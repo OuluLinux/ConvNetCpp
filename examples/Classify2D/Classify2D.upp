@@ -1,0 +1,17 @@
+description "ConvNetJS example translated to C++.\377";
+
+uses
+	ConvNet,
+	CtrlLib,
+	ConvNetCtrl;
+
+file
+	main.cpp,
+	Classify2D.h,
+	Classify2D.cpp;
+
+mainconfig
+	"" = "MT GUI",
+	"" = "MT GUI USEMALLOC",
+	"" = "GUI";
+

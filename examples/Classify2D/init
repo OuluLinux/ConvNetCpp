@@ -1,0 +1,6 @@
+#ifndef _Classify2D_icpp_init_stub
+#define _Classify2D_icpp_init_stub
+#include "ConvNet/init"
+#include "CtrlLib/init"
+#include "ConvNetCtrl/init"
+#endif

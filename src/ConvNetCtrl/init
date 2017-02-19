@@ -1,0 +1,4 @@
+#ifndef _ConvNetCtrl_icpp_init_stub
+#define _ConvNetCtrl_icpp_init_stub
+#include "CtrlLib/init"
+#endif

@@ -1,0 +1,5 @@
+#ifndef _ConvNet01_icpp_init_stub
+#define _ConvNet01_icpp_init_stub
+#include "Core/init"
+#include "ConvNet/init"
+#endif

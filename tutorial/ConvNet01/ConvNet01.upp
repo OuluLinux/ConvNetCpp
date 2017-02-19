@@ -1,0 +1,12 @@
+uses
+	Core,
+	ConvNet;
+
+file
+	ConvNet01.h,
+	ConvNet01.cpp;
+
+mainconfig
+	"" = "MT",
+	"" = "MT USEMALLOC";
+

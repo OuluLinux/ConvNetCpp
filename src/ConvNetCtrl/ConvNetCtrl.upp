@@ -1,0 +1,12 @@
+description "Widgets for ConvNet package.\377B28,0,200";
+
+uses
+	CtrlLib;
+
+file
+	ConvNetCtrl.h,
+	LayerCtrl.h,
+	LayerCtrl.cpp,
+	PointCtrl.h,
+	PointCtrl.cpp;
+

@@ -1,0 +1,41 @@
+description "C++ port of C# port of ConvNetJS.  ConvNet is a library for training Deep Learning models.\377B128,0,255";
+
+uses
+	Core;
+
+file
+	ConvNet.h,
+	Session.h,
+	Session.cpp,
+	Net.h,
+	Net.cpp,
+	Utilities.h,
+	Volume.cpp,
+	MagicNet.h,
+	Layers readonly separator,
+	LayerBase.h,
+	LayerBase.cpp,
+	Layers.h,
+	FullyConnLayer.cpp,
+	LRNLayer.cpp,
+	DropOutLayer.cpp,
+	InputLayer.cpp,
+	SoftmaxLayer.cpp,
+	RegressionLayer.cpp,
+	ConvLayer.cpp,
+	PoolLayer.cpp,
+	ReluLayer.cpp,
+	SigmoidLayer.cpp,
+	TanhLayer.cpp,
+	MaxoutLayer.cpp,
+	SVMLayer.cpp,
+	Training readonly separator,
+	Training.h,
+	TrainerBase.cpp,
+	AdadeltaTrainer.cpp,
+	AdagradTrainer.cpp,
+	AdamTrainer.cpp,
+	NetsterovTrainer.cpp,
+	SgdTrainer.cpp,
+	WindowgradTrainer.cpp;
+
