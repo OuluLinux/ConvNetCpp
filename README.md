@@ -6,4 +6,4 @@ Thank you very much to the original author (Andrej Karpathy), C# translator (Cé
 ## Example
 
 Here's a screeshot of a ConvNetJS example translated to ConvNetC++. 
-
+![Classify2D example](https://github.com/sppp/ConvNetC-/raw/master/doc/classify2d.png)
