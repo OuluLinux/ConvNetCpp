@@ -7,7 +7,7 @@ LrnLayer::LrnLayer() {
 }
 
 Volume& LrnLayer::Forward(Volume& input, bool is_training) {
-	return Volume();
+	return output_activation;
 }
 
 void LrnLayer::Backward() {
