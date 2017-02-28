@@ -37,7 +37,8 @@ public:
 	
 	virtual double GetLoss() {return cost_loss;}
 	
-	void Train(Volume& x, double y);
+	//void Train(Volume& x, double y) {Train(x, 0, y);}
+	void Train(Volume& x, int pos, double y);
 	void Train(double y, const Vector<VolumePtr>& x);
 	void Train(Volume& x, const Vector<double>& y);
 	void Train(const Vector<double>& y, const Vector<VolumePtr>& x);
@@ -46,7 +47,7 @@ public:
 protected:
 	virtual void TrainImplem() = 0;
 	
-	virtual void Backward(double y);
+	virtual void Backward(int pos, double y);
 	virtual void Backward(const Vector<double>& y);
 	
 };
@@ -66,7 +67,7 @@ public:
 	
 protected:
 	virtual void TrainImplem();
-	virtual void Backward(double y);
+	virtual void Backward(int pos, double y);
 	virtual void Backward(const Vector<double>& y);
 	
 };
@@ -84,7 +85,7 @@ public:
 	
 protected:
 	virtual void TrainImplem();
-	virtual void Backward(double y);
+	virtual void Backward(int pos, double y);
 	virtual void Backward(const Vector<double>& y);
 	
 };
@@ -104,7 +105,7 @@ public:
 protected:
 
 	virtual void TrainImplem();
-	virtual void Backward(double y);
+	virtual void Backward(int pos, double y);
 	virtual void Backward(const Vector<double>& y);
 	
 };
@@ -122,7 +123,7 @@ public:
 	
 protected:
 	virtual void TrainImplem();
-	virtual void Backward(double y);
+	virtual void Backward(int pos, double y);
 	virtual void Backward(const Vector<double>& y);
 	
 };
@@ -142,7 +143,7 @@ public:
 	
 protected:
 	virtual void TrainImplem();
-	virtual void Backward(double y);
+	virtual void Backward(int pos, double y);
 	virtual void Backward(const Vector<double>& y);
 	
 };
@@ -164,7 +165,7 @@ public:
 protected:
 	
 	virtual void TrainImplem();
-	virtual void Backward(double y);
+	virtual void Backward(int pos, double y);
 	virtual void Backward(const Vector<double>& y);
 	
 };

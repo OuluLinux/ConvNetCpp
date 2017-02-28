@@ -1,13 +1,12 @@
 #include "ConvNetCtrl.h"
 
-namespace ConvNetCtrl {
+namespace ConvNet {
 
 PointCtrl::PointCtrl(Session& ses) {
 	vis_len = 0;
 	offset = 0;
 	
 	this->ses = &ses;
-	sync_trainer = true;
 	ses.WhenSessionLoaded << THISBACK(RefreshData);
 }
 
@@ -19,21 +18,22 @@ void PointCtrl::Paint(Draw& d) {
 	Session& ses = *this->ses;
 	
 	Size sz = GetSize();
-	d.DrawRect(sz, White());
-	
 	int vis_len = min(sz.cx, sz.cy);
 	int density = 5;
-	int x_off = (sz.cx - vis_len) / 2;
-	int y_off = (sz.cy - vis_len) / 2;
 	
 	int count = vis_len / density;
-	if (count < 2) return;
+	if (count < 2) {
+		d.DrawRect(sz, White());
+		return;
+	}
 	
-	bool sync = sync_trainer;
-	if (sync) ses.Enter();
+	int x_off = (sz.cx - vis_len) / 2;
+	int y_off = (sz.cy - vis_len) / 2;
+	ImageDraw id(sz);
+	id.DrawRect(sz, White());
 	
+	ses.Enter();
 	Net& net = ses.GetNetwork();
-	
 	
 	InputLayer* input = ses.GetInput();
 	if (!input) {
@@ -75,7 +75,7 @@ void PointCtrl::Paint(Draw& d) {
 			
 			int label = aw0 > aw1;
 			
-			d.DrawRect(x_off + scr_x, y_off + scr_y, density, density, label ? clr_a : clr_b);
+			id.DrawRect(x_off + scr_x, y_off + scr_y, density, density, label ? clr_a : clr_b);
 			
 			scr_x += density;
 			x += step;
@@ -101,15 +101,16 @@ void PointCtrl::Paint(Draw& d) {
 		int pos = yi * count + xi;
 		int scr_x = x_fac * vis_len;
 		int scr_y = y_fac * vis_len;
-		d.DrawEllipse(x_off + scr_x - radius_2, y_off + scr_y - radius_2, radius, radius, label ? clr_a2 : clr_b2);
+		id.DrawEllipse(x_off + scr_x - radius_2, y_off + scr_y - radius_2, radius, radius, label ? clr_a2 : clr_b2);
 	}
 	
-	if (sync) ses.Leave();
+	ses.Leave();
+	
+	d.DrawImage(0, 0, id);
 }
 
 void PointCtrl::LeftDown(Point p, dword keyflags) {
 	
-	sync_trainer = !sync_trainer;
 	
 }
 

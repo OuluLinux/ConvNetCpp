@@ -92,4 +92,55 @@ Vector<ParametersAndGradients>& FullyConnLayer::GetParametersAndGradients() {
 	return response;
 }
 
+#define STOREVAR(json, field) map.GetAdd(#json) = this->field;
+#define LOADVAR(field, json) this->field = map.GetValue(map.Find(#json));
+#define LOADVARDEF(field, json, def) {Value tmp = map.GetValue(map.Find(#json)); if (tmp.IsNull()) this->field = def; else this->field = tmp;}
+
+void FullyConnLayer::Store(ValueMap& map) const {
+	STOREVAR(out_depth, output_depth);
+	STOREVAR(out_sx, output_width);
+	STOREVAR(out_sy, output_height);
+	STOREVAR(layer_type, GetKey());
+	STOREVAR(num_inputs, input_count);
+	STOREVAR(l1_decay_mul, l1_decay_mul);
+	STOREVAR(l2_decay_mul, l2_decay_mul);
+	
+	ValueMap filters;
+	for (int i = 0; i < this->filters.GetCount(); i++) {
+		ValueMap map;
+		this->filters[i].Store(map);
+		filters.Add(IntStr(i), map);
+	}
+	map.GetAdd("filters") = filters;
+	
+	ValueMap biases;
+	this->biases.Store(biases);
+	map.GetAdd("biases") = biases;
+}
+
+void FullyConnLayer::Load(const ValueMap& map) {
+	LOADVAR(output_depth, out_depth);
+	LOADVAR(output_width, out_sx);
+	LOADVAR(output_height, out_sy);
+	LOADVAR(input_count, num_inputs);
+	//LOADVARDEF(l1_decay_mul, l1_decay_mul, 1.0);
+	//LOADVARDEF(l2_decay_mul, l2_decay_mul, 1.0);
+	LOADVAR(l1_decay_mul, l1_decay_mul);
+	LOADVAR(l2_decay_mul, l2_decay_mul);
+	
+	neuron_count = output_depth;
+	
+	filters.Clear();
+	ValueMap filters = map.GetValue(map.Find("filters"));
+	
+	for (int i = 0; i < output_depth; i++) {
+		Volume& v = this->filters.Add();
+		ValueMap values = filters.GetValue(i);
+		v.Load(values);
+	}
+	ValueMap values = map.GetValue(map.Find("biases"));
+	biases.Load(values);
+}
+
+
 }

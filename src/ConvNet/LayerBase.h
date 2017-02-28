@@ -31,10 +31,29 @@ public:
 	virtual Vector<ParametersAndGradients>& GetParametersAndGradients();
 	virtual String GetKey() const {return "base";}
 	
+	virtual void Store(ValueMap& map) const {}
+	virtual void Load(const ValueMap& map) {}
+	
 };
 
-//typedef Ptr<LayerBase> LayerBasePtr;
+
 typedef LayerBase* LayerBasePtr;
+
+
+class LastLayerBase : public LayerBase {
+	
+protected:
+	LastLayerBase(const LastLayerBase& o) {}
+	
+public:
+	LastLayerBase() {}
+	
+	virtual double Backward(int pos, double y) = 0;
+	virtual double Backward(const Vector<double>& y) = 0;
+	virtual String GetKey() const {return "lastlayerbase";}
+	
+};
+
 
 }
 

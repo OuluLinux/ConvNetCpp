@@ -45,7 +45,7 @@ Volume& DropOutLayer::Forward(Volume& input, bool is_training) {
 		// scale the activations during prediction
 		for (int i = 0; i < length; i++) {
 			// NOTE:
-			//  in direct C# version translation: output->Set(i, output->Get(i) * (1 - drop_prob));
+			//  in direct C# version translation: output->Set(i, output.Get(i) * (1 - drop_prob));
 			//  but in original JS version was V2.w[i]*=this.drop_prob;
 			output.Set(i, output.Get(i) * drop_prob);
 		}
@@ -66,6 +66,25 @@ void DropOutLayer::Backward() {
 			input.SetGradient(i, output.GetGradient(i)); // copy over the gradient
 		}
 	}
+}
+
+#define STOREVAR(json, field) map.GetAdd(#json) = this->field;
+#define LOADVAR(field, json) this->field = map.GetValue(map.Find(#json));
+#define LOADVARDEF(field, json, def) {Value tmp = map.GetValue(map.Find(#json)); if (tmp.IsNull()) this->field = def; else this->field = tmp;}
+
+void DropOutLayer::Store(ValueMap& map) const {
+	STOREVAR(out_depth, output_depth);
+	STOREVAR(out_sx, output_width);
+	STOREVAR(out_sy, output_height);
+	STOREVAR(layer_type, GetKey());
+	STOREVAR(drop_prob, drop_prob);
+}
+
+void DropOutLayer::Load(const ValueMap& map) {
+	LOADVAR(output_depth, out_depth);
+	LOADVAR(output_width, out_sx);
+	LOADVAR(output_height, out_sy);
+	LOADVAR(drop_prob, drop_prob);
 }
 
 }

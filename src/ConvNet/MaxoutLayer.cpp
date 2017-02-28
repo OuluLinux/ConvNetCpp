@@ -100,4 +100,25 @@ void MaxoutLayer::Backward() {
 	}
 }
 
+#define STOREVAR(json, field) map.GetAdd(#json) = this->field;
+#define LOADVAR(field, json) this->field = map.GetValue(map.Find(#json));
+#define LOADVARDEF(field, json, def) {Value tmp = map.GetValue(map.Find(#json)); if (tmp.IsNull()) this->field = def; else this->field = tmp;}
+
+void MaxoutLayer::Store(ValueMap& map) const {
+	STOREVAR(out_depth, output_depth);
+	STOREVAR(out_sx, output_width);
+	STOREVAR(out_sy, output_height);
+	STOREVAR(layer_type, GetKey());
+	STOREVAR(group_size, group_size);
+}
+
+void MaxoutLayer::Load(const ValueMap& map) {
+	LOADVAR(output_depth, out_depth);
+	LOADVAR(output_width, out_sx);
+	LOADVAR(output_height, out_sy);
+	LOADVAR(group_size, group_size);
+	switches.SetCount(0);
+	switches.SetCount(output_width * output_height * output_depth, 0);
+}
+
 }

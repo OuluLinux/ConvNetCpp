@@ -162,4 +162,42 @@ void Volume::Set(int i, double v) {
 	weights[i] = v;
 }
 
+#define STOREVAR(json, field) map.GetAdd(#json) = this->field;
+#define LOADVAR(field, json) this->field = map.GetValue(map.Find(#json));
+#define LOADVARDEF(field, json, def) {Value tmp = map.GetValue(map.Find(#json)); if (tmp.IsNull()) this->field = def; else this->field = tmp;}
+
+void Volume::Store(ValueMap& map) const {
+	STOREVAR(sx, width);
+	STOREVAR(sy, height);
+	STOREVAR(depth, depth);
+	ValueMap w;
+	for(int i = 0; i < weights.GetCount(); i++) {
+		double value = weights[i];
+		w.Add(IntStr(i), value);
+	}
+	map.GetAdd("w") = w;
+}
+
+void Volume::Load(const ValueMap& map) {
+	LOADVAR(width, sx);
+	LOADVAR(height, sy);
+	LOADVAR(depth, depth);
+	
+	length = width * height * depth;
+	
+	weights.SetCount(0);
+	weights.SetCount(length, 0);
+	weight_gradients.SetCount(0);
+	weight_gradients.SetCount(length, 0);
+	
+	// copy over the elements.
+	ValueMap w = map.GetValue(map.Find("w"));
+	for (int i = 0; i < length; i++) {
+		double value = w.GetValue(w.Find(IntStr(i)));
+		//double value = w.GetValue(i);
+		weights[i] = value;
+	}
+
+}
+
 }

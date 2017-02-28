@@ -1,6 +1,6 @@
 #include "ConvNetCtrl.h"
 
-namespace ConvNetCtrl {
+namespace ConvNet {
 
 LayerView::LayerView(LayerCtrl* lc) : lc(lc) {
 	
@@ -8,25 +8,27 @@ LayerView::LayerView(LayerCtrl* lc) : lc(lc) {
 	
 void LayerView::Paint(Draw& d) {
 	
-	Size sz = GetSize();
-	d.DrawRect(sz, White());
-	
 	Session& ses = *lc->ses;
+	int lix = lc->lix;
 	int d0 = lc->d0;
 	int d1 = lc->d1;
-	bool sync = lc->sync_trainer;
 	
+	Size sz = GetSize();
 	int vis_len = min(sz.cx, sz.cy);
 	int density = 20;
+	int count = vis_len / density;
+	if (count < 2) {
+		d.DrawRect(sz, White());
+		return;
+	}
+	
 	int density_2 = density / 2;
 	int x_off = (sz.cx - vis_len) / 2;
 	int y_off = (sz.cy - vis_len) / 2;
+	ImageDraw id(sz);
+	id.DrawRect(sz, White());
 	
-	int count = vis_len / density;
-	if (count < 2) return;
-	
-	if (sync) ses.Enter();
-	
+	ses.Enter();
 	Net& net = ses.GetNetwork();
 	
 	
@@ -54,7 +56,9 @@ void LayerView::Paint(Draw& d) {
 	double diff = offset * 2;
 	double step = diff / (count - 1);
 	
-	LayerBase& lb = *net.GetLayers()[lc->lix];
+	const Vector<LayerBasePtr>& layers = net.GetLayers();
+	if (lix < 0 || lix >= layers.GetCount()) {ses.Leave(); return;}
+	LayerBase& lb = *layers[lix];
 	Volume& output = lb.output_activation;
 	
 	Volume netx(1,1,2,0);
@@ -127,7 +131,7 @@ void LayerView::Paint(Draw& d) {
 			ptr.x = x_off + x0;
 			ptr.y = y_off + y0;
 			
-			d.DrawRect(x_off + x0 - density_2, y_off + y0 - density_2, density, density, label ? clr_a : clr_b);
+			id.DrawRect(x_off + x0 - density_2, y_off + y0 - density_2, density, density, label ? clr_a : clr_b);
 			
 			k++;
 		}
@@ -137,7 +141,7 @@ void LayerView::Paint(Draw& d) {
 	
 	for(int i = 0; i < lines.GetCount(); i++) {
 		const Vector<Point>& l = lines[i];
-		d.DrawPolyline(l, 1, stroke_clr);
+		id.DrawPolyline(l, 1, stroke_clr);
 	}
 	
 	
@@ -157,10 +161,12 @@ void LayerView::Paint(Draw& d) {
 		double scr_y = (output.Get(0,0,d1) - min_y) / diff_y * vis_len;
 		int label = ses.GetLabel(i);
 		
-		d.DrawEllipse(x_off + scr_x - radius_2, y_off + scr_y - radius_2, radius, radius, label ? clr_a2 : clr_b2);
+		id.DrawEllipse(x_off + scr_x - radius_2, y_off + scr_y - radius_2, radius, radius, label ? clr_a2 : clr_b2);
 	}
 	
-	if (sync) ses.Leave();
+	ses.Leave();
+	
+	d.DrawImage(0, 0, id);
 }
 
 
@@ -174,7 +180,6 @@ LayerCtrl::LayerCtrl(Session& ses) : view(this) {
 	d0 = 0;
 	d1 = 1;
 	lix = 1;
-	sync_trainer = true;
 	
 	
 	Add(view.VSizePos(0,60).HSizePos());

@@ -70,12 +70,12 @@ Volume& Net::Forward(Volume& input, bool is_training) {
 	return *activation;
 }
 
-double Net::GetCostLoss(Volume& input, double y) {
+double Net::GetCostLoss(Volume& input, int pos, double y) {
 	Forward(input);
 	
 	LastLayerBase* last_layer = dynamic_cast<LastLayerBase*>(&*layers[layers.GetCount() - 1]);
 	if (last_layer != NULL) {
-		double loss = last_layer->Backward(y);
+		double loss = last_layer->Backward(pos, y);
 		return loss;
 	}
 	
@@ -94,11 +94,11 @@ double Net::GetCostLoss(Volume& input, const Vector<double>& y) {
 	throw Exception("Last layer doesnt implement ILastLayer interface");
 }
 
-double Net::Backward(double y) {
+double Net::Backward(int pos, double y) {
 	int n = layers.GetCount();
 	LastLayerBase* last_layer = dynamic_cast<LastLayerBase*>(&*layers[n - 1]);
 	if (last_layer != NULL) {
-		double loss = last_layer->Backward(y); // last layer assumed to be loss layer
+		double loss = last_layer->Backward(pos, y); // last layer assumed to be loss layer
 		for (int i = n - 2; i >= 0; i--) {
 			// first layer assumed input
 			layers[i]->Backward();
@@ -159,6 +159,8 @@ Vector<ParametersAndGradients>& Net::GetParametersAndGradients() {
 			k++;
 		}
 	}
+	
+	response.SetCount(count);
 	
 	return response;
 }

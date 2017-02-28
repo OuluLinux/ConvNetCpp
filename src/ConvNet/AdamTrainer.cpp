@@ -73,8 +73,8 @@ void AdamTrainer::TrainImplem() {
 	// and it should all be computed correctly and automatically.
 }
 
-void AdamTrainer::Backward(double y) {
-	TrainerBase::Backward(y);
+void AdamTrainer::Backward(int pos, double y) {
+	TrainerBase::Backward(pos, y);
 	
 	l2_decay_loss = 0.0;
 	l1_decay_loss = 0.0;

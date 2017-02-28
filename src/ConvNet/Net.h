@@ -13,19 +13,21 @@ private:
 	Vector<ParametersAndGradients> response;
 
 protected:
+	friend class Session;
 	Net(const Net& iv) {}
 		
+	void AddLayerPointer(LayerBase& layer) {layers.Add(&layer);}
 public:
 	Net() {}
 	
-	const Vector<LayerBasePtr>& GetLayers() {return layers;}
+	const Vector<LayerBasePtr>& GetLayers() const {return layers;}
 	
 	virtual void AddLayer(LayerBase& layer);
 	virtual Volume& Forward(const Vector<VolumePtr>& inputs, bool is_training = false);
 	virtual Volume& Forward(Volume& input, bool is_training = false);
-	virtual double GetCostLoss(Volume& input, double y);
+	virtual double GetCostLoss(Volume& input, int pos, double y);
 	virtual double GetCostLoss(Volume& input, const Vector<double>& y);
-	virtual double Backward(double y);
+	virtual double Backward(int pos, double y);
 	virtual double Backward(const Vector<double>& y);
 	virtual int GetPrediction();
 	virtual Vector<ParametersAndGradients>& GetParametersAndGradients();

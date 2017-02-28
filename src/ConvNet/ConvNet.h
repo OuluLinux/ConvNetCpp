@@ -6,5 +6,6 @@
 #include "Layers.h"
 #include "Training.h"
 #include "Session.h"
+#include "Brain.h"
 
 #endif

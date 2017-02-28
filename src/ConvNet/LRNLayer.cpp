@@ -1,10 +1,42 @@
 #include "ConvNet.h"
 
+namespace ConvNet {
+
+LrnLayer::LrnLayer() {
+	
+}
+
+Volume& LrnLayer::Forward(Volume& input, bool is_training) {
+	return Volume();
+}
+
+void LrnLayer::Backward() {
+	
+}
+
+void LrnLayer::Init(int input_width, int input_height, int input_depth) {
+	
+}
+
+void LrnLayer::Store(ValueMap& map) const {
+	
+}
+
+void LrnLayer::Load(const ValueMap& map) {
+	
+}
+
+}
+
+
+
+
+
 #if 0
   // a bit experimental layer for now. I think it works but I'm not 100%
   // the gradient check is a bit funky. I'll look into this a bit later.
   // Local Response Normalization in window, along depths of volumes
-  var LocalResponseNormalizationLayer = function(opt) {
+  var LrnLayer = function(opt) {
     var opt = opt || {};
 
     // required
@@ -22,7 +54,7 @@
     // checks
     if(this.n%2 === 0) { console.log('WARNING n should be odd for LRN layer'); }
   }
-  LocalResponseNormalizationLayer.prototype = {
+  LrnLayer.prototype = {
     forward: function(V, is_training) {
       this.in_act = V;
 

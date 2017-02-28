@@ -71,8 +71,8 @@ void SgdTrainer::TrainImplem() {
 	// and it should all be computed correctly and automatically.
 }
 
-void SgdTrainer::Backward(double y) {
-	TrainerBase::Backward(y);
+void SgdTrainer::Backward(int pos, double y) {
+	TrainerBase::Backward(pos, y);
 	
 	l2_decay_loss = 0.0;
 	l1_decay_loss = 0.0;

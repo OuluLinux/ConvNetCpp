@@ -3,9 +3,9 @@
 
 #include <ConvNet/ConvNet.h>
 #include <CtrlLib/CtrlLib.h>
-using namespace Upp;
 
-namespace ConvNetCtrl {
+namespace ConvNet {
+using namespace Upp;
 using namespace ConvNet;
 
 class LayerCtrl;
@@ -34,7 +34,6 @@ protected:
 	Session* ses;
 	int d0, d1;
 	int lix;
-	bool sync_trainer;
 	
 	Array<Button> layer_buttons;
 	
@@ -54,7 +53,6 @@ public:
 	void RefreshData();
 	void PostRefreshData() {PostCallback(THISBACK(RefreshData));}
 	int GetId() const {return lix;}
-	void SetSyncTrainer(bool b=false) {sync_trainer = b;}
 	
 };
 

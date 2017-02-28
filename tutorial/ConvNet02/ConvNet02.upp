@@ -1,0 +1,8 @@
+description "Neural Net Regression Example\377";
+
+uses
+	ConvNet;
+
+file
+	ConvNet02.cpp;
+

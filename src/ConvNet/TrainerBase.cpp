@@ -23,20 +23,12 @@ TrainerBase::TrainerBase(Net& net) {
 	
 }
 
-void TrainerBase::Train(Volume& x, double y) {
+void TrainerBase::Train(Volume& x, int pos, double y) {
 	vec.SetCount(1);
 	vec[0] = &x;
 	Forward(vec);
 	
-	Backward(y);
-	
-	TrainImplem();
-}
-
-void TrainerBase::Train(double y, const Vector<VolumePtr>& x) {
-	Forward(x);
-	
-	Backward(y);
+	Backward(pos, y);
 	
 	TrainImplem();
 }
@@ -59,8 +51,8 @@ void TrainerBase::Train(const Vector<double>& y, const Vector<VolumePtr>& x) {
 	TrainImplem();
 }
 
-void TrainerBase::Backward(double y) {
-	cost_loss = net->Backward(y);
+void TrainerBase::Backward(int pos, double y) {
+	cost_loss = net->Backward(pos, y);
 }
 
 void TrainerBase::Backward(const Vector<double>& y) {

@@ -52,21 +52,20 @@ Volume& SoftmaxLayer::Forward(Volume& input, bool is_training) {
 	return output_activation;
 }
 
-double SoftmaxLayer::Backward(double y) {
-	int yint = (int)y;
+double SoftmaxLayer::Backward(int pos, double y) {
 	
 	// compute and accumulate gradient wrt weights and bias of this layer
 	Volume& input = *input_activation;
 	input.ZeroGradients(); // zero out the gradient of input Vol
 	
 	for (int i = 0; i < output_depth; i++) {
-		double indicator = i == yint ? 1.0 : 0.0;
+		double indicator = i == pos ? 1.0 : 0.0;
 		double mul = -1.0 * (indicator - es[i]);
 		input.SetGradient(i, mul);
 	}
 	
 	// loss is the class negative log likelihood
-	return -1.0 * log(es[yint]);
+	return -1.0 * log(es[pos]);
 }
 
 double SoftmaxLayer::Backward(const Vector<double>& y) {
@@ -75,6 +74,25 @@ double SoftmaxLayer::Backward(const Vector<double>& y) {
 
 void SoftmaxLayer::Backward() {
 	throw NotImplementedException();
+}
+
+#define STOREVAR(json, field) map.GetAdd(#json) = this->field;
+#define LOADVAR(field, json) this->field = map.GetValue(map.Find(#json));
+#define LOADVARDEF(field, json, def) {Value tmp = map.GetValue(map.Find(#json)); if (tmp.IsNull()) this->field = def; else this->field = tmp;}
+
+void SoftmaxLayer::Store(ValueMap& map) const {
+	STOREVAR(out_depth, output_depth);
+	STOREVAR(out_sx, output_width);
+	STOREVAR(out_sy, output_height);
+	STOREVAR(layer_type, GetKey());
+	STOREVAR(num_inputs, class_count);
+}
+
+void SoftmaxLayer::Load(const ValueMap& map) {
+	LOADVAR(output_depth, out_depth);
+	LOADVAR(output_width, out_sx);
+	LOADVAR(output_height, out_sy);
+	LOADVAR(class_count, num_inputs);
 }
 
 }

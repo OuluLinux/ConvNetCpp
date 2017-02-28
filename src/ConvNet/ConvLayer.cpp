@@ -149,4 +149,59 @@ Vector<ParametersAndGradients>& ConvLayer::GetParametersAndGradients() {
 	return response;
 }
 
+#define STOREVAR(json, field) map.GetAdd(#json) = this->field;
+#define LOADVAR(field, json) this->field = map.GetValue(map.Find(#json));
+#define LOADVARDEF(field, json, def) {Value tmp = map.GetValue(map.Find(#json)); if (tmp.IsNull()) this->field = def; else this->field = tmp;}
+
+void ConvLayer::Store(ValueMap& map) const {
+	STOREVAR(out_depth, output_depth);
+	STOREVAR(out_sx, output_width);
+	STOREVAR(out_sy, output_height);
+	STOREVAR(layer_type, GetKey());
+	STOREVAR(sx, width); // filter size in x, y dims
+	STOREVAR(sy, height);
+	STOREVAR(stride, stride);
+	STOREVAR(in_depth, filter_count);
+	STOREVAR(l1_decay_mul, l1_decay_mul);
+	STOREVAR(l2_decay_mul, l2_decay_mul);
+	STOREVAR(pad, pad);
+	
+	ValueMap filters;
+	for (int i = 0; i < filters.GetCount(); i++) {
+		ValueMap map;
+		this->filters[i].Store(map);
+		filters.Add(IntStr(i), map);
+	}
+	map.GetAdd("filters") = filters;
+	
+	ValueMap biases;
+	this->biases.Store(biases);
+	map.GetAdd("biases") = biases;
+}
+
+void ConvLayer::Load(const ValueMap& map) {
+	LOADVAR(output_depth, out_depth);
+	LOADVAR(output_width, out_sx);
+	LOADVAR(output_height, out_sy);
+	LOADVAR(width, sx); // filter size in x, y dims
+	LOADVAR(height, sy);
+	LOADVAR(stride, stride);
+	LOADVAR(filter_count, in_depth); // depth of input volume
+	LOADVARDEF(l1_decay_mul, l1_decay_mul, 1.0);
+	LOADVARDEF(l2_decay_mul, l2_decay_mul, 1.0);
+	LOADVARDEF(pad, pad, 0);
+	
+	filters.Clear();
+	ValueMap filters = map.GetValue(map.Find("filters"));
+	for (int i = 0; i < filters.GetCount(); i++) {
+		Volume& v = this->filters.Add();
+		ValueMap values = filters.GetValue(i);
+		v.Load(values);
+	}
+	
+	ValueMap values = map.GetValue(map.Find("biases"));
+	biases.Load(values);
+
+}
+
 }

@@ -16,10 +16,10 @@ Classify2D::Classify2D() : pctrl(session), lctrl(session) {
 		"]\n";
 	
 	net_ctrl.Add( net_edit.HSizePos().VSizePos(0, 30) );
-	net_ctrl.Add( btn.LeftPos(5, 200).BottomPos(2, 26) );
+	net_ctrl.Add( reload_btn.LeftPos(5, 200).BottomPos(2, 26) );
 	
-	btn.SetLabel("Change network");
-	btn <<= THISBACK(Reload);
+	reload_btn.SetLabel("Reload network");
+	reload_btn <<= THISBACK(Reload);
 	
 	v_split << net_ctrl << h_split;
 	v_split.Vert();
@@ -48,19 +48,23 @@ Classify2D::Classify2D() : pctrl(session), lctrl(session) {
     PostCallback(THISBACK(OriginalData));
 }
 
+void Classify2D::Start() {
+	running = true;
+	stopped = false;
+	PostCallback(THISBACK(Refresher));
+}
+
 void Classify2D::ViewLayer(int i) {
 	lctrl.ViewLayer(i);
 }
 
 void Classify2D::Reload() {
 	String net_str = net_edit.GetData();
-	session.LoadJSON(net_str);
+	session.MakeLayers(net_str);
 	session.StartTraining();
 	
 	if (stopped) {
-		running = true;
-		stopped = false;
-		PostCallback(THISBACK(Refresher));
+		Start();
 	}
 }
 

@@ -1,10 +1,15 @@
 description "Widgets for ConvNet package.\377B28,0,200";
 
 uses
-	CtrlLib;
+	CtrlLib,
+	ConvNet;
 
 file
 	ConvNetCtrl.h,
+	BarView.h,
+	BarView.cpp,
+	HeatmapView.h,
+	HeatmapView.cpp,
 	LayerCtrl.h,
 	LayerCtrl.cpp,
 	PointCtrl.h,

@@ -35,6 +35,7 @@ protected:
 	
 public:
 	ConvLayer(int width, int height, int filter_count);
+	ConvLayer(ValueMap values) {Load(values);}
 	
 	int width;
 	int height;
@@ -55,7 +56,8 @@ public:
 	void UpdateOutputSize();
 	virtual Vector<ParametersAndGradients>& GetParametersAndGradients();
 	virtual String GetKey() const {return "conv";}
-	
+	virtual void Store(ValueMap& map) const;
+	virtual void Load(const ValueMap& map);
 };
 
 class DropOutLayer : public LayerBase {
@@ -69,11 +71,14 @@ public:
 	double drop_prob;
 	
 	DropOutLayer(double drop_prob);
+	DropOutLayer(ValueMap values) {Load(values);}
+	
 	virtual Volume& Forward(Volume& input, bool is_training = false);
 	virtual void Backward();
 	virtual void Init(int input_width, int input_height, int input_depth);
 	virtual String GetKey() const {return "dropout";}
-	
+	virtual void Store(ValueMap& map) const;
+	virtual void Load(const ValueMap& map);
 };
 
 
@@ -83,10 +88,11 @@ class FullyConnLayer : public LayerBase, public IDotProductLayer {
 	int input_count;
 	
 protected:
-	FullyConnLayer(const FullyConnLayer& o) {}
+	FullyConnLayer(const FullyConnLayer& o) {Panic("Not allowed");}
 	
 public:
 	FullyConnLayer(int neuron_count);
+	FullyConnLayer(ValueMap values) {Load(values);}
 	
 	Volume biases;
 	Vector<Volume> filters;
@@ -99,7 +105,8 @@ public:
 	virtual void Init(int input_width, int input_height, int input_depth);
 	virtual Vector<ParametersAndGradients>& GetParametersAndGradients();
 	virtual String GetKey() const {return "fc";}
-	
+	virtual void Store(ValueMap& map) const;
+	virtual void Load(const ValueMap& map);
 };
 
 class InputLayer : public LayerBase {
@@ -108,27 +115,15 @@ protected:
 	InputLayer(const InputLayer& o) {}
 	
 public:
-	
 	InputLayer(int input_width, int input_height, int input_depth);
+	InputLayer(ValueMap values) {Load(values);}
+	
 	virtual Volume& Forward(Volume& input, bool is_training = false);
 	virtual void Backward();
 	virtual Volume& Forward(bool is_training);
 	virtual String GetKey() const {return "input";}
-	
-};
-
-class LastLayerBase : public LayerBase {
-	
-protected:
-	LastLayerBase(const LastLayerBase& o) {}
-	
-public:
-	LastLayerBase() {}
-	
-	virtual double Backward(const Vector<double>& y) = 0;
-	virtual double Backward(double y) = 0;
-	virtual String GetKey() const {return "lastlayerbase";}
-	
+	virtual void Store(ValueMap& map) const;
+	virtual void Load(const ValueMap& map);
 };
 
 
@@ -146,6 +141,7 @@ protected:
 	
 public:
 	MaxoutLayer(int group_size = 2);
+	MaxoutLayer(ValueMap values) {Load(values);}
 	
 	int group_size;
 	
@@ -153,7 +149,8 @@ public:
 	virtual void Backward();
 	virtual void Init(int input_width, int input_height, int input_depth);
 	virtual String GetKey() const {return "maxout";}
-	
+	virtual void Store(ValueMap& map) const;
+	virtual void Load(const ValueMap& map);
 };
 
 class PoolLayer : public LayerBase {
@@ -165,6 +162,7 @@ protected:
 	
 public:
 	PoolLayer(int width, int height);
+	PoolLayer(ValueMap values) {Load(values);}
 	
 	int width;
 	int height;
@@ -176,7 +174,8 @@ public:
 	virtual void Init(int input_width, int input_height, int input_depth);
 	void UpdateOutputSize();
 	virtual String GetKey() const {return "pool";}
-	
+	virtual void Store(ValueMap& map) const;
+	virtual void Load(const ValueMap& map);
 };
 
 
@@ -190,13 +189,16 @@ protected:
 	
 public:
 	RegressionLayer();
-	virtual double Backward(double y);
+	RegressionLayer(ValueMap values) {Load(values);}
+	
+	virtual double Backward(int pos, double y);
 	virtual double Backward(const Vector<double>& y);
 	virtual Volume& Forward(Volume& input, bool is_training = false);
 	virtual void Backward();
 	virtual void Init(int input_width, int input_height, int input_depth);
-	virtual String GetKey() const {return "reg";}
-	
+	virtual String GetKey() const {return "regression";}
+	virtual void Store(ValueMap& map) const;
+	virtual void Load(const ValueMap& map);
 };
 
 
@@ -210,11 +212,14 @@ protected:
 	
 public:
 	ReluLayer();
+	ReluLayer(ValueMap values) {Load(values);}
+	
 	virtual Volume& Forward(Volume& input, bool is_training = false);
 	virtual void Backward();
 	virtual void Init(int input_width, int input_height, int input_depth);
 	virtual String GetKey() const {return "relu";}
-	
+	virtual void Store(ValueMap& map) const;
+	virtual void Load(const ValueMap& map);
 };
 
 
@@ -227,13 +232,15 @@ protected:
 	SigmoidLayer(const SigmoidLayer& o) {}
 	
 public:
-
 	SigmoidLayer();
+	SigmoidLayer(ValueMap values) {Load(values);}
+	
 	virtual Volume& Forward(Volume& input, bool is_training = false);
 	virtual void Backward();
 	virtual void Init(int input_width, int input_height, int input_depth);
 	virtual String GetKey() const {return "sigmoid";}
-	
+	virtual void Store(ValueMap& map) const;
+	virtual void Load(const ValueMap& map);
 };
 
 
@@ -248,14 +255,16 @@ protected:
 	
 public:
 	SoftmaxLayer(int class_count);
+	SoftmaxLayer(ValueMap values) {Load(values);}
 	
-	virtual double Backward(double y);
+	virtual double Backward(int pos, double y);
 	virtual double Backward(const Vector<double>& y);
 	virtual Volume& Forward(Volume& input, bool is_training = false);
 	virtual void Backward();
 	virtual void Init(int input_width, int input_height, int input_depth);
 	virtual String GetKey() const {return "softmax";}
-	
+	virtual void Store(ValueMap& map) const;
+	virtual void Load(const ValueMap& map);
 };
 
 
@@ -266,14 +275,16 @@ protected:
 	
 public:
 	SvmLayer(int class_count);
+	SvmLayer(ValueMap values) {Load(values);}
 	
-	virtual double Backward(double yd);
+	virtual double Backward(int pos, double y);
 	virtual double Backward(const Vector<double>& y);
 	virtual Volume& Forward(Volume& input, bool is_training = false);
 	virtual void Backward();
 	virtual void Init(int input_width, int input_height, int input_depth);
 	virtual String GetKey() const {return "svm";}
-	
+	virtual void Store(ValueMap& map) const;
+	virtual void Load(const ValueMap& map);
 };
 
 
@@ -283,13 +294,31 @@ protected:
 	TanhLayer(const TanhLayer& o) {}
 	
 public:
-	
 	TanhLayer();
+	TanhLayer(ValueMap values) {Load(values);}
+	
 	virtual Volume& Forward(Volume& input, bool is_training = false);
 	virtual void Backward();
 	virtual void Init(int input_width, int input_height, int input_depth);
 	virtual String GetKey() const {return "tanh";}
+	virtual void Store(ValueMap& map) const;
+	virtual void Load(const ValueMap& map);
+};
+
+
+// Local Response Normalization Layer
+class LrnLayer : public LayerBase {
 	
+public:
+	LrnLayer();
+	LrnLayer(ValueMap values) {Load(values);}
+	
+	virtual Volume& Forward(Volume& input, bool is_training = false);
+	virtual void Backward();
+	virtual void Init(int input_width, int input_height, int input_depth);
+	virtual String GetKey() const {return "lrn";}
+	virtual void Store(ValueMap& map) const;
+	virtual void Load(const ValueMap& map);
 };
 
 }

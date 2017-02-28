@@ -97,4 +97,34 @@ void PoolLayer::Backward() {
 	}
 }
 
+#define STOREVAR(json, field) map.GetAdd(#json) = this->field;
+#define LOADVAR(field, json) this->field = map.GetValue(map.Find(#json));
+#define LOADVARDEF(field, json, def) {Value tmp = map.GetValue(map.Find(#json)); if (tmp.IsNull()) this->field = def; else this->field = tmp;}
+
+void PoolLayer::Store(ValueMap& map) const {
+	STOREVAR(out_depth, output_depth);
+	STOREVAR(out_sx, output_width);
+	STOREVAR(out_sy, output_height);
+	STOREVAR(layer_type, GetKey());
+	STOREVAR(sx, width);
+	STOREVAR(sy, height);
+	STOREVAR(stride, stride);
+	STOREVAR(pad, pad);
+}
+
+void PoolLayer::Load(const ValueMap& map) {
+	LOADVAR(output_depth, out_depth);
+	LOADVAR(output_width, out_sx);
+	LOADVAR(output_height, out_sy);
+	LOADVAR(width, sx);
+	LOADVAR(height, sy);
+	LOADVAR(stride, stride);
+	LOADVARDEF(pad, pad, 0); // backwards compatibility
+	int length = output_depth * output_width * output_height;
+	switchx.SetCount(0);
+	switchx.SetCount(length, 0);
+	switchy.SetCount(0);
+	switchy.SetCount(length, 0);
+}
+
 }

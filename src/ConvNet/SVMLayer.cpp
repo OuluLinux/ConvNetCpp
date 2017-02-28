@@ -22,8 +22,7 @@ Volume& SvmLayer::Forward(Volume& input, bool is_training) {
 	return input;
 }
 
-double SvmLayer::Backward(double yd) {
-	int y = (int)yd;
+double SvmLayer::Backward(int pos, double yd) {
 	
 	// compute and accumulate gradient wrt weights and bias of this layer
 	Volume& input = *input_activation;
@@ -33,18 +32,18 @@ double SvmLayer::Backward(double yd) {
 	// we're using structured loss here, which means that the score
 	// of the ground truth should be higher than the score of any other
 	// class, by a margin
-	double yscore = input.Get(y); // score of ground truth
+	double yscore = input.Get(pos); // score of ground truth
 	const double margin = 1.0;
 	double loss = 0.0;
 	for (int i = 0; i < output_depth; i++) {
-		if (y == i) {
+		if (pos == i) {
 			continue;
 		}
 		double ydiff = -1.0 * yscore + input.Get(i) + margin;
 		if (ydiff > 0) {
 			// violating dimension, apply loss
 			input.SetGradient(i, input.GetGradient(i) + 1);
-			input.SetGradient(y, input.GetGradient(y) - 1);
+			input.SetGradient(pos, input.GetGradient(pos) - 1);
 			loss += ydiff;
 		}
 	}
@@ -58,6 +57,25 @@ double SvmLayer::Backward(const Vector<double>& y) {
 
 void SvmLayer::Backward() {
 	throw NotImplementedException();
+}
+
+#define STOREVAR(json, field) map.GetAdd(#json) = this->field;
+#define LOADVAR(field, json) this->field = map.GetValue(map.Find(#json));
+#define LOADVARDEF(field, json, def) {Value tmp = map.GetValue(map.Find(#json)); if (tmp.IsNull()) this->field = def; else this->field = tmp;}
+
+void SvmLayer::Store(ValueMap& map) const {
+	STOREVAR(out_depth, output_depth);
+	STOREVAR(out_sx, output_width);
+	STOREVAR(out_sy, output_height);
+	STOREVAR(layer_type, GetKey());
+	STOREVAR(num_inputs, class_count);
+}
+
+void SvmLayer::Load(const ValueMap& map) {
+	LOADVAR(output_depth, out_depth);
+	LOADVAR(output_width, out_sx);
+	LOADVAR(output_height, out_sy);
+	LOADVAR(class_count, num_inputs);
 }
 
 }

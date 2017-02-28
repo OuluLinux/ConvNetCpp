@@ -1,3 +1,5 @@
+description "Neural Net Classification Example\377";
+
 uses
 	Core,
 	ConvNet;

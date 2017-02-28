@@ -11,6 +11,8 @@ file
 	Net.cpp,
 	Utilities.h,
 	Volume.cpp,
+	Brain.h,
+	Brain.cpp,
 	MagicNet.h,
 	Layers readonly separator,
 	LayerBase.h,

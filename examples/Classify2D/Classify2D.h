@@ -2,7 +2,8 @@
 #define _Classify2D_Classify2D_h_
 
 #include <ConvNetCtrl/ConvNetCtrl.h>
-using namespace ConvNetCtrl;
+using namespace Upp;
+using namespace ConvNet;
 
 
 class Classify2D : public TopWindow {
@@ -17,7 +18,7 @@ protected:
 	
 	ParentCtrl net_ctrl;
 	DocEdit net_edit;
-	Button btn;
+	Button reload_btn;
 	Splitter v_split, h_split;
 	ParentCtrl parent_pctrl;
 	PointCtrl pctrl;
@@ -37,6 +38,8 @@ public:
 	void CircleData(int count=100);
 	void SpiralData(int count=100);
 	void Refresher();
+	
+	void Start();
 	
 };
 

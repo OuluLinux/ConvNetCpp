@@ -7,29 +7,38 @@ Session::Session() {
 	is_training_stopped = true;
 	train_iter_limit = 0;
 	owned_trainer = NULL;
+	trainer = NULL;
 }
 
 Session::~Session() {
 	StopTraining();
 	ClearOwnedLayers();
+	ClearOwnedTrainer();
 }
 
 void Session::Clear() {
 	StopTraining();
 	ClearOwnedLayers();
-	net.Clear();
+	ClearOwnedTrainer();
 	train_iter_limit = 0;
 }
 
 void Session::ClearOwnedLayers() {
 	lock.Enter();
+	net.Clear();
 	for(int i = 0; i < owned_layers.GetCount(); i++)
 		if (owned_layers[i])
 			delete owned_layers[i];
 	owned_layers.Clear();
+	lock.Leave();
+}
+
+void Session::ClearOwnedTrainer() {
+	lock.Enter();
 	if (owned_trainer)
 		delete owned_trainer;
 	owned_trainer = NULL;
+	trainer = NULL;
 	lock.Leave();
 }
 
@@ -49,7 +58,8 @@ void Session::StopTraining() {
 	while (!is_training_stopped)
 		Sleep(100);
 	#else
-	TrainEnd();
+	if (is_training)
+		TrainEnd();
 	#endif
 }
 
@@ -66,7 +76,7 @@ void Session::Train() {
 }
 
 void Session::TrainBegin() {
-	if (!owned_trainer) {
+	if (!trainer) {
 		LOG("Can't train, because trainer has not been set");
 		return;
 	}
@@ -84,23 +94,29 @@ void Session::TrainBegin() {
 }
 
 void Session::TrainIteration() {
-	TrainerBase& trainer = *owned_trainer;
+	TrainerBase& trainer = *this->trainer;
 	
-	for(int i = 0; i < GetDataCount() && is_training; i++) {
-		
-		for(int j = 0; j < cols; j++) {
-			double d = GetData(i, j);
-			x.Set(0, 0, j, d);
+	try {
+	
+		for(int i = 0; i < GetDataCount() && is_training; i++) {
+			
+			for(int j = 0; j < cols; j++) {
+				double d = GetData(i, j);
+				x.Set(0, 0, j, d);
+			}
+			
+			int label = GetLabel(i);
+			
+			lock.Enter();
+			trainer.Train(x, label, 1.0); // value
+			double loss = trainer.GetLoss();
+			lock.Leave();
+			
+			avloss += loss;
 		}
-		
-		int label = GetLabel(i);
-		
-		lock.Enter();
-		trainer.Train(x, label);
-		double loss = trainer.GetLoss();
-		lock.Leave();
-		
-		avloss += loss;
+	}
+	catch (Exc e) {
+		LOG("Exception: " + e);
 	}
 	iter++;
 }
@@ -117,7 +133,7 @@ Net& Session::GetNetwork() {
 	return net;
 }
 
-InputLayer* Session::GetInput() {
+InputLayer* Session::GetInput() const {
 	if (net.GetLayers().IsEmpty()) return NULL;
 	return dynamic_cast<InputLayer*>(&*net.GetLayers()[0]);
 }
@@ -135,12 +151,16 @@ const Value& Session::ChkNotNull(const String& key, const Value& v) {
 	return v;
 }
 
-bool Session::LoadJSON(const String& json) {
+bool Session::MakeLayers(const String& json) {
 	Clear();
 	
+	LOG(json);
 	Value js = ParseJSON(json);
-	LOG(AsJSON(js));
+	if (js.IsNull()) return false;
+	//LOG(AsJSON(js));
 	DUMP(js);
+	
+	Enter();
 	
 	try {
 		
@@ -151,6 +171,7 @@ bool Session::LoadJSON(const String& json) {
 			String type = row.GetAdd("type");
 			if (type.IsEmpty()) {
 				LOG("Invalid JSON");
+				Leave();
 				return false;
 			}
 			
@@ -158,8 +179,9 @@ bool Session::LoadJSON(const String& json) {
 			bool trainer_loaded = false;
 			#define LOAD_LAYER(key, layer) \
 				if (type == key) {\
-					if (owned_trainer) {LOG("Only one trainer can be loaded"); return false;} \
+					if (owned_trainer) {LOG("Only one trainer can be loaded"); Leave(); return false;} \
 					owned_trainer = new layer (net); \
+					trainer = owned_trainer; \
 					trainer_loaded = true; \
 				}
 			
@@ -172,7 +194,7 @@ bool Session::LoadJSON(const String& json) {
 			
 			
 			if (trainer_loaded) {
-				#define OPT(x) {Value x = row.GetAdd(#x); if (!x.IsNull()) {owned_trainer->x = x;}}
+				#define OPT(x) {Value x = row.GetAdd(#x); if (!x.IsNull()) {trainer->x = x;}}
 				OPT(Beta1);
 				OPT(Beta2);
 				OPT(l1_decay);
@@ -190,6 +212,7 @@ bool Session::LoadJSON(const String& json) {
 			// Read layers
 			if (net.GetLayers().IsEmpty() && type != "input") {
 				LOG("Error! First layer must be the input layer, to declare size of inputs. Trying to create layer " + type);
+				Leave();
 				return false;
 			}
 			
@@ -239,7 +262,7 @@ bool Session::LoadJSON(const String& json) {
 			}
 			
 			if      (type == "fc")			AddFullyConnLayer(REQ(neuron_count), DEF(l1_decay_mul, 0.0), DEF(l2_decay_mul, 1.0), DEF(bias_pref, 0.0));
-			else if (type == "lrn")			AddLocalResponseNormalizationLayer();
+			else if (type == "lrn")			AddLrnLayer();
 			else if (type == "dropout")		AddDropoutLayer(REQ(drop_prob));
 			else if (type == "input")		AddInputLayer(REQ(input_width), REQ(input_height), REQ(input_depth));
 			else if (type == "softmax")		AddSoftmaxLayer(REQ(class_count));
@@ -253,6 +276,7 @@ bool Session::LoadJSON(const String& json) {
 			else if (type == "svm")			AddSVMLayer(REQ(class_count));
 			else {
 				LOG("ERROR: UNRECOGNIZED LAYER TYPE: " + type);
+				Leave();
 				return false;
 			}
 			
@@ -279,6 +303,7 @@ bool Session::LoadJSON(const String& json) {
 				}
 				else {
 					LOG("ERROR unsupported activation " + act_str);
+					Leave();
 					return false;
 				}
 			}
@@ -291,15 +316,75 @@ bool Session::LoadJSON(const String& json) {
 	}
 	catch (RequiredArg a) {
 		LOG("Required argument " + a + " was missing");
+		Leave();
 		return false;
 	}
 	
 	if (net.GetLayers().GetCount() < 2) {
 		LOG("Error! At least one input layer and one loss layer are required.");
+		Leave();
 		return false;
 	}
 	
+	Leave();
+	
 	WhenSessionLoaded();
+	
+	return true;
+}
+
+bool Session::LoadOriginalJSON(const String& json) {
+	ClearOwnedLayers();
+	
+	Enter();
+	
+	ValueMap js = ParseJSON(json);
+	
+	ValueMap layers = js.GetAdd("layers");
+	
+	for(int i = 0; i < layers.GetCount(); i++) {
+		ValueMap layer = layers.GetValue(i);
+		
+		String type = layer.GetAdd("layer_type");
+		if (type.IsEmpty()) return false;
+		
+		if      (type == "fc")			LoadLayer<FullyConnLayer>(layer);
+		else if (type == "lrn")			LoadLayer<LrnLayer>(layer);
+		else if (type == "dropout")		LoadLayer<DropOutLayer>(layer);
+		else if (type == "input")		LoadLayer<InputLayer>(layer);
+		else if (type == "softmax")		LoadLayer<SoftmaxLayer>(layer);
+		else if (type == "regression")	LoadLayer<RegressionLayer>(layer);
+		else if (type == "conv")		LoadLayer<ConvLayer>(layer);
+		else if (type == "pool")		LoadLayer<PoolLayer>(layer);
+		else if (type == "relu")		LoadLayer<ReluLayer>(layer);
+		else if (type == "sigmoid")		LoadLayer<SigmoidLayer>(layer);
+		else if (type == "tanh")		LoadLayer<TanhLayer>(layer);
+		else if (type == "maxout")		LoadLayer<MaxoutLayer>(layer);
+		else if (type == "svm")			LoadLayer<SvmLayer>(layer);
+		else {
+			LOG("ERROR: UNRECOGNIZED LAYER TYPE: " + type);
+			return false;
+		}
+	}
+	
+	Leave();
+	
+	return true;
+}
+
+bool Session::StoreOriginalJSON(String& json) {
+	Enter();
+	
+	ValueMap new_layers;
+	for(int i = 0; i < this->owned_layers.GetCount(); i++) {
+		ValueMap map;
+		this->owned_layers[i]->Store(map);
+		new_layers.Add(IntStr(i), map);
+	}
+	
+	json = AsJSON(new_layers, true);
+	
+	Leave();
 	
 	return true;
 }
@@ -330,56 +415,57 @@ void Session::EndData() {
 	}
 }
 
-Session& Session::AddFullyConnLayer(int neuron_count, double l1_decay_mul, double l2_decay_mul, double bias_pref) {
+FullyConnLayer& Session::AddFullyConnLayer(int neuron_count, double l1_decay_mul, double l2_decay_mul, double bias_pref) {
 	FullyConnLayer* fc = new FullyConnLayer(neuron_count);
 	fc->l1_decay_mul = l1_decay_mul;
 	fc->l2_decay_mul = l2_decay_mul;
 	fc->bias_pref = bias_pref;
 	owned_layers.Add(fc);
 	net.AddLayer(*fc);
-	return *this;
+	return *fc;
 }
 
-Session& Session::AddLocalResponseNormalizationLayer() {
+LrnLayer& Session::AddLrnLayer() {
 	
 	
 	
-	throw NotImplementedException("LocalResponseNormalizationLayer");
+	throw NotImplementedException("LrnLayer");
 	
-	
-	
-	return *this;
+	LrnLayer* lrn = new LrnLayer();
+	owned_layers.Add(lrn);
+	net.AddLayer(*lrn);
+	return *lrn;
 }
 
-Session& Session::AddDropoutLayer(double drop_prob) {
+DropOutLayer& Session::AddDropoutLayer(double drop_prob) {
 	DropOutLayer* dol = new DropOutLayer(drop_prob);
 	owned_layers.Add(dol);
 	net.AddLayer(*dol);
-	return *this;
+	return *dol;
 }
 
-Session& Session::AddInputLayer(int input_width, int input_height, int input_depth) {
+InputLayer& Session::AddInputLayer(int input_width, int input_height, int input_depth) {
 	InputLayer* in = new InputLayer(input_width, input_height, input_depth);
 	owned_layers.Add(in);
 	net.AddLayer(*in);
-	return *this;
+	return *in;
 }
 
-Session& Session::AddSoftmaxLayer(int class_count) {
+SoftmaxLayer& Session::AddSoftmaxLayer(int class_count) {
 	SoftmaxLayer* sm = new SoftmaxLayer(class_count);
 	owned_layers.Add(sm);
 	net.AddLayer(*sm);
-	return *this;
+	return *sm;
 }
 
-Session& Session::AddRegressionLayer() {
+RegressionLayer& Session::AddRegressionLayer() {
 	RegressionLayer* reg = new RegressionLayer();
 	owned_layers.Add(reg);
 	net.AddLayer(*reg);
-	return *this;
+	return *reg;
 }
 
-Session& Session::AddConvLayer(int width, int height, int filter_count, double l1_decay_mul, double l2_decay_mul, int stride, int pad, double bias_pref) {
+ConvLayer& Session::AddConvLayer(int width, int height, int filter_count, double l1_decay_mul, double l2_decay_mul, int stride, int pad, double bias_pref) {
 	ConvLayer* conv = new ConvLayer(width, height, filter_count);
 	conv->l1_decay_mul = l1_decay_mul;
 	conv->l2_decay_mul = l2_decay_mul;
@@ -388,51 +474,51 @@ Session& Session::AddConvLayer(int width, int height, int filter_count, double l
 	conv->bias_pref = bias_pref;
 	owned_layers.Add(conv);
 	net.AddLayer(*conv);
-	return *this;
+	return *conv;
 }
 
-Session& Session::AddPoolLayer(int width, int height, int stride, int pad) {
+PoolLayer& Session::AddPoolLayer(int width, int height, int stride, int pad) {
 	PoolLayer* pool = new PoolLayer(width, height);
 	pool->stride = stride;
 	pool->pad = pad;
 	owned_layers.Add(pool);
 	net.AddLayer(*pool);
-	return *this;
+	return *pool;
 }
 
-Session& Session::AddReluLayer() {
+ReluLayer& Session::AddReluLayer() {
 	ReluLayer* relu = new ReluLayer();
 	owned_layers.Add(relu);
 	net.AddLayer(*relu);
-	return *this;
+	return *relu;
 }
 
-Session& Session::AddSigmoidLayer() {
+SigmoidLayer& Session::AddSigmoidLayer() {
 	SigmoidLayer* sig = new SigmoidLayer();
 	owned_layers.Add(sig);
 	net.AddLayer(*sig);
-	return *this;
+	return *sig;
 }
 
-Session& Session::AddTanhLayer() {
+TanhLayer& Session::AddTanhLayer() {
 	TanhLayer* tanh = new TanhLayer();
 	owned_layers.Add(tanh);
 	net.AddLayer(*tanh);
-	return *this;
+	return *tanh;
 }
 
-Session& Session::AddMaxoutLayer(int group_size) {
+MaxoutLayer& Session::AddMaxoutLayer(int group_size) {
 	MaxoutLayer* mo = new MaxoutLayer(group_size);
 	owned_layers.Add(mo);
 	net.AddLayer(*mo);
-	return *this;
+	return *mo;
 }
 
-Session& Session::AddSVMLayer(int class_count) {
+SvmLayer& Session::AddSVMLayer(int class_count) {
 	SvmLayer* svm = new SvmLayer(class_count);
 	owned_layers.Add(svm);
 	net.AddLayer(*svm);
-	return *this;
+	return *svm;
 }
 
 }
