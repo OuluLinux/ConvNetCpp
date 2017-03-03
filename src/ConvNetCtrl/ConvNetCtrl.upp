@@ -13,5 +13,9 @@ file
 	LayerCtrl.h,
 	LayerCtrl.cpp,
 	PointCtrl.h,
-	PointCtrl.cpp;
+	PointCtrl.cpp,
+	ImagePrediction.h,
+	ImagePrediction.cpp,
+	ConvLayerCtrl.h,
+	ConvLayerCtrl.cpp;
 

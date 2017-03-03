@@ -68,7 +68,9 @@ public:
 	
 	double GetLatestReward() const {return latest_reward;}
 	double GetAverageReward() const {return average_reward_window.GetAverage();}
+	double GetAverageRewardWindowSize() const {return average_reward_window.GetCount();}
 	double GetAverageLoss() const {return average_loss_window.GetAverage();}
+	double GetAverageLossWindowSize() const {return average_loss_window.GetCount();}
 	int GetExperienceCount() const {return experience.GetCount();}
 	double GetEpsilon() const {return epsilon;}
 	int GetAge() const {return age;}

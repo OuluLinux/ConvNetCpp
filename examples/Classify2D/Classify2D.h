@@ -5,6 +5,10 @@
 using namespace Upp;
 using namespace ConvNet;
 
+#define IMAGECLASS Classify2DImg
+#define IMAGEFILE <Classify2D/Classify2D.iml>
+#include <Draw/iml_header.h>
+
 
 class Classify2D : public TopWindow {
 	

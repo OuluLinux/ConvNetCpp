@@ -105,11 +105,11 @@ void FullyConnLayer::Store(ValueMap& map) const {
 	STOREVAR(l1_decay_mul, l1_decay_mul);
 	STOREVAR(l2_decay_mul, l2_decay_mul);
 	
-	ValueMap filters;
+	Value filters;
 	for (int i = 0; i < this->filters.GetCount(); i++) {
 		ValueMap map;
 		this->filters[i].Store(map);
-		filters.Add(IntStr(i), map);
+		filters.Add(map);
 	}
 	map.GetAdd("filters") = filters;
 	
@@ -131,11 +131,11 @@ void FullyConnLayer::Load(const ValueMap& map) {
 	neuron_count = output_depth;
 	
 	filters.Clear();
-	ValueMap filters = map.GetValue(map.Find("filters"));
+	Value filters = map.GetValue(map.Find("filters"));
 	
 	for (int i = 0; i < output_depth; i++) {
 		Volume& v = this->filters.Add();
-		ValueMap values = filters.GetValue(i);
+		ValueMap values = filters[i];
 		v.Load(values);
 	}
 	ValueMap values = map.GetValue(map.Find("biases"));

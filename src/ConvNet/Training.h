@@ -10,20 +10,16 @@ namespace ConvNet {
 class TrainerBase {
 	
 protected:
+	friend class Session;
+	friend class Brain;
+	
 	Net* net;
 	int iter_count;
 	Vector<VolumePtr> vec;
 	
-	TrainerBase(Net& net);
-	TrainerBase(const TrainerBase& o) {}
-	TrainerBase() {}
-	
-public:
-	virtual ~TrainerBase() {}
-	
-	double cost_loss;
+	// Previously public vars
 	int batch_size;
-	
+	double cost_loss;
 	double Beta1;
 	double Beta2;
 	double l1_decay;
@@ -35,7 +31,43 @@ public:
 	double eps;
 	double ro;
 	
+	TrainerBase(Net& net);
+	TrainerBase(const TrainerBase& o) {}
+	TrainerBase() {}
+	
+public:
+	virtual ~TrainerBase() {}
+	
+	// TODO: make these protected
+	
+	
+	int GetBatchSize() const {return batch_size;}
+	double GetCostLoss() const {return cost_loss;}
+	double GetBeta1() const {return Beta1;}
+	double GetBeta2() const {return Beta2;}
+	double GetLearningRate() const {return learning_rate;}
+	double GetMomentum() const {return momentum;}
+	double GetEps() const {return eps;}
+	double GetRo() const {return ro;}
+	double GetL1Decay() const {return l1_decay;}
+	double GetL2Decay() const {return l2_decay;}
+	double GetL1DecayLoss() const {return l1_decay_loss;}
+	double GetL2DecayLoss() const {return l2_decay_loss;}
 	virtual double GetLoss() {return cost_loss;}
+	
+	
+	TrainerBase& SetBatchSize(int i) {batch_size = i; return *this;}
+	TrainerBase& SetCostLoss(double d) {cost_loss = d; return *this;}
+	TrainerBase& SetBeta1(double d) {Beta1 = d; return *this;}
+	TrainerBase& SetBeta2(double d) {Beta2 = d; return *this;}
+	TrainerBase& SetLearningRate(double d) {learning_rate = d; return *this;}
+	TrainerBase& SetMomentum(double d) {momentum = d; return *this;}
+	TrainerBase& SetEps(double d) {eps = d; return *this;}
+	TrainerBase& SetRo(double d) {ro = d; return *this;}
+	TrainerBase& SetL1Decay(double d) {l1_decay = d; return *this;}
+	TrainerBase& SetL2Decay(double d) {l2_decay = d; return *this;}
+	TrainerBase& SetL1DecayLoss(double d) {l1_decay_loss = d; return *this;}
+	TrainerBase& SetL2DecayLoss(double d) {l2_decay_loss = d; return *this;}
 	
 	//void Train(Volume& x, double y) {Train(x, 0, y);}
 	void Train(Volume& x, int pos, double y);

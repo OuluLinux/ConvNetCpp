@@ -7,5 +7,7 @@
 #include "PointCtrl.h"
 #include "BarView.h"
 #include "HeatmapView.h"
+#include "ConvLayerCtrl.h"
+#include "ImagePrediction.h"
 
 #endif

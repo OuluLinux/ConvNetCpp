@@ -154,11 +154,11 @@ const Value& Session::ChkNotNull(const String& key, const Value& v) {
 bool Session::MakeLayers(const String& json) {
 	Clear();
 	
-	LOG(json);
 	Value js = ParseJSON(json);
-	if (js.IsNull()) return false;
-	//LOG(AsJSON(js));
-	DUMP(js);
+	if (js.IsNull()) {
+		LOG("JSON parse failed");
+		return false;
+	}
 	
 	Enter();
 	
@@ -340,7 +340,10 @@ bool Session::LoadOriginalJSON(const String& json) {
 	
 	ValueMap js = ParseJSON(json);
 	
-	ValueMap layers = js.GetAdd("layers");
+	int layers_id = js.Find("layers");
+	if (layers_id == -1) {Leave(); return false;}
+	
+	ValueMap layers = js.GetValue(layers_id);
 	
 	for(int i = 0; i < layers.GetCount(); i++) {
 		ValueMap layer = layers.GetValue(i);
@@ -369,22 +372,50 @@ bool Session::LoadOriginalJSON(const String& json) {
 	
 	Leave();
 	
+	WhenSessionLoaded();
+	
 	return true;
 }
 
 bool Session::StoreOriginalJSON(String& json) {
 	Enter();
 	
-	ValueMap new_layers;
+	Value new_layers;
 	for(int i = 0; i < this->owned_layers.GetCount(); i++) {
 		ValueMap map;
 		this->owned_layers[i]->Store(map);
-		new_layers.Add(IntStr(i), map);
+		new_layers.Add(map);
 	}
 	
-	json = AsJSON(new_layers, true);
+	ValueMap js;
+	js.GetAdd("layers") = new_layers;
+	
+	json = AsJSON(js, true);
 	
 	Leave();
+	
+	// HOTFIX: Bug in older U++: test if json puts , instead of .
+	String s = Format("%.16g", 7.56);
+	if (s.Find(",") != -1) {
+		String fix_tmp;
+		
+		char prev = json[0];
+		fix_tmp.Cat(prev);
+		
+		int count = json.GetCount()-1;
+		for(int i = 1; i < count; i++) {
+			char cur = json[i];
+			char next = json[i+1];
+			if (cur == ',' && IsDigit(prev) && IsDigit(next))
+				fix_tmp.Cat('.');
+			else
+				fix_tmp.Cat(cur);
+			prev = cur;
+		}
+		fix_tmp.Cat(json[count]);
+		
+		json = fix_tmp;
+	}
 	
 	return true;
 }

@@ -170,12 +170,20 @@ void Volume::Store(ValueMap& map) const {
 	STOREVAR(sx, width);
 	STOREVAR(sy, height);
 	STOREVAR(depth, depth);
-	ValueMap w;
+	
+	Value w;
 	for(int i = 0; i < weights.GetCount(); i++) {
 		double value = weights[i];
-		w.Add(IntStr(i), value);
+		w.Add(value);
 	}
 	map.GetAdd("w") = w;
+	
+	Value dw;
+	for(int i = 0; i < weight_gradients.GetCount(); i++) {
+		double value = weight_gradients[i];
+		dw.Add(value);
+	}
+	map.GetAdd("dw") = dw;
 }
 
 void Volume::Load(const ValueMap& map) {
@@ -191,13 +199,60 @@ void Volume::Load(const ValueMap& map) {
 	weight_gradients.SetCount(length, 0);
 	
 	// copy over the elements.
-	ValueMap w = map.GetValue(map.Find("w"));
+	Value w = map.GetValue(map.Find("w"));
+	
 	for (int i = 0; i < length; i++) {
-		double value = w.GetValue(w.Find(IntStr(i)));
-		//double value = w.GetValue(i);
+		double value = w[i];
 		weights[i] = value;
 	}
+	
+	int i = map.Find("dw");
+	if (i != -1) {
+		Value dw = map.GetValue(i);
+		for (int i = 0; i < length; i++) {
+			double value = dw[i];
+			weight_gradients[i] = value;
+		}
+	}
+}
 
+void Volume::Augment(int crop, int dx, int dy, bool fliplr) {
+	
+	// note assumes square outputs of size crop x crop
+	if (dx == -1) dx = Random(width - crop);
+	if (dy == -1) dy = Random(height - crop);
+	
+	// randomly sample a crop in the input volume
+	Volume W;
+	if (crop != width || dx != 0 || dy != 0) {
+		W.Init(crop, crop, depth, 0.0);
+		for (int x = 0; x < crop; x++) {
+			for (int y = 0; y < crop; y++) {
+				if (x+dx < 0 || x+dx >= width || y+dy < 0 || y+dy >= height)
+					continue; // oob
+				for (int d = 0; d < depth; d++) {
+					W.Set(x, y, d, Get(x+dx, y+dy, d)); // copy data over
+				}
+			}
+		}
+		*this = W;
+	}/* else {
+		W = *this;
+	}*/
+	
+	if (fliplr) {
+		// flip volume horziontally
+		Volume vol;
+		vol.Init(width, height, depth, 0.0);
+		for (int x = 0; x < width; x++) {
+			for (int y = 0; y < height; y++) {
+				for (int d = 0; d < depth; d++) {
+					vol.Set(x, y, d, Get(width - x - 1, y, d)); // copy data over
+				}
+			}
+		}
+		*this = vol; //swap
+	}
 }
 
 }

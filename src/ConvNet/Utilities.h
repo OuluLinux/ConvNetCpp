@@ -42,25 +42,27 @@ public:
 	Volume& operator=(const Volume& src);
 	
 	const Vector<double>& GetWeights() const {return weights;}
+	const Vector<double>& GetGradients() const {return weight_gradients;}
 	
-	virtual void Add(int x, int y, int d, double v);
-	virtual void AddFrom(const Volume& volume);
-	virtual void AddFromScaled(const Volume& volume, double a);
-	virtual void AddGradient(int x, int y, int d, double v);
-	virtual void AddGradientFrom(const Volume& volume);
-	virtual double Get(int x, int y, int d) const;
-	virtual double GetGradient(int x, int y, int d) const;
-	virtual void Set(int x, int y, int d, double v);
-	virtual void SetConst(double c);
-	virtual void SetGradient(int x, int y, int d, double v);
-	virtual double Get(int i) const;
-	virtual void Set(int i, double v);
-	virtual double GetGradient(int i) const;
-	virtual void SetGradient(int i, double v);
-	virtual void AddGradient(int i, double v);
-	virtual void ZeroGradients();
-	virtual void Store(ValueMap& map) const;
-	virtual void Load(const ValueMap& map);
+	void Add(int x, int y, int d, double v);
+	void AddFrom(const Volume& volume);
+	void AddFromScaled(const Volume& volume, double a);
+	void AddGradient(int x, int y, int d, double v);
+	void AddGradientFrom(const Volume& volume);
+	double Get(int x, int y, int d) const;
+	double GetGradient(int x, int y, int d) const;
+	void Set(int x, int y, int d, double v);
+	void SetConst(double c);
+	void SetGradient(int x, int y, int d, double v);
+	double Get(int i) const;
+	void Set(int i, double v);
+	double GetGradient(int i) const;
+	void SetGradient(int i, double v);
+	void AddGradient(int i, double v);
+	void ZeroGradients();
+	void Store(ValueMap& map) const;
+	void Load(const ValueMap& map);
+	void Augment(int crop, int dx=-1, int dy=-1, bool fliplr=false);
 	
 	int GetWidth()  const {return width;}
 	int GetHeight() const {return height;}
@@ -142,7 +144,7 @@ public:
 		sum = 0;
 	}
 	
-	Window& Init(int size, int minsize) {
+	Window& Init(int size, int minsize=1) {
 		this->size = size;
 		this->minsize = minsize;
 		sum = 0;
@@ -166,7 +168,9 @@ public:
 			return sum / v.GetCount();
 	}
 	
-	void Reset() {
+	int GetCount() const {return size;}
+	
+	void Clear() {
 		v.Clear();
 		sum = 0;
 	}

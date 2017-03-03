@@ -12,6 +12,7 @@ ConvLayer::ConvLayer(int width, int height, int filter_count) {
 	this->filter_count = filter_count;
 	this->width = width;
 	this->height = height;
+	
 }
 
 void ConvLayer::Init(int input_width, int input_height, int input_depth) {
@@ -165,12 +166,13 @@ void ConvLayer::Store(ValueMap& map) const {
 	STOREVAR(l1_decay_mul, l1_decay_mul);
 	STOREVAR(l2_decay_mul, l2_decay_mul);
 	STOREVAR(pad, pad);
+	STOREVAR(input_depth, input_depth);
 	
-	ValueMap filters;
+	Value filters;
 	for (int i = 0; i < filters.GetCount(); i++) {
 		ValueMap map;
 		this->filters[i].Store(map);
-		filters.Add(IntStr(i), map);
+		filters.Add(map);
 	}
 	map.GetAdd("filters") = filters;
 	
@@ -187,21 +189,28 @@ void ConvLayer::Load(const ValueMap& map) {
 	LOADVAR(height, sy);
 	LOADVAR(stride, stride);
 	LOADVAR(filter_count, in_depth); // depth of input volume
+	LOADVAR(input_depth, input_depth);
 	LOADVARDEF(l1_decay_mul, l1_decay_mul, 1.0);
 	LOADVARDEF(l2_decay_mul, l2_decay_mul, 1.0);
 	LOADVARDEF(pad, pad, 0);
 	
-	filters.Clear();
-	ValueMap filters = map.GetValue(map.Find("filters"));
+	this->filters.Clear();
+	Value filters = map.GetValue(map.Find("filters"));
 	for (int i = 0; i < filters.GetCount(); i++) {
 		Volume& v = this->filters.Add();
-		ValueMap values = filters.GetValue(i);
+		ValueMap values = filters[i];
 		v.Load(values);
 	}
 	
 	ValueMap values = map.GetValue(map.Find("biases"));
 	biases.Load(values);
-
+	
+	
+	// Fill rest of the filters
+	for (int i = filters.GetCount(); i < output_depth; i++) {
+		this->filters.Add().Init(width, height, input_depth);
+	}
+	
 }
 
 }

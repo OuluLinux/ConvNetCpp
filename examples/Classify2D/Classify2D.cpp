@@ -1,8 +1,13 @@
 #include "Classify2D.h"
 
+#define IMAGECLASS Classify2DImg
+#define IMAGEFILE <Classify2D/Classify2D.iml>
+#include <Draw/iml_source.h>
+
 Classify2D::Classify2D() : pctrl(session), lctrl(session) {
-	Sizeable().MaximizeBox().MinimizeBox();
 	Title("Classify2D");
+	Icon(Classify2DImg::icon());
+	Sizeable().MaximizeBox().MinimizeBox();
 	
 	running = false;
 	stopped = true;

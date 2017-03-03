@@ -101,7 +101,7 @@ void PointCtrl::Paint(Draw& d) {
 		int pos = yi * count + xi;
 		int scr_x = x_fac * vis_len;
 		int scr_y = y_fac * vis_len;
-		id.DrawEllipse(x_off + scr_x - radius_2, y_off + scr_y - radius_2, radius, radius, label ? clr_a2 : clr_b2);
+		id.DrawEllipse(x_off + scr_x - radius_2, y_off + scr_y - radius_2, radius, radius, label ? clr_a2 : clr_b2, 1, Black());
 	}
 	
 	ses.Leave();

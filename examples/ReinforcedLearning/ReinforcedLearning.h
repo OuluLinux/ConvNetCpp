@@ -7,6 +7,11 @@
 using namespace Upp;
 using namespace ConvNet;
 
+#define IMAGECLASS ReinforcedLearningImg
+#define IMAGEFILE <ReinforcedLearning/ReinforcedLearning.iml>
+#include <Draw/iml_header.h>
+
+
 // Wall is made up of two points
 struct Wall : Moveable<Wall> {
 	Wall() {}
@@ -141,6 +146,7 @@ class ReinforcedLearning : public DockWindow {
 	SliderCtrl speed;
 	int current_interval_id;
 	int simspeed;
+	int average_size;
 	bool skipdraw;
 	bool running, stopped;
 	bool ticking_running, ticking_stopped;
@@ -167,6 +173,8 @@ public:
 	void RefreshTrainingStatus();
 	void RefreshSpeed();
 	void LoadPreTrained();
+	void OpenFile();
+	void SaveFile();
 	
 };
 

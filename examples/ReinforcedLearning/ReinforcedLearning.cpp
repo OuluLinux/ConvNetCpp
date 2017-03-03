@@ -2,6 +2,11 @@
 #include "pretrained.brc"
 #include <plugin/bz2/bz2.h>
 
+#define IMAGECLASS ReinforcedLearningImg
+#define IMAGEFILE <ReinforcedLearning/ReinforcedLearning.iml>
+#include <Draw/iml_source.h>
+
+
 GUI_APP_MAIN {
 	ReinforcedLearning().Run();
 }
@@ -9,6 +14,7 @@ GUI_APP_MAIN {
 
 ReinforcedLearning::ReinforcedLearning() {
 	Title("Deep Q Learning Reinforcement");
+	Icon(ReinforcedLearningImg::icon());
 	Sizeable().MaximizeBox().MinimizeBox().Zoomable();
 	
 	running = false;
@@ -37,7 +43,10 @@ ReinforcedLearning::ReinforcedLearning() {
 	
 	reward_graph.SetMode(PLOT_AA).SetLimits(-5,5,-5,5);
 	reward_graph.data.Add();
-	reward_graph.data[0].SetDash("1.5").SetTitle("Reward").SetThickness(1.5).SetColor(Red());
+	reward_graph.data.Add();
+	reward_graph.data[0].SetTitle("Reward").SetThickness(1.5).SetColor(Red());
+	reward_graph.data[1].SetDash("1.5").SetTitle("Average").SetThickness(1.0).SetColor(Blue());
+	average_size = 10;
 	
 	network_view.SetSession(world.agents[0].brain);
     input_view.SetSession(world.agents[0].brain);
@@ -47,6 +56,8 @@ ReinforcedLearning::ReinforcedLearning() {
 	load_file.SetLabel("Load file");
 	store_file.SetLabel("Save file");
 	load_trained <<= THISBACK(LoadPreTrained);
+	load_file <<= THISBACK(OpenFile);
+	store_file <<= THISBACK(SaveFile);
 	
 	is_training.Set(true);
 	is_training <<= THISBACK(RefreshTrainingStatus);
@@ -129,6 +140,12 @@ void ReinforcedLearning::Tick() {
 	if      (simspeed == 1) Sleep(10);
 	else if (simspeed == 0) Sleep(100);
 	world.Tick();
+	
+	Brain& brain = world.agents[0].brain;
+	int experiences = brain.GetExperienceCount();
+	int average_window_size = brain.GetAverageLossWindowSize();
+	if (experiences >= average_window_size && (experiences % 100) == 0)
+		AddReward();
 }
 
 void ReinforcedLearning::Ticking() {
@@ -192,11 +209,10 @@ void ReinforcedLearning::Start() {
 void ReinforcedLearning::Refresher() {
 	if (!skipdraw) {
 		input_view.Refresh();
-		reward_graph.Refresh();
 		network_view.Refresh();
 		world.Refresh();
-		if ( (world.clock % 200) == 0)
-			AddReward();
+		reward_graph.Sync();
+		reward_graph.Refresh();
 		RefreshStatus();
 	}
 	if (running) PostCallback(THISBACK(Refresher));
@@ -210,6 +226,18 @@ void ReinforcedLearning::AddReward() {
 	int count = id + 1;
 	if (count < 2) return;
 	
+	int pos = id;
+	double sum = 0;
+	int av_count = 0;
+	for(int i = 0; i < average_size && pos >= 0; i++) {
+		sum += reward_graph.data[0][pos].y;
+		av_count++;
+		pos--;
+	}
+	double avav = sum / av_count;
+	reward_graph.data[1].AddXY(id, avav);
+	
+	
 	double min = +DBL_MAX;
 	double max = -DBL_MAX;
 	for(int i = 0; i < count; i++) {
@@ -222,8 +250,8 @@ void ReinforcedLearning::AddReward() {
 	double center = min + diff / 2;
 	reward_graph.SetLimits(0, id, min, max);
 	reward_graph.SetModify();
-	reward_graph.Refresh();
-	reward_graph.Sync();
+	//reward_graph.Refresh();
+	//reward_graph.Sync();
 }
 
 void ReinforcedLearning::LoadPreTrained() {
@@ -233,17 +261,73 @@ void ReinforcedLearning::LoadPreTrained() {
 	String json = BZ2Decompress(pretrained_mem);
 	
 	// Stop training
+	ticking_lock.Enter();
 	this->is_training = false;
 	RefreshTrainingStatus();
 	
 	// Load json
-	ticking_lock.Enter();
 	world.agents[0].brain.LoadOriginalJSON(json);
 	ticking_lock.Leave();
 	
 	// Go slower
 	GoNormal();
 	
+}
+
+void ReinforcedLearning::OpenFile() {
+	String file = SelectFileOpen("JSON files\t*.json\nAll files\t*.*");
+	if (file.IsEmpty()) return;
+	
+	if (!FileExists(file)) {
+		PromptOK("File does not exists");
+		return;
+	}
+	
+	// Stop training
+	this->is_training = false;
+	RefreshTrainingStatus();
+	
+	// Load json
+	String json = LoadFile(file);
+	if (json.IsEmpty()) {
+		PromptOK("File is empty");
+		return;
+	}
+	ticking_lock.Enter();
+	bool res = world.agents[0].brain.LoadOriginalJSON(json);
+	if (!res) {
+		ticking_running = false;
+	}
+	ticking_lock.Leave();
+	
+	if (!res) {
+		PromptOK("Loading failed.");
+		return;
+	}
+	
+	// Go slower
+	GoNormal();
+	
+	if (!ticking_running) Start();
+}
+
+void ReinforcedLearning::SaveFile() {
+	String file = SelectFileSaveAs("JSON files\t*.json\nAll files\t*.*");
+	if (file.IsEmpty()) return;
+	
+	// Save json
+	String json;
+	if (!world.agents[0].brain.StoreOriginalJSON(json)) {
+		PromptOK("Error: Getting JSON failed");
+		return;
+	}
+	
+	FileOut fout(file);
+	if (!fout.IsOpen()) {
+		PromptOK("Error: could not open file " + file);
+		return;
+	}
+	fout << json;
 }
 
 

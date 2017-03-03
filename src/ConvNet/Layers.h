@@ -37,6 +37,7 @@ public:
 	ConvLayer(int width, int height, int filter_count);
 	ConvLayer(ValueMap values) {Load(values);}
 	
+	// TODO: change protected
 	int width;
 	int height;
 	Volume biases;
@@ -99,6 +100,8 @@ public:
 	double l1_decay_mul;
 	double l2_decay_mul;
 	int neuron_count;
+	
+	int GetInputCount() const {return input_count;}
 	
 	virtual Volume& Forward(Volume& input, bool is_training = false);
 	virtual void Backward();

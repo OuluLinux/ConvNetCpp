@@ -161,7 +161,7 @@ void LayerView::Paint(Draw& d) {
 		double scr_y = (output.Get(0,0,d1) - min_y) / diff_y * vis_len;
 		int label = ses.GetLabel(i);
 		
-		id.DrawEllipse(x_off + scr_x - radius_2, y_off + scr_y - radius_2, radius, radius, label ? clr_a2 : clr_b2);
+		id.DrawEllipse(x_off + scr_x - radius_2, y_off + scr_y - radius_2, radius, radius, label ? clr_a2 : clr_b2, 1, Black());
 	}
 	
 	ses.Leave();
