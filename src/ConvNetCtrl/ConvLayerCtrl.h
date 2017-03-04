@@ -10,8 +10,9 @@ using namespace ConvNet;
 
 class ConvLayerCtrl : public Ctrl {
 	Session* ses;
-	int layer_id, height;
 	VectorMap<int, Image> gradient_cache;
+	int layer_id, height;
+	bool is_color;
 	
 public:
 	typedef ConvLayerCtrl CLASSNAME;
@@ -21,6 +22,7 @@ public:
 	void DrawActivations(Draw& d, Size& sz, Point& pt, Volume& v, int scale, bool draw_grads=false, bool end_newline=true);
 	void SetId(int i) {layer_id = i;}
 	void SetSession(Session& ses) {this->ses = &ses;}
+	void SetColor(bool b) {is_color = b;}
 	void PaintSize(Draw& d, Size sz);
 	void ClearGradientCache() {gradient_cache.Clear();}
 	
@@ -34,12 +36,14 @@ class SessionConvLayers : public ParentCtrl {
 	ScrollBar sb;
 	Session* ses;
 	bool is_scrolling;
+	bool is_color;
 	
 public:
 	typedef SessionConvLayers CLASSNAME;
 	SessionConvLayers();
 	
 	void SetSession(Session& ses);
+	void SetColor(bool b=true) {is_color = b;}
 	void Scroll();
 	void RefreshLayers();
 	virtual bool Key(dword key, int);

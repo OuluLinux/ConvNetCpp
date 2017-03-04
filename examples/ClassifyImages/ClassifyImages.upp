@@ -1,0 +1,24 @@
+description "Trains a Convolutional Neural Network on the image dataset.\377";
+
+uses
+	CtrlLib,
+	ConvNetCtrl,
+	Docking,
+	PlotCtrl,
+	plugin/z;
+
+uses(CIFAR10) plugin/LoaderCIFAR10;
+
+uses(MNIST) plugin/LoaderMNIST;
+
+file
+	main.cpp,
+	ClassifyImages.h,
+	ClassifyImages.cpp,
+	ClassifyImages.iml,
+	ClassifyImages.rc;
+
+mainconfig
+	"Use MNIST dataset" = "GUI MT MNIST",
+	"Use CIFAR-10 dataset" = "GUI MT CIFAR10";
+

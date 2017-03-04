@@ -6,6 +6,7 @@ ConvLayerCtrl::ConvLayerCtrl() {
 	ses = NULL;
 	layer_id = -1;
 	height = 0;
+	is_color = false;
 }
 
 void ConvLayerCtrl::Paint(Draw& d) {
@@ -226,31 +227,65 @@ void ConvLayerCtrl::DrawActivations(Draw& draw, Size& sz, Point& pt, Volume& v, 
 	
 	
 	// create the canvas elements, draw and add to DOM
-	for (int d = 0; d < v.GetDepth(); d++) {
+	bool is_color = this->is_color;
+	
+	// Looking "colored" data is a lucky guess, but the visual part is almost irrelevant anyway
+	if (v.GetDepth() < 3 || v.GetDepth() % 3 != 0) is_color = false;
+	
+	for (int d = 0; d < v.GetDepth(); d += is_color ? 3 : 1) {
 		ImageBuffer ib(W, H);
 		RGBA* it = ib.Begin();
 		bool has_white = false;
 		
 		for(int y = 0; y < v.GetHeight(); y++) {
 			for (int x = 0; x < v.GetWidth(); x++) {
-				byte dval;
-				if (draw_grads) {
-					dval = (v.GetGradient(x, y, d) - min) / diff * 255;
-					if (dval > 64)
-						has_white = true;
-				} else {
-					dval = (v.Get(x, y, d) - min) / diff * 255;
-				}
 				
-				for (int dy = 0; dy < s; dy++) {
-					RGBA* it2 = it + dy * W;
-					for (int dx = 0; dx < s; dx++) {
-						
-						it2->r = dval;
-						it2->g = dval;
-						it2->b = dval;
-						it2->a = 255;
-						it2++;
+				// Grayscale image
+				if (!is_color) {
+					byte dval;
+					if (draw_grads) {
+						dval = (v.GetGradient(x, y, d) - min) / diff * 255;
+						if (dval > 64)
+							has_white = true;
+					} else {
+						dval = (v.Get(x, y, d) - min) / diff * 255;
+					}
+					
+					for (int dy = 0; dy < s; dy++) {
+						RGBA* it2 = it + dy * W;
+						for (int dx = 0; dx < s; dx++) {
+							it2->r = dval;
+							it2->g = dval;
+							it2->b = dval;
+							it2->a = 255;
+							it2++;
+						}
+					}
+				}
+				// Color image
+				else {
+					byte r, g, b;
+					if (draw_grads) {
+						r = (v.GetGradient(x, y, d + 0) - min) / diff * 255;
+						g = (v.GetGradient(x, y, d + 1) - min) / diff * 255;
+						b = (v.GetGradient(x, y, d + 2) - min) / diff * 255;
+						if (r > 64)
+							has_white = true;
+					} else {
+						r = (v.Get(x, y, d + 0) - min) / diff * 255;
+						g = (v.Get(x, y, d + 1) - min) / diff * 255;
+						b = (v.Get(x, y, d + 2) - min) / diff * 255;
+					}
+					
+					for (int dy = 0; dy < s; dy++) {
+						RGBA* it2 = it + dy * W;
+						for (int dx = 0; dx < s; dx++) {
+							it2->r = r;
+							it2->g = g;
+							it2->b = b;
+							it2->a = 255;
+							it2++;
+						}
 					}
 				}
 				
@@ -328,6 +363,7 @@ SessionConvLayers::SessionConvLayers() {
 	sb.WhenScroll = THISBACK(Scroll);
 	sb.SetLine(30);
 	is_scrolling = false;
+	is_color = false;
 }
 
 void SessionConvLayers::SetSession(Session& ses) {
@@ -402,6 +438,7 @@ void SessionConvLayers::RefreshLayers() {
 		ConvLayerCtrl& ctrl = layer_ctrls[i];
 		ctrl.SetSession(*ses);
 		ctrl.SetId(i);
+		ctrl.SetColor(is_color);
 		Add(ctrl);
 	}
 	

@@ -1,0 +1,12 @@
+description "Loader for MNIST image data.\3770,128,128";
+
+uses
+	CtrlLib;
+
+file
+	LoaderMNIST.h,
+	LoaderMNIST.cpp;
+
+mainconfig
+	"" = "GUI";
+

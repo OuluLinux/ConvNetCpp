@@ -1,0 +1,12 @@
+description "\3770,128,128";
+
+uses
+	CtrlLib;
+
+file
+	LoaderCIFAR10.h,
+	LoaderCIFAR10.cpp;
+
+mainconfig
+	"" = "GUI";
+

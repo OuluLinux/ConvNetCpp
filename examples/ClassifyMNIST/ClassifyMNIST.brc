@@ -1,2 +1,0 @@
-BINARY_MASK(mnist_data, "*.bin" BZ2)
-
