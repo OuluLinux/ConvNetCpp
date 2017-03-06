@@ -7,6 +7,7 @@ ConvLayerCtrl::ConvLayerCtrl() {
 	layer_id = -1;
 	height = 0;
 	is_color = false;
+	hide_gradients = false;
 }
 
 void ConvLayerCtrl::Paint(Draw& d) {
@@ -14,7 +15,7 @@ void ConvLayerCtrl::Paint(Draw& d) {
 	
 	if (!ses) {d.DrawRect(sz, White()); return;}
 	
-	ses->Enter();
+	//ses->Enter();
 	Net& net = ses->GetNetwork();
 	if (layer_id < 0 || layer_id >= net.GetLayers().GetCount()) {
 		ses->Leave();
@@ -26,7 +27,7 @@ void ConvLayerCtrl::Paint(Draw& d) {
 	
 	PaintSize(id, sz);
 	
-	ses->Leave();
+	//ses->Leave();
 	
 	d.DrawImage(0, 0, id);
 }
@@ -103,11 +104,11 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 	
 	// find min, max activations and display them
 	{
-		const Vector<double>& w = l.output_activation.GetWeights();
+		Volume& v = l.output_activation;
 		double min = +DBL_MAX;
 		double max = -DBL_MAX;
-		for(int i = 0; i < w.GetCount(); i++) {
-			double d = w[i];
+		for(int i = 0; i < v.GetLength(); i++) {
+			double d = v.Get(i);
 			if (d > max) max = d;
 			if (d < min) min = d;
 		}
@@ -118,12 +119,12 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 		y += txt_sz.cy;
 	}
 	
-	{
-		const Vector<double>& dw = l.output_activation.GetGradients();
+	if (!hide_gradients) {
+		Volume& v = l.output_activation;
 		double min = +DBL_MAX;
 		double max = -DBL_MAX;
-		for(int i = 0; i < dw.GetCount(); i++) {
-			double d = dw[i];
+		for(int i = 0; i < v.GetLength(); i++) {
+			double d = v.GetGradient(i);
 			if (d > max) max = d;
 			if (d < min) min = d;
 		}
@@ -139,7 +140,31 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 	
 	// visualize activations
 	Point pt(xoff, 4);
-	{
+	if (type == "regression") {
+		int scale = 2;
+		String s;
+		s << "Activations:";
+		txt_sz = GetTextSize(s, fnt);
+		id.DrawText(pt.x, pt.y, s, fnt);
+		pt.y += txt_sz.cy;
+		int depth = l.output_activation.GetDepth();
+		int w = sqrt((double)depth);
+		int h = w ? depth / w : 0;
+		int w_clr = sqrt((double)depth / 3);
+		int h_clr = w_clr ? depth / 3 / w_clr : 0;
+		if (w * h == depth && l.output_activation.GetWidth() == 1 && l.output_activation.GetHeight() == 1) {
+			Volume v(w, h, 1, l.output_activation);
+			DrawActivations(id, sz, pt, v, scale, false);
+		}
+		else if (w_clr * h_clr * 3 == depth && l.output_activation.GetWidth() == 1 && l.output_activation.GetHeight() == 1) {
+			Volume v(w_clr, h_clr, 3, l.output_activation);
+			DrawActivations(id, sz, pt, v, scale, false);
+		}
+		else {
+			DrawActivations(id, sz, pt, l.output_activation, scale, false);
+		}
+	}
+	else {
 		int scale = 2;
 		if (type == "softmax" || type == "fc")
 			scale = 10; // for softmax
@@ -153,7 +178,7 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 	
 	
 	// visualize data gradients
-	if (type != "softmax") {
+	if (!hide_gradients && type != "softmax" && type != "regression") {
 		int scale = 2;
 		if (type == "softmax" || type == "fc")
 			scale = 10; // for softmax
@@ -212,11 +237,10 @@ void ConvLayerCtrl::DrawActivations(Draw& draw, Size& sz, Point& pt, Volume& v, 
 	int s = scale > 0 ? scale : 2; // scale
 	
 	// get max and min activation to scale the maps automatically
-	const Vector<double>& w = draw_grads ? v.GetGradients() : v.GetWeights();
 	double min = +DBL_MAX;
 	double max = -DBL_MAX;
-	for(int i = 0; i < w.GetCount(); i++) {
-		double d = w[i];
+	for(int i = 0; i < v.GetLength(); i++) {
+		double d = draw_grads ? v.GetGradient(i) : v.Get(i);
 		if (d > max) max = d;
 		if (d < min) min = d;
 	}
@@ -386,7 +410,9 @@ void SessionConvLayers::Layout() {
 	
 	if (layer_ctrls.IsEmpty() || !ses) return;
 	
-	ses->Enter();
+	bool use_session = !is_scrolling;
+	if (use_session) ses->Enter();
+	
 	Net& net = ses->GetNetwork();
 	
 	int y = -scroll;
@@ -396,7 +422,7 @@ void SessionConvLayers::Layout() {
 		
 		// Calculate height for current width
 		// Make layout faster when scrolling by skipping size calculation
-		if (!is_scrolling) {
+		if (use_session) {
 			Size tmp_sz(sz.cx, 1);
 			ImageDraw ib(tmp_sz);
 			ctrl.ClearGradientCache();
@@ -414,7 +440,7 @@ void SessionConvLayers::Layout() {
 	sb.SetTotal(total);
 	sb.WhenScroll = THISBACK(Scroll);
 	
-	ses->Leave();
+	if (use_session) ses->Leave();
 }
 
 void SessionConvLayers::Scroll() {
@@ -439,12 +465,15 @@ void SessionConvLayers::RefreshLayers() {
 		ctrl.SetSession(*ses);
 		ctrl.SetId(i);
 		ctrl.SetColor(is_color);
+		ctrl.HideGradients(hide_gradients);
 		Add(ctrl);
 	}
 	
 	ses->Leave();
 	
-	Layout();
+	PostCallback(THISBACK(Layout));
 }
 
 }
+
+

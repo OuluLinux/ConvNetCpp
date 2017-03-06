@@ -21,7 +21,16 @@ struct ImagePrediction : public Ctrl {
 		bool operator() (const PredValue& a, const PredValue& b) const {return a.a > b.a;}
 	};
 	
+	Array<Image> imgs;
 	Vector<Prediction> preds;
+	Session* ses;
+	Volume aavg;
+	int augmentation;
+	bool do_flip;
+	
+protected:
+	void Add(Image& img, String l0, double p0, String l1, double p1, String l2, double p2);
+	void Refresh0() {Refresh();}
 	
 public:
 	int GetLineHeight() { return 70; }
@@ -31,8 +40,12 @@ public:
 	virtual void MouseWheel(Point, int zdelta, dword);
 	bool Key(dword key, int);
 	void Scroll();
-	void Add(Image& img, String l0, double p0, String l1, double p1, String l2, double p2);
 	void Clear() {lock.Enter(); preds.Clear(); lock.Leave();}
+	void RefreshData();
+	void SetSession(Session& ses);
+	void StepInterval(int step_num);
+	void SetAugmentation(int i, bool flip_img) {augmentation = i; do_flip = flip_img;}
+	
 	
 	typedef ImagePrediction CLASSNAME;
 	ImagePrediction();

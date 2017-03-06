@@ -9,6 +9,7 @@ TrainerBase::TrainerBase(Net& net) {
 	batch_size = 1;
 	iter_count = 0;
 	cost_loss = 0;
+	cost_reward = 0;
 	
 	Beta1 = 0;
 	Beta2 = 0;
@@ -33,7 +34,7 @@ void TrainerBase::Train(Volume& x, int pos, double y) {
 	TrainImplem();
 }
 
-void TrainerBase::Train(Volume& x, const Vector<double>& y) {
+void TrainerBase::Train(Volume& x, const VolumeDataBase& y) {
 	vec.SetCount(1);
 	vec[0] = &x;
 	Forward(vec);
@@ -43,7 +44,7 @@ void TrainerBase::Train(Volume& x, const Vector<double>& y) {
 	TrainImplem();
 }
 
-void TrainerBase::Train(const Vector<double>& y, const Vector<VolumePtr>& x) {
+void TrainerBase::Train(const VolumeDataBase& y, const Vector<VolumePtr>& x) {
 	Forward(x);
 	
 	Backward(y);
@@ -52,10 +53,11 @@ void TrainerBase::Train(const Vector<double>& y, const Vector<VolumePtr>& x) {
 }
 
 void TrainerBase::Backward(int pos, double y) {
+	cost_reward = y; // not perfect, because position varies, but this is essentially what was in the JS example.
 	cost_loss = net->Backward(pos, y);
 }
 
-void TrainerBase::Backward(const Vector<double>& y) {
+void TrainerBase::Backward(const VolumeDataBase& y) {
 	cost_loss = net->Backward(y);
 }
 

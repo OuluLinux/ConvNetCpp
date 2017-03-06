@@ -2,10 +2,13 @@ description "Widgets for ConvNet package.\377B28,0,200";
 
 uses
 	CtrlLib,
-	ConvNet;
+	ConvNet,
+	PlotCtrl;
 
 file
 	ConvNetCtrl.h,
+	TrainingGraph.h,
+	TrainingGraph.cpp,
 	BarView.h,
 	BarView.cpp,
 	HeatmapView.h,
@@ -14,8 +17,8 @@ file
 	LayerCtrl.cpp,
 	PointCtrl.h,
 	PointCtrl.cpp,
-	ImagePrediction.h,
-	ImagePrediction.cpp,
 	ConvLayerCtrl.h,
-	ConvLayerCtrl.cpp;
+	ConvLayerCtrl.cpp,
+	ImagePrediction.h,
+	ImagePrediction.cpp;
 

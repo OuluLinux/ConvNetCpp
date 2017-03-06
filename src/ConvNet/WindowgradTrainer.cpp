@@ -78,7 +78,7 @@ void WindowgradTrainer::Backward(int pos, double y) {
 	l1_decay_loss = 0.0;
 }
 
-void WindowgradTrainer::Backward(const Vector<double>& y) {
+void WindowgradTrainer::Backward(const VolumeDataBase& y) {
 	TrainerBase::Backward(y);
 	
 	l2_decay_loss = 0.0;

@@ -2,12 +2,15 @@
 
 namespace ConvNet {
 
-PointCtrl::PointCtrl(Session& ses) {
+PointCtrl::PointCtrl() {
 	vis_len = 0;
 	offset = 0;
-	
+	ses = NULL;
+}
+
+void PointCtrl::SetSession(Session& ses) {
 	this->ses = &ses;
-	ses.WhenSessionLoaded << THISBACK(RefreshData);
+	ses.WhenSessionLoaded << THISBACK(PostRefreshData);
 }
 
 void PointCtrl::RefreshData() {
@@ -15,6 +18,8 @@ void PointCtrl::RefreshData() {
 }
 
 void PointCtrl::Paint(Draw& d) {
+	if (!ses) {d.DrawRect(GetSize(), White()); return;}
+	
 	Session& ses = *this->ses;
 	
 	Size sz = GetSize();

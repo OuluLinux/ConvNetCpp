@@ -68,7 +68,7 @@ double SoftmaxLayer::Backward(int pos, double y) {
 	return -1.0 * log(es[pos]);
 }
 
-double SoftmaxLayer::Backward(const Vector<double>& y) {
+double SoftmaxLayer::Backward(const VolumeDataBase& y) {
 	throw NotImplementedException();
 }
 

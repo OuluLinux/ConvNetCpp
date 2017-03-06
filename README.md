@@ -12,6 +12,9 @@ Screenshot of [a MNIST digit classification example](http://cs.stanford.edu/peop
 Screenshot of [a CIFAR-10 classification example](http://cs.stanford.edu/people/karpathy/convnetjs/demo/cifar10.html) translated to ConvNetC++. 
 ![Classify CIFAR-10 example](https://github.com/sppp/ConvNetC-/raw/master/doc/classifycifar10.png)
 
+Screenshot of [a MNIST digit autoencoder example](http://cs.stanford.edu/people/karpathy/convnetjs/demo/autoencoder.html) translated to ConvNetC++. 
+![MNIST Autoencoder example](https://github.com/sppp/ConvNetC-/raw/master/doc/autoencodemnist.png)
+
 Screenshot of [a toy 2d classification example](http://cs.stanford.edu/people/karpathy/convnetjs/demo/classify2d.html) translated to ConvNetC++. 
 ![Classify2D example](https://github.com/sppp/ConvNetC-/raw/master/doc/classify2d.png)
 

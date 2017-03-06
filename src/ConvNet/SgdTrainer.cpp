@@ -78,7 +78,7 @@ void SgdTrainer::Backward(int pos, double y) {
 	l1_decay_loss = 0.0;
 }
 
-void SgdTrainer::Backward(const Vector<double>& y) {
+void SgdTrainer::Backward(const VolumeDataBase& y) {
 	TrainerBase::Backward(y);
 	
 	l2_decay_loss = 0.0;

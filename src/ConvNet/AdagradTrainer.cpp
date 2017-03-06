@@ -75,7 +75,7 @@ void AdagradTrainer::Backward(int pos, double y) {
 	l1_decay_loss = 0.0;
 }
 
-void AdagradTrainer::Backward(const Vector<double>& y) {
+void AdagradTrainer::Backward(const VolumeDataBase& y) {
 	TrainerBase::Backward(y);
 	
 	l2_decay_loss = 0.0;

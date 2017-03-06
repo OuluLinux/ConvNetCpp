@@ -34,6 +34,7 @@ protected:
 public:
 	typedef Classify2D CLASSNAME;
 	Classify2D();
+	~Classify2D();
 	
 	void ViewLayer(int i);
 	void Reload();

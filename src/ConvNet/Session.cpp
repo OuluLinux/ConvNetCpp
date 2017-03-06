@@ -8,12 +8,36 @@ Session::Session() {
 	train_iter_limit = 0;
 	owned_trainer = NULL;
 	trainer = NULL;
+	step_num = 0;
+	predict_interval = 10;
+	test_predict = false;
+	forward_time = 0;
+	backward_time = 0;
+	step_cb_interal = 100;
+	augmentation = 0;
+	augmentation_do_flip = false;
+	data_w = 0;
+	data_h = 0;
+	data_d = 0;
+	
+	SetWindowSize(100);
 }
 
 Session::~Session() {
 	StopTraining();
 	ClearOwnedLayers();
 	ClearOwnedTrainer();
+	ClearData();
+}
+
+Session& Session::SetWindowSize(int size, int min_size) {
+	loss_window.Init(size, min_size);
+	reward_window.Init(size, min_size);
+	l1_loss_window.Init(size, min_size);
+	l2_loss_window.Init(size, min_size);
+	train_window.Init(size, min_size);
+	accuracy_window.Init(size, min_size);
+	return *this;
 }
 
 void Session::Clear() {
@@ -53,8 +77,8 @@ void Session::StartTraining() {
 }
 
 void Session::StopTraining() {
-	#ifdef flagMT
 	is_training = false;
+	#ifdef flagMT
 	while (!is_training_stopped)
 		Sleep(100);
 	#else
@@ -86,45 +110,92 @@ void Session::TrainBegin() {
 	
 	ts.Reset();
 	
-	avloss = 0.0;
 	iter = 0;
 	
-	cols = GetColumnCount();
-	x.Init(1,1,cols);
+	x.Init(data_w, data_h, data_d, 0.0);
+	
+	// reinit windows that keep track of val/train accuracies
+	loss_window.Clear();
+	reward_window.Clear();
+	l1_loss_window.Clear();
+	l2_loss_window.Clear();
+	train_window.Clear();
+	accuracy_window.Clear();
+	
 }
 
 void Session::TrainIteration() {
 	TrainerBase& trainer = *this->trainer;
 	
+	const Vector<LayerBasePtr>& layers = net.GetLayers();
+	bool train_regression = dynamic_cast<RegressionLayer*>(layers[layers.GetCount()-1]);
+	
 	try {
 	
 		for(int i = 0; i < GetDataCount() && is_training; i++) {
+			ASSERT(data[i]);
 			
-			for(int j = 0; j < cols; j++) {
-				double d = GetData(i, j);
-				x.Set(0, 0, j, d);
-			}
-			
+			x.SetData(Get(i));
 			int label = GetLabel(i);
 			
+			if (augmentation)
+				x.Augment(augmentation, -1, -1, augmentation_do_flip);
+			
 			lock.Enter();
-			trainer.Train(x, label, 1.0); // value
+			
+			// use x to build our estimate of validation error
+			if (test_predict && (step_num % predict_interval) == 0) {
+				TimeStop ts;
+				net.Forward(x);
+				forward_time = ts.Elapsed();
+				
+				int cls = net.GetPrediction();
+				accuracy_window.Add(cls == label ? 1.0 : 0.0);
+			}
+			
+			TimeStop ts;
+			if (train_regression)
+				trainer.Train(x, x.GetWeights()); // value
+			else
+				trainer.Train(x, label, 1.0); // value
+			backward_time = ts.Elapsed();
+			double reward = trainer.GetReward();
 			double loss = trainer.GetLoss();
+			double loss_l1d = trainer.GetL1DecayLoss();
+			double loss_l2d = trainer.GetL2DecayLoss();
+			step_num++;
 			lock.Leave();
 			
-			avloss += loss;
+			// keep track of stats such as the average training error and loss
+			// if last layer is softmax, then add prediction value to the average
+			if (test_predict) {
+				int cls = net.GetPrediction();
+				train_window.Add(cls == label ? 1.0 : 0.0); // add 1 when label is correct
+			}
+			
+			reward_window.Add(reward);
+			loss_window.Add(loss);
+			l1_loss_window.Add(loss_l1d);
+			l2_loss_window.Add(loss_l2d);
+			
+			
+			if ((step_num % step_cb_interal) == 0)
+				WhenStepInterval(step_num);
+			
 		}
+		
+		iter++;
 	}
 	catch (Exc e) {
+		lock.Leave();
 		LOG("Exception: " + e);
+		TrainEnd();
 	}
-	iter++;
 }
 
 void Session::TrainEnd() {
-	avloss /= GetDataCount() * iter;
 	
-	LOG("loss = " << avloss << ", " << iter << " cycles through data in " << ts.ToString() << "ms");
+	LOG("loss = " << loss_window.GetAverage() << ", " << iter << " cycles through data in " << ts.ToString() << "ms");
 	is_training_stopped = true;
 	is_training = false;
 }
@@ -139,7 +210,11 @@ InputLayer* Session::GetInput() const {
 }
 
 double Session::GetData(int i, int col) const {
-	return data[i][col];
+	return data[i]->Get(col);
+}
+
+double Session::GetTestData(int i, int col) const {
+	return test_data[i]->Get(col);
 }
 
 int Session::GetDataCount() const {
@@ -420,30 +495,50 @@ bool Session::StoreOriginalJSON(String& json) {
 	return true;
 }
 
-void Session::BeginData(int count, int column_count) {
-	Vector<double> cols;
-	cols.SetCount(column_count, 0.0);
+void Session::ClearData() {
+	Enter();
+	for(int i = 0; i < data.GetCount(); i++) {
+		delete data[i];
+	}
 	data.Clear();
-	data.SetCount(count, cols);
+	for(int i = 0; i < test_data.GetCount(); i++) {
+		delete test_data[i];
+	}
+	test_data.Clear();
 	labels.Clear();
-	labels.SetCount(count, 0);
-	mins.Clear();
-	mins.SetCount(column_count, DBL_MAX);
-	maxs.Clear();
-	maxs.SetCount(column_count, -DBL_MAX);
+	test_labels.Clear();
+	classes.Clear();
+	step_num = 0;
+	Leave();
 }
 
 void Session::EndData() {
 	for(int i = 0; i < data.GetCount(); i++) {
-		Vector<double>& cols = data[i];
-		for(int j = 0; j < cols.GetCount(); j++) {
-			double d = cols[j];
+		VolumeDataBase* vol = data[i];
+		if (!vol) {
+			data.Remove(i);
+			labels.Remove(i);
+			i--;
+			continue;
+		}
+		for(int j = 0; j < vol->GetCount(); j++) {
+			double d = vol->Get(j);
 			double& mind = mins[j];
 			double& maxd = maxs[j];
 			mind = min(mind, d);
 			maxd = max(maxd, d);
 		}
 	}
+	
+	// Randomize data
+	int count = data.GetCount() / 2;
+	for(int i = 0; i < count; i++) {
+		int a = Random(data.GetCount());
+		int b = Random(data.GetCount());
+		Swap(data[a],	data[b]);
+		Swap(labels[a],	labels[b]);
+	}
+	
 }
 
 FullyConnLayer& Session::AddFullyConnLayer(int neuron_count, double l1_decay_mul, double l2_decay_mul, double bias_pref) {
@@ -550,6 +645,27 @@ SvmLayer& Session::AddSVMLayer(int class_count) {
 	owned_layers.Add(svm);
 	net.AddLayer(*svm);
 	return *svm;
+}
+
+void Session::GetUniformClassData(int per_class, Vector<VolumeDataBase*>& volumes, Vector<int>& labels) {
+	ASSERT(per_class >= 0);
+	Vector<int> counts;
+	counts.SetCount(classes.GetCount(), 0);
+	int remaining = per_class * classes.GetCount();
+	volumes.SetCount(remaining);
+	labels.SetCount(remaining);
+	
+	for(int i = 0; i < this->labels.GetCount() && remaining > 0; i++) {
+		int label = this->labels[i];
+		int& count = counts[label];
+		if (count < per_class) {
+			count++;
+			remaining--;
+			volumes[remaining] = data[i];
+			labels[remaining] = label;
+		}
+	}
+	
 }
 
 }

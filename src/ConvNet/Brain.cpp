@@ -164,8 +164,11 @@ void Brain::Init(int num_states, int num_actions, Vector<double>* random_action_
 	forward_passes = 0; // incremented every forward()
 	epsilon = 1.0; // controls exploration exploitation tradeoff. Should be annealed over time
 	latest_reward = 0;
+	
 	average_reward_window.Init(1000, 10);
 	average_loss_window.Init(1000, 10);
+	SetWindowSize(1000, 10);
+	
 	learning = true;
 }
 
@@ -304,13 +307,6 @@ void Brain::Backward(double reward) {
 		e.action0 = action_window[n-2];
 		e.reward0 = reward_window[n-2];
 		HeaplessCopy(e.state1, net_window[n-1]);
-		/*if(experience.GetCount() < experience_size) {
-			experience.Add(e);
-		} else {
-			// replace. finite memory!
-			int ri = Random(experience_size);
-			experience[ri] = e;
-		}*/
 	}
 	
 	// learn based on experience, once we have some samples to go on

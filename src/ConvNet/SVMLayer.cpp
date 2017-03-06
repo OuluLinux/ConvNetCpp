@@ -51,7 +51,7 @@ double SvmLayer::Backward(int pos, double yd) {
 	return loss;
 }
 
-double SvmLayer::Backward(const Vector<double>& y) {
+double SvmLayer::Backward(const VolumeDataBase& y) {
 	throw NotImplementedException();
 }
 

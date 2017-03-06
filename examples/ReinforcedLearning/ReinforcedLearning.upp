@@ -8,8 +8,8 @@ uses
 
 file
 	ReinforcedLearning.h,
-	ReinforcedLearning.rc,
 	ReinforcedLearning.cpp,
+	ReinforcedLearning.rc,
 	ReinforcedLearning.iml,
 	pretrained.brc,
 	pretrained.json,

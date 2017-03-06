@@ -195,7 +195,7 @@ public:
 	RegressionLayer(ValueMap values) {Load(values);}
 	
 	virtual double Backward(int pos, double y);
-	virtual double Backward(const Vector<double>& y);
+	virtual double Backward(const VolumeDataBase& y);
 	virtual Volume& Forward(Volume& input, bool is_training = false);
 	virtual void Backward();
 	virtual void Init(int input_width, int input_height, int input_depth);
@@ -261,7 +261,7 @@ public:
 	SoftmaxLayer(ValueMap values) {Load(values);}
 	
 	virtual double Backward(int pos, double y);
-	virtual double Backward(const Vector<double>& y);
+	virtual double Backward(const VolumeDataBase& y);
 	virtual Volume& Forward(Volume& input, bool is_training = false);
 	virtual void Backward();
 	virtual void Init(int input_width, int input_height, int input_depth);
@@ -281,7 +281,7 @@ public:
 	SvmLayer(ValueMap values) {Load(values);}
 	
 	virtual double Backward(int pos, double y);
-	virtual double Backward(const Vector<double>& y);
+	virtual double Backward(const VolumeDataBase& y);
 	virtual Volume& Forward(Volume& input, bool is_training = false);
 	virtual void Backward();
 	virtual void Init(int input_width, int input_height, int input_depth);

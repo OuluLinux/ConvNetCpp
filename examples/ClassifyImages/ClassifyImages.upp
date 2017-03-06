@@ -7,18 +7,18 @@ uses
 	PlotCtrl,
 	plugin/z;
 
-uses(CIFAR10) plugin/LoaderCIFAR10;
-
-uses(MNIST) plugin/LoaderMNIST;
-
 file
 	main.cpp,
 	ClassifyImages.h,
 	ClassifyImages.cpp,
 	ClassifyImages.iml,
-	ClassifyImages.rc;
+	ClassifyImages.rc,
+	Loaders readonly separator,
+	LoaderCIFAR10.h,
+	LoaderCIFAR10.cpp,
+	LoaderMNIST.h,
+	LoaderMNIST.cpp;
 
 mainconfig
-	"Use MNIST dataset" = "GUI MT MNIST",
-	"Use CIFAR-10 dataset" = "GUI MT CIFAR10";
+	"" = "GUI MT";
 

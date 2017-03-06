@@ -7,10 +7,106 @@ ImagePrediction::ImagePrediction() {
 	AddFrame(sb);
 	sb.WhenScroll = THISBACK(Scroll);
 	sb.SetLine(GetLineHeight());
+	ses = NULL;
+	augmentation = 0;
+	do_flip = false;
+}
+
+void ImagePrediction::SetSession(Session& ses) {
+	this->ses = &ses;
+	ses.WhenStepInterval << THISBACK(StepInterval);
+}
+
+void ImagePrediction::StepInterval(int step_num) {
+	
+	// run prediction on test set
+	if (step_num == 100 || (step_num % 1000) == 0) {
+		RefreshData();
+	}
+	
+}
+
+void ImagePrediction::RefreshData() {
+	if (!ses) return;
+	
+	lock.Enter();
+	
+	Net& net = ses->GetNetwork();
+	int layer_count = net.GetLayers().GetCount();
+	ASSERT(layer_count);
+	
+	int num_classes = net.GetLayers()[layer_count-1]->output_depth;
+	
+	int data_w = ses->GetDataWidth();
+	int data_h = ses->GetDataHeight();
+	int data_d = ses->GetDataDepth();
+	
+	// grab a random test image
+	int tests = 50;
+	imgs.SetCount(tests);
+	for (int num = 0; num < tests; num++) {
+		
+		int i = Random(ses->GetDataCount());
+		VolumeDataBase& vol = ses->Get(i);
+		int label = ses->GetLabel(i);
+		
+		Image& img = imgs[num];
+		ImageBuffer ib(data_w, data_h);
+		RGBA* it = ib.Begin();
+		for (int y = 0; y < data_h; y++) {
+			for (int x = 0; x < data_w; x++) {
+				if (data_d == 3) {
+					it->r = vol.Get(x, y, 0, data_w, data_d) * 255;
+					it->g = vol.Get(x, y, 1, data_w, data_d) * 255;
+					it->b = vol.Get(x, y, 2, data_w, data_d) * 255;
+				}
+				else {
+					byte b = vol.Get(x, y, 0, data_w, data_d) * 255;
+					it->r = b;
+					it->g = b;
+					it->b = b;
+				}
+				it->a = 255;
+				it++;
+			}
+		}
+		img = ib;
+		
+		// forward prop it through the network
+		aavg.Init(1, 1, num_classes, 0.0);
+		
+		// ensures we always have a list, regardless if above returns single item or list
+		int n = 4;
+		for (int i = 0; i < n; i++) {
+			Volume aug(data_w, data_h, data_d, vol);
+			if (augmentation)
+				aug.Augment(augmentation, -1, -1, do_flip);
+			Volume& a = net.Forward(aug);
+			aavg.AddFrom(a);
+		}
+		
+		double label_val = 0;
+		VectorMap<int, double> preds;
+		for(int i = 0; i < num_classes; i++) {
+			double av = aavg.Get(i) / n;
+			if (i == label)
+				label_val = av;
+			else
+				preds.Add(i, av);
+		}
+		SortByValue(preds, StdGreater<double>());
+		
+		Add(img, ses->GetClass(label), label_val, ses->GetClass(preds.GetKey(0)), preds[0], ses->GetClass(preds.GetKey(1)), preds[1]);
+		
+	}
+	
+	lock.Leave();
+	
+	PostCallback(THISBACK(Layout));
+	PostCallback(THISBACK(Refresh0));
 }
 
 void ImagePrediction::Add(Image& img, String l0, double p0, String l1, double p1, String l2, double p2) {
-	lock.Enter();
 	while (preds.GetCount() >= max_count) preds.Remove(0);
 	Prediction& pred = preds.Add();
 	pred.img = &img;
@@ -22,8 +118,6 @@ void ImagePrediction::Add(Image& img, String l0, double p0, String l1, double p1
 	v1.a = max(0.0, min(1.0, p1));	v1.b = l1;	v1.c = false;
 	v2.a = max(0.0, min(1.0, p2));	v2.b = l2;	v2.c = false;
 	Sort(pred.values, Prediction());
-	lock.Leave();
-	PostCallback(THISBACK(Layout));
 }
 
 void ImagePrediction::Paint(Draw& d) {

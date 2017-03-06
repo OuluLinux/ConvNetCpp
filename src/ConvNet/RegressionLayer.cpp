@@ -26,7 +26,7 @@ void RegressionLayer::Backward() {
 	throw NotImplementedException();
 }
 
-double RegressionLayer::Backward(const Vector<double>& y) {
+double RegressionLayer::Backward(const VolumeDataBase& y) {
 	// compute and accumulate gradient wrt weights and bias of this layer
 	Volume& input = *input_activation;
 	
@@ -34,7 +34,7 @@ double RegressionLayer::Backward(const Vector<double>& y) {
 	double loss = 0.0;
 	
 	for (int i = 0; i < output_depth; i++) {
-		double dy = input.Get(i) - y[i];
+		double dy = input.Get(i) - y.Get(i);
 		input.SetGradient(i,  dy);
 		loss += 0.5 * dy * dy;
 	}

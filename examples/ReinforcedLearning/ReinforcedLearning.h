@@ -135,7 +135,7 @@ class ReinforcedLearning : public DockWindow {
 	DocEdit net_edit;
 	ParentCtrl net_ctrl;
 	Button reload_btn;
-	PlotCtrl reward_graph;
+	TrainingGraph reward_graph;
 	BarView input_view;
 	HeatmapView network_view;
 	ParentCtrl controller;
@@ -168,7 +168,6 @@ public:
 	void Reload();
 	void Start();
 	void Refresher();
-	void AddReward();
 	void RefreshStatus();
 	void RefreshTrainingStatus();
 	void RefreshSpeed();

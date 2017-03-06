@@ -14,9 +14,11 @@ class PointCtrl : public Ctrl {
 	
 public:
 	typedef PointCtrl CLASSNAME;
-	PointCtrl(Session& ses);
+	PointCtrl();
 	
 	void RefreshData();
+	void SetSession(Session& ses);
+	void PostRefreshData() {PostCallback(THISBACK(RefreshData));}
 	
 	virtual void Paint(Draw& d);
 	virtual void LeftDown(Point p, dword keyflags);

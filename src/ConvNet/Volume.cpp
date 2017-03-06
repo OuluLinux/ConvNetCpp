@@ -7,27 +7,19 @@ Volume::Volume() {
 	height = 0;
 	depth = 0;
 	length = 0;
-}
-
-Volume& Volume::operator=(const Volume& src) {
-	width = src.width;
-	height = src.height;
-	depth = src.depth;
-	length = src.length;
-	weights.SetCount(src.weights.GetCount());
-	for(int i = 0; i < weights.GetCount(); i++)
-		weights[i] = src.weights[i];
-	weight_gradients.SetCount(src.weight_gradients.GetCount());
-	for(int i = 0; i < weight_gradients.GetCount(); i++)
-		weight_gradients[i] = src.weight_gradients[i];
-	return *this;
+	owned_weights = true;
+	weights = new VolumeData<double>();
 }
 
 Volume::Volume(int width, int height, int depth) {
+	owned_weights = true;
+	weights = new VolumeData<double>();
 	Init(width, height, depth);
 }
 
 Volume::Volume(int width, int height, int depth, double c) {
+	owned_weights = true;
+	weights = new VolumeData<double>();
 	Init(width, height, depth, c);
 }
 
@@ -38,8 +30,74 @@ Volume::Volume(const Vector<double>& weights) {
 	depth = weights.GetCount();
 	length = depth;
 	
-	this->weights <<= weights;
+	owned_weights = true;
+	this->weights = new VolumeData<double>(weights);
+	
 	weight_gradients.SetCount(depth, 0.0);
+}
+
+Volume::Volume(int width, int height, int depth, VolumeDataBase& weights) {
+	this->width = width;
+	this->height = height;
+	this->depth = depth;
+	length = width * height * depth;
+	
+	owned_weights = false;
+	this->weights = &weights;
+	
+	weight_gradients.SetCount(length, 0.0);
+}
+
+Volume::Volume(int width, int height, int depth, Volume& vol) {
+	this->width = width;
+	this->height = height;
+	this->depth = depth;
+	length = width * height * depth;
+	
+	owned_weights = false;
+	this->weights = vol.weights;
+	
+	ASSERT(this->weights->GetCount() == length);
+	
+	weight_gradients.SetCount(length, 0.0);
+}
+
+Volume::~Volume() {
+	if (owned_weights && weights)
+		delete weights;
+	weights = NULL;
+}
+
+void Volume::SetData(VolumeDataBase& data) {
+	if (owned_weights && weights)
+		delete weights;
+	owned_weights = false;
+	weights = &data;
+	weight_gradients.SetCount(data.GetCount(), 0);
+}
+
+Volume& Volume::operator=(const Volume& src) {
+	ASSERT(weights);
+	//if (!owned_weights) {
+	//	this->weights = new VolumeData<double>();
+	//	this->weights->SetCount(src.weights->GetCount());
+	//}
+	width = src.width;
+	height = src.height;
+	depth = src.depth;
+	length = src.length;
+	if (owned_weights) {
+		weights->SetCount(src.weights->GetCount());
+		for(int i = 0; i < weights->GetCount(); i++)
+			weights->Set(i, src.weights->Get(i));
+	} else {
+		ASSERT(!src.owned_weights); // keep it simple;
+		weights = src.weights;
+	}
+	weight_gradients.SetCount(src.weight_gradients.GetCount());
+	for(int i = 0; i < weight_gradients.GetCount(); i++)
+		weight_gradients[i] = src.weight_gradients[i];
+	return *this;
 }
 
 Volume& Volume::Init(int width, int height, int depth) {
@@ -51,13 +109,13 @@ Volume& Volume::Init(int width, int height, int depth) {
 	int n = width * height * depth;
 	
 	length = n;
-	weights.SetCount(n, 0.0);
+	weights->SetCount(n, 0.0);
 	weight_gradients.SetCount(n, 0.0);
 	
 	RandomGaussian& rand = GetRandomGaussian(length);
 
 	for (int i = 0; i < n; i++) {
-		weights[i] = rand;
+		weights->Set(i, rand);
 	}
 	
 	return *this;
@@ -72,11 +130,11 @@ Volume& Volume::Init(int width, int height, int depth, double default_value) {
 	int n = width * height * depth;
 	
 	length = n;
-	weights.SetCount(n);
+	weights->SetCount(n);
 	weight_gradients.SetCount(n);
 	
 	for (int i = 0; i < n; i++) {
-		weights[i] = default_value;
+		weights->Set(i, default_value);
 		weight_gradients[i] = 0.0;
 	}
 	
@@ -85,17 +143,17 @@ Volume& Volume::Init(int width, int height, int depth, double default_value) {
 
 double Volume::Get(int x, int y, int d) const {
 	int ix = ((width * y) + x) * depth + d;
-	return weights[ix];
+	return weights->Get(ix);
 }
 
 void Volume::Set(int x, int y, int d, double v) {
 	int ix = ((width * y) + x) * depth + d;
-	weights[ix] = v;
+	weights->Set(ix, v);
 }
 
 void Volume::Add(int x, int y, int d, double v) {
 	int ix = ((width * y) + x) * depth + d;
-	weights[ix] += v;
+	weights->Set(ix, weights->Get(ix) + v);
 }
 
 double Volume::GetGradient(int x, int y, int d) const {
@@ -119,8 +177,8 @@ void Volume::ZeroGradients() {
 }
 
 void Volume::AddFrom(const Volume& volume) {
-	for (int i = 0; i < weights.GetCount(); i++) {
-		weights[i] += volume.Get(i);
+	for (int i = 0; i < weights->GetCount(); i++) {
+		weights->Set(i, weights->Get(i) + volume.Get(i));
 	}
 }
 
@@ -131,19 +189,19 @@ void Volume::AddGradientFrom(const Volume& volume) {
 }
 
 void Volume::AddFromScaled(const Volume& volume, double a) {
-	for (int i = 0; i < weights.GetCount(); i++) {
-		weights[i] += a * volume.Get(i);
+	for (int i = 0; i < weights->GetCount(); i++) {
+		weights->Set(i, weights->Get(i) + a * volume.Get(i));
 	}
 }
 
 void Volume::SetConst(double c) {
-	for (int i = 0; i < weights.GetCount(); i++) {
-		weights[i] += c;
+	for (int i = 0; i < weights->GetCount(); i++) {
+		weights->Set(i, weights->Get(i) + c);
 	}
 }
 
 double Volume::Get(int i) const {
-	return weights[i];
+	return weights->Get(i);
 }
 
 double Volume::GetGradient(int i) const {
@@ -159,7 +217,7 @@ void Volume::AddGradient(int i, double v) {
 }
 
 void Volume::Set(int i, double v) {
-	weights[i] = v;
+	weights->Set(i, v);
 }
 
 #define STOREVAR(json, field) map.GetAdd(#json) = this->field;
@@ -172,8 +230,8 @@ void Volume::Store(ValueMap& map) const {
 	STOREVAR(depth, depth);
 	
 	Value w;
-	for(int i = 0; i < weights.GetCount(); i++) {
-		double value = weights[i];
+	for(int i = 0; i < weights->GetCount(); i++) {
+		double value = weights->Get(i);
 		w.Add(value);
 	}
 	map.GetAdd("w") = w;
@@ -193,8 +251,8 @@ void Volume::Load(const ValueMap& map) {
 	
 	length = width * height * depth;
 	
-	weights.SetCount(0);
-	weights.SetCount(length, 0);
+	weights->SetCount(0);
+	weights->SetCount(length, 0);
 	weight_gradients.SetCount(0);
 	weight_gradients.SetCount(length, 0);
 	
@@ -203,7 +261,7 @@ void Volume::Load(const ValueMap& map) {
 	
 	for (int i = 0; i < length; i++) {
 		double value = w[i];
-		weights[i] = value;
+		weights->Set(i, value);
 	}
 	
 	int i = map.Find("dw");
@@ -223,8 +281,8 @@ void Volume::Augment(int crop, int dx, int dy, bool fliplr) {
 	if (dy == -1) dy = Random(height - crop);
 	
 	// randomly sample a crop in the input volume
-	Volume W;
 	if (crop != width || dx != 0 || dy != 0) {
+		Volume W;
 		W.Init(crop, crop, depth, 0.0);
 		for (int x = 0; x < crop; x++) {
 			for (int y = 0; y < crop; y++) {
@@ -235,10 +293,8 @@ void Volume::Augment(int crop, int dx, int dy, bool fliplr) {
 				}
 			}
 		}
-		*this = W;
-	}/* else {
-		W = *this;
-	}*/
+		SwapData(W);
+	}
 	
 	if (fliplr) {
 		// flip volume horziontally
@@ -251,8 +307,19 @@ void Volume::Augment(int crop, int dx, int dy, bool fliplr) {
 				}
 			}
 		}
-		*this = vol; //swap
+		SwapData(vol);
 	}
+}
+
+void Volume::SwapData(Volume& vol) {
+	Swap(vol.weight_gradients, weight_gradients);
+	Swap(vol.weights, weights);
+	Swap(vol.owned_weights, owned_weights);
+	Swap(vol.width, width);
+	Swap(vol.height, height);
+	Swap(vol.depth, depth);
+	Swap(vol.length, length);
+	
 }
 
 }

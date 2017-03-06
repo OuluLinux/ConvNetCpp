@@ -4,13 +4,16 @@
 #define IMAGEFILE <Classify2D/Classify2D.iml>
 #include <Draw/iml_source.h>
 
-Classify2D::Classify2D() : pctrl(session), lctrl(session) {
+Classify2D::Classify2D() {
 	Title("Classify2D");
 	Icon(Classify2DImg::icon());
 	Sizeable().MaximizeBox().MinimizeBox();
 	
 	running = false;
 	stopped = true;
+	
+	lctrl.SetSession(session);
+	pctrl.SetSession(session);
 	
 	t = "[\n"
 		"\t{\"type\":\"input\", \"input_width\":1, \"input_height\":1, \"input_depth\":2},\n"
@@ -53,6 +56,10 @@ Classify2D::Classify2D() : pctrl(session), lctrl(session) {
     PostCallback(THISBACK(OriginalData));
 }
 
+Classify2D::~Classify2D() {
+	session.StopTraining();
+}
+
 void Classify2D::Start() {
 	running = true;
 	stopped = false;
@@ -75,7 +82,7 @@ void Classify2D::Reload() {
 
 void Classify2D::RandomData(int count) {
 	session.StopTraining();
-	session.BeginData(count, 2);
+	session.BeginData(2, count, 2);
 	for(int k=0; k < count; k++) {
 		session.SetData(k, 0, Randomf() * 10.0 - 5.0);
 		session.SetData(k, 1, Randomf() * 10.0 - 5.0);
@@ -87,7 +94,7 @@ void Classify2D::RandomData(int count) {
 
 void Classify2D::OriginalData() {
 	session.StopTraining();
-	session.BeginData(13, 2);
+	session.BeginData(2, 13, 2);
 	session.SetData(0, 0, -0.4326)	.SetData(0, 1, 1.1909)	.SetLabel(0, 1);
 	session.SetData(1, 0, 3.0)		.SetData(1, 1, 4.0)		.SetLabel(1, 1);
 	session.SetData(2, 0, 0.1253)	.SetData(2, 1, -0.0376)	.SetLabel(2, 1);
@@ -107,7 +114,7 @@ void Classify2D::OriginalData() {
 
 void Classify2D::CircleData(int count) {
 	session.StopTraining();
-	session.BeginData(count, 2);
+	session.BeginData(2, count, 2);
 	int count_a = count / 2;
 	int count_b = count - count_a;
 	int j = 0;
@@ -133,7 +140,7 @@ void Classify2D::CircleData(int count) {
 
 void Classify2D::SpiralData(int count) {
 	session.StopTraining();
-	session.BeginData(count, 2);
+	session.BeginData(2, count, 2);
 	int count_a = count / 2;
 	int count_b = count - count_a;
 	int j = 0;

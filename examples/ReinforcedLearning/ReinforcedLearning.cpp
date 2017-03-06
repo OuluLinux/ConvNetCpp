@@ -41,11 +41,6 @@ ReinforcedLearning::ReinforcedLearning() {
 	reload_btn.SetLabel("Reload Network");
 	reload_btn <<= THISBACK(Reload);
 	
-	reward_graph.SetMode(PLOT_AA).SetLimits(-5,5,-5,5);
-	reward_graph.data.Add();
-	reward_graph.data.Add();
-	reward_graph.data[0].SetTitle("Reward").SetThickness(1.5).SetColor(Red());
-	reward_graph.data[1].SetDash("1.5").SetTitle("Average").SetThickness(1.0).SetColor(Blue());
 	average_size = 10;
 	
 	network_view.SetSession(world.agents[0].brain);
@@ -81,6 +76,7 @@ ReinforcedLearning::ReinforcedLearning() {
 	controller.Add(store_file.TopPos(90,30).LeftPos(0,150));
 	controller.Add(speed.VSizePos().LeftPos(150,30));
 	
+	reward_graph.SetSession(world.agents[0].brain);
 	
     Start();
 }
@@ -145,7 +141,7 @@ void ReinforcedLearning::Tick() {
 	int experiences = brain.GetExperienceCount();
 	int average_window_size = brain.GetAverageLossWindowSize();
 	if (experiences >= average_window_size && (experiences % 100) == 0)
-		AddReward();
+		reward_graph.AddValue();
 }
 
 void ReinforcedLearning::Ticking() {
@@ -211,47 +207,11 @@ void ReinforcedLearning::Refresher() {
 		input_view.Refresh();
 		network_view.Refresh();
 		world.Refresh();
-		reward_graph.Sync();
-		reward_graph.Refresh();
+		reward_graph.RefreshData();
 		RefreshStatus();
 	}
 	if (running) PostCallback(THISBACK(Refresher));
 	else stopped = true;
-}
-
-void ReinforcedLearning::AddReward() {
-	int id = reward_graph.data[0].GetCount();
-	double av = world.agents[0].brain.GetAverageReward();
-	reward_graph.data[0].AddXY(id, av);
-	int count = id + 1;
-	if (count < 2) return;
-	
-	int pos = id;
-	double sum = 0;
-	int av_count = 0;
-	for(int i = 0; i < average_size && pos >= 0; i++) {
-		sum += reward_graph.data[0][pos].y;
-		av_count++;
-		pos--;
-	}
-	double avav = sum / av_count;
-	reward_graph.data[1].AddXY(id, avav);
-	
-	
-	double min = +DBL_MAX;
-	double max = -DBL_MAX;
-	for(int i = 0; i < count; i++) {
-		double d = reward_graph.data[0][i].y;
-		if (d > max) max = d;
-		if (d < min) min = d;
-	}
-	double diff = max - min;
-	if (diff <= 0) return;
-	double center = min + diff / 2;
-	reward_graph.SetLimits(0, id, min, max);
-	reward_graph.SetModify();
-	//reward_graph.Refresh();
-	//reward_graph.Sync();
 }
 
 void ReinforcedLearning::LoadPreTrained() {
@@ -392,5 +352,7 @@ void AddBox(Vector<Wall>& lst, int x, int y, int w, int h) {
 	lst.Add(Wall(Point(x+w,y+h),	Point(x,y+h)));
 	lst.Add(Wall(Point(x,y+h),		Point(x,y)));
 }
+
+
 
 

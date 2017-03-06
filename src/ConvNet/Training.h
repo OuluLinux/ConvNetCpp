@@ -20,6 +20,7 @@ protected:
 	// Previously public vars
 	int batch_size;
 	double cost_loss;
+	double cost_reward;
 	double Beta1;
 	double Beta2;
 	double l1_decay;
@@ -54,6 +55,7 @@ public:
 	double GetL1DecayLoss() const {return l1_decay_loss;}
 	double GetL2DecayLoss() const {return l2_decay_loss;}
 	virtual double GetLoss() {return cost_loss;}
+	virtual double GetReward() {return cost_reward;}
 	
 	
 	TrainerBase& SetBatchSize(int i) {batch_size = i; return *this;}
@@ -72,15 +74,15 @@ public:
 	//void Train(Volume& x, double y) {Train(x, 0, y);}
 	void Train(Volume& x, int pos, double y);
 	void Train(double y, const Vector<VolumePtr>& x);
-	void Train(Volume& x, const Vector<double>& y);
-	void Train(const Vector<double>& y, const Vector<VolumePtr>& x);
+	void Train(Volume& x, const VolumeDataBase& y);
+	void Train(const VolumeDataBase& y, const Vector<VolumePtr>& x);
 	void Forward(const Vector<VolumePtr>& x);
 	
 protected:
 	virtual void TrainImplem() = 0;
 	
 	virtual void Backward(int pos, double y);
-	virtual void Backward(const Vector<double>& y);
+	virtual void Backward(const VolumeDataBase& y);
 	
 };
 
@@ -100,7 +102,7 @@ public:
 protected:
 	virtual void TrainImplem();
 	virtual void Backward(int pos, double y);
-	virtual void Backward(const Vector<double>& y);
+	virtual void Backward(const VolumeDataBase& y);
 	
 };
 
@@ -118,7 +120,7 @@ public:
 protected:
 	virtual void TrainImplem();
 	virtual void Backward(int pos, double y);
-	virtual void Backward(const Vector<double>& y);
+	virtual void Backward(const VolumeDataBase& y);
 	
 };
 
@@ -138,7 +140,7 @@ protected:
 
 	virtual void TrainImplem();
 	virtual void Backward(int pos, double y);
-	virtual void Backward(const Vector<double>& y);
+	virtual void Backward(const VolumeDataBase& y);
 	
 };
 
@@ -156,7 +158,7 @@ public:
 protected:
 	virtual void TrainImplem();
 	virtual void Backward(int pos, double y);
-	virtual void Backward(const Vector<double>& y);
+	virtual void Backward(const VolumeDataBase& y);
 	
 };
 
@@ -176,7 +178,7 @@ public:
 protected:
 	virtual void TrainImplem();
 	virtual void Backward(int pos, double y);
-	virtual void Backward(const Vector<double>& y);
+	virtual void Backward(const VolumeDataBase& y);
 	
 };
 
@@ -198,7 +200,7 @@ protected:
 	
 	virtual void TrainImplem();
 	virtual void Backward(int pos, double y);
-	virtual void Backward(const Vector<double>& y);
+	virtual void Backward(const VolumeDataBase& y);
 	
 };
 

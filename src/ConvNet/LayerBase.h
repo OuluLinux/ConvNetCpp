@@ -49,7 +49,7 @@ public:
 	LastLayerBase() {}
 	
 	virtual double Backward(int pos, double y) = 0;
-	virtual double Backward(const Vector<double>& y) = 0;
+	virtual double Backward(const VolumeDataBase& y) = 0;
 	virtual String GetKey() const {return "lastlayerbase";}
 	
 };

@@ -16,12 +16,24 @@ class LayerView : public Ctrl {
 	Vector<double> gridx;
 	Vector<double> gridy;
 	Vector<bool> gridl;
+	Vector<Pointf> tmp_pts;
+	Vector<Image> tmp_imgs;
+	Vector<VolumeDataBase*> volumes;
+	Vector<Color> lbl_colors;
+	Vector<int> labels;
 	LayerCtrl* lc;
+	
+	// tmp vars
+	int x_off, y_off, count, lix, d0, d1, vis_len, density, density_2;
+	
+	void PaintInputXY(Draw& d);
+	void PaintInputImage(Draw& d);
 	
 public:
 	LayerView(LayerCtrl* lc);
 	
 	virtual void Paint(Draw& d);
+	void ClearCache();
 	
 };
 
@@ -35,7 +47,7 @@ protected:
 	int d0, d1;
 	int lix;
 	
-	Array<Button> layer_buttons;
+	Array<ButtonOption> layer_buttons;
 	
 	LayerView view;
 	Button btn_cycle;
@@ -46,7 +58,9 @@ protected:
 	
 public:
 	typedef LayerCtrl CLASSNAME;
-	LayerCtrl(Session& ses);
+	LayerCtrl();
+	
+	void SetSession(Session& ses);
 	
 	void ViewLayer(int i);
 	void Cycle();

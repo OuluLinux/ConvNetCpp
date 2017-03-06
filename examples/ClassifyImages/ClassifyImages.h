@@ -4,35 +4,18 @@
 #include <CtrlLib/CtrlLib.h>
 #include <Docking/Docking.h>
 #include <ConvNetCtrl/ConvNetCtrl.h>
-#include <PlotCtrl/PlotCtrl.h>
 using namespace Upp;
 using namespace ConvNet;
 
-#ifdef flagMNIST
-	#include <plugin/LoaderMNIST/LoaderMNIST.h>
-#elif defined flagCIFAR10
-	#include <plugin/LoaderCIFAR10/LoaderCIFAR10.h>
-#endif
+#include "LoaderMNIST.h"
+#include "LoaderCIFAR10.h"
 
 #define IMAGECLASS ClassifyImagesImg
 #define IMAGEFILE <ClassifyImages/ClassifyImages.iml>
 #include <Draw/iml_header.h>
 
-
-struct Sample : Moveable<Sample> {
-	Sample() {}
-	Sample(const Sample& src) {*this = src;}
-	Sample& operator=(const Sample& src) {
-		x = src.x;
-		label = src.label;
-		img_id = src.img_id;
-		isval = src.isval;
-		return *this;
-	}
-	Volume x;
-	int label, img_id;
-	bool isval;
-};
+enum {LOADER_MNIST, LOADER_CIFAR10};
+enum {TYPE_LEARNER, TYPE_AUTOENCODER};
 
 class ClassifyImages : public DockWindow {
 	ParentCtrl settings;
@@ -40,43 +23,38 @@ class ClassifyImages : public DockWindow {
 	EditDouble rate, mom, decay;
 	EditInt batch;
 	Button apply, save_net, load_net;
-	
+	TrainingGraph graph;
 	Label status;
-	PlotCtrl loss_graph;
 	ParentCtrl net_ctrl;
 	DocEdit net_edit;
 	Button reload_btn;
 	SessionConvLayers layer_view;
 	ImagePrediction pred_view;
+	LayerCtrl aenc_view;
 	
 	Splitter v_split;
 	
 	Session ses;
-	Window xLossWindow, wLossWindow, trainAccWindow, valAccWindow;
 	String t;
 	SpinLock ticking_lock;
-	Vector<Sample> tmp_samples;
-	Sample tmp_sample;
-	Volume tmp_vol, aavg;
 	Size img_sz;
-	double forward_time, backward_time;
-	int step_num;
 	int average_size;
 	int max_diff_imgs;
 	int augmentation;
-	bool use_validation_data;
+	int loader, type;
 	bool is_training;
 	bool do_flip;
 	bool has_colors;
 	bool running, stopped;
-	bool ticking_running, ticking_stopped;
 	
 public:
 	typedef ClassifyImages CLASSNAME;
-	ClassifyImages();
+	ClassifyImages(int loader, int type);
 	~ClassifyImages();
 	
 	virtual void DockInit();
+	
+	Session& GetSession() {return ses;}
 	
 	void Start();
 	void Refresher();
@@ -84,20 +62,14 @@ public:
 	void OpenFile();
 	void SaveFile();
 	void Reload();
-	void AddLoss();
-	void Ticking();
-	void Tick();
 	void RefreshStatus();
 	void StopRefresher() {running = false; while (!stopped) Sleep(100);}
-	void StopTicking() {ticking_running = false; while (!ticking_stopped) Sleep(100);}
 	void RefreshPredictions() {pred_view.Refresh();}
 	
-	void SampleTrainingInstance(Sample& sample);
-	void SampleTestInstance(Vector<Sample>& samples);
-	void TestPredict();
-	void Step(Sample& sample);
 	void UpdateNetParamDisplay();
 	void ResetAll();
+	void PostReload() {PostCallback(THISBACK(Reload));}
+	void StepInterval(int steps);
 	
 };
 

@@ -5,26 +5,33 @@ namespace ConvNet {
 LayerView::LayerView(LayerCtrl* lc) : lc(lc) {
 	
 }
+
+void LayerView::ClearCache() {
+	labels.Clear();
+	volumes.Clear();
+	tmp_imgs.Clear();
+	lbl_colors.Clear();
+}
 	
 void LayerView::Paint(Draw& d) {
 	
 	Session& ses = *lc->ses;
-	int lix = lc->lix;
-	int d0 = lc->d0;
-	int d1 = lc->d1;
+	lix = lc->lix;
+	d0 = lc->d0;
+	d1 = lc->d1;
 	
 	Size sz = GetSize();
-	int vis_len = min(sz.cx, sz.cy);
-	int density = 20;
-	int count = vis_len / density;
+	vis_len = min(sz.cx, sz.cy);
+	density = 20;
+	count = vis_len / density;
 	if (count < 2) {
 		d.DrawRect(sz, White());
 		return;
 	}
 	
-	int density_2 = density / 2;
-	int x_off = (sz.cx - vis_len) / 2;
-	int y_off = (sz.cy - vis_len) / 2;
+	density_2 = density / 2;
+	x_off = (sz.cx - vis_len) / 2;
+	y_off = (sz.cy - vis_len) / 2;
 	ImageDraw id(sz);
 	id.DrawRect(sz, White());
 	
@@ -34,9 +41,31 @@ void LayerView::Paint(Draw& d) {
 	
 	InputLayer* input = ses.GetInput();
 	if (!input) {
+		d.DrawRect(sz, White());
 		ses.Leave();
 		return;
 	}
+	
+	// Select drawing by input length
+	Volume& in = input->output_activation;
+	
+	// 2D x,y input...
+	if (in.GetLength() == 2)
+		PaintInputXY(id);
+	
+	// Image input, grayscale or color
+	else if (in.GetWidth() > 1 && in.GetHeight() > 1)
+		PaintInputImage(id);
+	
+	
+	ses.Leave();
+	
+	d.DrawImage(0, 0, id);
+}
+
+void LayerView::PaintInputXY(Draw& id) {
+	Session& ses = *lc->ses;
+	Net& net = ses.GetNetwork();
 	
 	int count2 = count * count;
 	gridx.SetCount(count2);
@@ -57,7 +86,7 @@ void LayerView::Paint(Draw& d) {
 	double step = diff / (count - 1);
 	
 	const Vector<LayerBasePtr>& layers = net.GetLayers();
-	if (lix < 0 || lix >= layers.GetCount()) {ses.Leave(); return;}
+	if (lix < 0 || lix >= layers.GetCount()) {return;}
 	LayerBase& lb = *layers[lix];
 	Volume& output = lb.output_activation;
 	
@@ -164,9 +193,112 @@ void LayerView::Paint(Draw& d) {
 		id.DrawEllipse(x_off + scr_x - radius_2, y_off + scr_y - radius_2, radius, radius, label ? clr_a2 : clr_b2, 1, Black());
 	}
 	
-	ses.Leave();
+}
+
+void LayerView::PaintInputImage(Draw& d) {
+	Session& ses = *lc->ses;
+	Net& net = ses.GetNetwork();
 	
-	d.DrawImage(0, 0, id);
+	int data_w = ses.GetDataWidth();
+	int data_h = ses.GetDataHeight();
+	int data_d = ses.GetDataDepth();
+	bool is_color = data_d == 3;
+	
+	if (volumes.IsEmpty()) {
+		ses.GetUniformClassData(16, volumes, labels);
+		tmp_imgs.SetCount(volumes.GetCount());
+		for(int i = 0; i < volumes.GetCount(); i++) {
+			VolumeDataBase& data = *volumes[i];
+			Image& img = tmp_imgs[i];
+			ImageBuffer ib(data_w, data_h);
+			RGBA* it = ib.Begin();
+			if (is_color) {
+				for (int y = 0; y < data_h; y++) {
+					for (int x = 0; x < data_w; x++) {
+						it->r = data.Get(x, y, 0, data_w, data_d) * 255;
+						it->g = data.Get(x, y, 1, data_w, data_d) * 255;
+						it->b = data.Get(x, y, 2, data_w, data_d) * 255;
+						it->a = 255;
+						it++;
+					}
+				}
+			} else {
+				for (int y = 0; y < data_h; y++) {
+					for (int x = 0; x < data_w; x++) {
+						it->r = data.Get(x, y, 0, data_w, data_d) * 255;
+						it->g = it->r;
+						it->b = it->r;
+						it->a = 255;
+						it++;
+					}
+				}
+			}
+			img = ib;
+		}
+		
+		
+		int cls_count = ses.GetClassCount();
+		lbl_colors.SetCount(cls_count);
+		for(int i = 0; i < cls_count; i++) {
+			lbl_colors[i] = Rainbow((double)i / cls_count);
+		}
+	}
+	
+	const Vector<LayerBasePtr>& layers = net.GetLayers();
+	if (lix < 0 || lix >= layers.GetCount()) return;
+	LayerBase& lb = *layers[lix];
+	Volume& output = lb.output_activation;
+	
+	
+	Volume netx(data_w, data_h, data_d, 0);
+	
+	tmp_pts.SetCount(volumes.GetCount());
+	
+	double min_x = +DBL_MAX;
+	double min_y = +DBL_MAX;
+	double max_x = -DBL_MAX;
+	double max_y = -DBL_MAX;
+	
+	for(int i = 0; i < volumes.GetCount(); i++) {
+		
+		// also draw transformed data points while we're at it
+		netx.SetData(*volumes[i]);
+		Volume& a = net.Forward(netx, false);
+		
+		Pointf& p = tmp_pts[i];
+		p.x = output.Get(0,0,d0);
+		p.y = output.Get(0,0,d1);
+		if (p.x < min_x) min_x = p.x;
+		if (p.y < min_y) min_y = p.y;
+		if (p.x > max_x) max_x = p.x;
+		if (p.y > max_y) max_y = p.y;
+	}
+	
+	double diff_x = max_x - min_x;
+	double diff_y = max_y - min_y;
+	
+	int w_2 = data_w / 2;
+	int h_2 = data_h / 2;
+	
+	for(int i = 0; i < tmp_pts.GetCount(); i++) {
+		Pointf& p = tmp_pts[i];
+		
+		double scr_x = (p.x - min_x) / diff_x * vis_len;
+		double scr_y = (p.y - min_y) / diff_y * vis_len;
+		int label = labels[i];
+		
+		d.DrawRect(
+			x_off + scr_x - w_2 - 2,
+			y_off + scr_y - h_2 - 2,
+			data_w + 4,
+			data_h + 4,
+			lbl_colors[label]);
+		d.DrawImage(
+			x_off + scr_x - w_2,
+			y_off + scr_y - h_2,
+			tmp_imgs[i]);
+	}
+	
 }
 
 
@@ -175,8 +307,14 @@ void LayerView::Paint(Draw& d) {
 
 
 
-LayerCtrl::LayerCtrl(Session& ses) : view(this) {
-	this->ses = &ses;
+
+
+
+
+
+
+LayerCtrl::LayerCtrl() : view(this) {
+	ses = NULL;
 	d0 = 0;
 	d1 = 1;
 	lix = 1;
@@ -191,11 +329,16 @@ LayerCtrl::LayerCtrl(Session& ses) : view(this) {
 	btn_cycle <<= THISBACK(Cycle);
 	lbl_layer.SetLabel("drawing neurons 0 and 1 of layer with index 0");
 	
+}
+
+void LayerCtrl::SetSession(Session& ses) {
+	this->ses = &ses;
 	ses.WhenSessionLoaded << THISBACK(PostRefreshData);
-	
 }
 
 void LayerCtrl::RefreshData() {
+	if (!ses) return;
+	
 	layerbtn_split.Clear();
 	layer_buttons.Clear();
 	
@@ -207,26 +350,41 @@ void LayerCtrl::RefreshData() {
 	d0 = 0;
 	d1 = 1;
 	
+	int first_xy_layer = -1;
 	for(int i = 0; i < layers.GetCount(); i++) {
 		const LayerBase& lb = *layers[i];
 		
 		String lstr = lb.GetKey();
+		int length = lb.output_depth * lb.output_height * lb.output_width;
+		lstr << "(" << length << ")";
 		
-		Button& b = layer_buttons.Add();
+		if (i && first_xy_layer == -1 && length == 2)
+			first_xy_layer = i;
+		
+		ButtonOption& b = layer_buttons.Add();
 		b.SetLabel(lstr);
 		b <<= THISBACK1(ViewLayer, i);
 		layerbtn_split << b;
 	}
 	ses->Leave();
 	
+	view.ClearCache();
 	view.Refresh();
 	RefreshCycle();
+	
+	PostCallback(THISBACK1(ViewLayer, first_xy_layer != -1 ? first_xy_layer : 1));
 }
 
 void LayerCtrl::ViewLayer(int i) {
+	if (layer_buttons.IsEmpty()) return;
+	i = max(0, min(layer_buttons.GetCount()-1, i));
+	
+	for(int i = 0; i < layer_buttons.GetCount(); i++)
+		layer_buttons[i].Set(false);
 	lix = i;
 	d0 = 0; // first dimension to show visualized
 	d1 = 1; // second dimension to show visualized
+	layer_buttons[i].Set(true);
 	view.Refresh();
 	RefreshCycle();
 }

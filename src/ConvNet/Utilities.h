@@ -8,6 +8,53 @@
 namespace ConvNet {
 using namespace Upp;
 
+class VolumeDataBase {
+	
+public:
+	VolumeDataBase() {}
+	virtual ~VolumeDataBase() {}
+	virtual double operator[](int i) const = 0;
+	virtual double Get(int i) const = 0;
+	virtual int GetCount() const = 0;
+	virtual void Set(int i, double d) = 0;
+	virtual void SetCount(int i) = 0;
+	virtual void SetCount(int i, double d) = 0;
+	
+	inline double Get(int x, int y, int d, int width, int depth) const {return Get(((width * y) + x) * depth + d);}
+	inline void   Set(int x, int y, int d, int width, int depth, double value) {Set(((width * y) + x) * depth + d, value);}
+	
+};
+
+template <class T>
+struct VolumeData : public VolumeDataBase {
+	Vector<T> weights;
+	
+	VolumeData() {}
+	VolumeData(int count, T value=0) {weights.SetCount(count, value);}
+	VolumeData(const Vector<T>& data) {weights <<= data;}
+	virtual double operator[](int i) const {return weights[i];}
+	virtual double Get(int i) const {return weights[i];}
+	virtual int GetCount() const {return weights.GetCount();}
+	virtual void Set(int i, double d) {weights[i] = d;}
+	virtual void SetCount(int i) {weights.SetCount(i);}
+	virtual void SetCount(int i, double d) {weights.SetCount(i, d);}
+};
+
+template <class T, int DIV>
+struct VolumeDataDivider : public VolumeDataBase {
+	Vector<T> weights;
+	double div;
+	
+	VolumeDataDivider() : div(DIV) {}
+	VolumeDataDivider(int count, T value=0) : div(DIV) {weights.SetCount(count, value);}
+	void SetDivider(double d) {div = d;}
+	virtual double operator[](int i) const {return weights[i] / div;}
+	virtual double Get(int i) const {return weights[i] / div;}
+	virtual int GetCount() const {return weights.GetCount();}
+	virtual void Set(int i, double d) {weights[i] = d * div;}
+	virtual void SetCount(int i) {weights.SetCount(i);}
+	virtual void SetCount(int i, double d) {weights.SetCount(i, d * div);}
+};
 
 
 // Volume is the basic building block of all data in a net.
@@ -18,8 +65,8 @@ using namespace Upp;
 // the data.
 class Volume : Moveable<Volume> {
 	Vector<double> weight_gradients;
-	Vector<double> weights;
-	
+	VolumeDataBase* weights;
+	bool owned_weights;
 
 protected:
 	
@@ -32,16 +79,20 @@ public:
 
 	
 	Volume();
-	Volume(const Volume& o) {*this = o;}
+	Volume(int width, int height, int depth, Volume& vol);
+	Volume(int width, int height, int depth, VolumeDataBase& weights);
+	Volume(const Volume& o) {owned_weights = false; weights = NULL; *this = o;}
 	Volume(int width, int height, int depth); // Volume will be filled with random numbers
 	Volume(int width, int height, int depth, double default_value);
 	Volume(const Vector<double>& weights);
 	Volume& Init(int width, int height, int depth); // Volume will be filled with random numbers
 	Volume& Init(int width, int height, int depth, double default_value);
 	
+	~Volume();
+	
 	Volume& operator=(const Volume& src);
 	
-	const Vector<double>& GetWeights() const {return weights;}
+	const VolumeDataBase& GetWeights() const {return *weights;}
 	const Vector<double>& GetGradients() const {return weight_gradients;}
 	
 	void Add(int x, int y, int d, double v);
@@ -63,6 +114,8 @@ public:
 	void Store(ValueMap& map) const;
 	void Load(const ValueMap& map);
 	void Augment(int crop, int dx=-1, int dy=-1, bool fliplr=false);
+	void SetData(VolumeDataBase& data);
+	void SwapData(Volume& vol);
 	
 	int GetWidth()  const {return width;}
 	int GetHeight() const {return height;}

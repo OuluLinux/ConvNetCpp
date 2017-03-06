@@ -3,7 +3,9 @@
 namespace ConvNet {
 using namespace Upp;
 
-LoaderMNIST::LoaderMNIST() {
+LoaderMNIST::LoaderMNIST(Session& ses) {
+	this->ses = &ses;
+	
 	ImageDraw id(64, 64);
 	id.DrawRect(0,0,64,64,Black());
 	id.DrawText(0,0, "M", Arial(64), White());
@@ -20,22 +22,6 @@ LoaderMNIST::LoaderMNIST() {
 	prog.Set(0, 1);
 	sub.Set(0, 1);
 	ret_value = 0;
-	
-	
-	ImageBank& bank = GetImageBank();
-	bank.classes.Clear();
-	bank.classes.Add("0");
-	bank.classes.Add("1");
-	bank.classes.Add("2");
-	bank.classes.Add("3");
-	bank.classes.Add("4");
-	bank.classes.Add("5");
-	bank.classes.Add("6");
-	bank.classes.Add("7");
-	bank.classes.Add("8");
-	bank.classes.Add("9");
-	
-	fast_cache = false;
 	
 	Thread::Start(THISBACK(Load));
 }
@@ -55,34 +41,24 @@ bool LoaderMNIST::SubProgress(int actual, int total) {
 
 void LoaderMNIST::Load() {
 	
-	ImageBank& bank = GetImageBank();
-	
-	// Try to load cached file, which is a lot faster than extracting included files.
-	if (fast_cache) {
-		TimeStop ts;
-		FileIn fast_file(ConfigFile("mnist_databank.bin"));
-		if (fast_file.IsOpen()) {
-			PostCallback(THISBACK3(Progress, 0, 1, "Loading existing cache: mnist_databank.bin"));
-			fast_file % bank;
-			if (bank.images.GetCount() == 60000 && bank.labels.GetCount() == 60000 &&
-				bank.test_images.GetCount() == 10000 && bank.test_labels.GetCount() == 10000) {
-				LOG("Loaded data from mnist_databank.bin successfully in " << ts.ToString());
-				PostCallback(THISBACK(Close0));
-				return;
-			}
-		}
-	}
-	
-	bank.images.Clear();
-	bank.labels.Clear();
-	bank.test_images.Clear();
-	bank.test_labels.Clear();
-	
 	#ifdef LITTLEENDIAN
 		#define SWAP32(x) x = SwapEndian32(x)
 	#else
 		#define SWAP32(x)
 	#endif
+	
+	ses->BeginDataClass<VolumeDataDivider<byte, 255> >(10, 60000, 28, 28, 1, 10000);
+	
+	ses->SetClass(0, "0");
+	ses->SetClass(1, "1");
+	ses->SetClass(2, "2");
+	ses->SetClass(3, "3");
+	ses->SetClass(4, "4");
+	ses->SetClass(5, "5");
+	ses->SetClass(6, "6");
+	ses->SetClass(7, "7");
+	ses->SetClass(8, "8");
+	ses->SetClass(9, "9");
 	
 	int mnist_data_count = 4;
 	int actual = 0;
@@ -127,12 +103,13 @@ void LoaderMNIST::Load() {
 			SWAP32(items);
 			ASSERT(items == (main ? 60000 : 10000));
 			
-			Vector<int>& labels = main ? bank.labels : bank.test_labels;
-			labels.SetCount(items);
 			for (int j = 0; j < items && !in.IsEof() && !IsFail(); j++) {
 				byte label;
 				in.Get(&label, 1);
-				labels[j] = label;
+				if (main)
+					ses->SetLabel(j, label);
+				else
+					ses->SetTestLabel(j, label);
 			}
 			LOG("Read OK: " << file);
 		}
@@ -156,25 +133,17 @@ void LoaderMNIST::Load() {
 			SWAP32(cols);
 			ASSERT(cols == 28);
 			
-			byte pixel;
-			Vector<Image>& images = main ? bank.images : bank.test_images;
-			images.SetCount(items);
+			int len = rows * cols;
+			
 			for(int j = 0; j < items && !in.IsEof() && !IsFail(); j++) {
-				ImageBuffer ib(cols, rows);
-				RGBA* it = ib.Begin();
-				for (int y = 0; y < rows && !in.IsEof(); y++) {
-					for (int x = 0; x < cols && !in.IsEof(); x++) {
-						in.Get(&pixel, 1);
-						it->a = 255;
-						it->r = pixel;
-						it->g = pixel;
-						it->b = pixel;
-						it++;
-					}
+				VolumeDataBase& out = main ? ses->Get(j) : ses->GetTest(j);
+				for (int p = 0; p < len && !in.IsEof(); p++) {
+					byte pixel;
+					in.Get(&pixel, 1);
+					out.Set(p, pixel / 255.0);
 				}
 				if ((j % 100) == 0)
 					SubProgress(j, items);
-				images[j] = ib;
 			}
 			
 			
@@ -185,11 +154,7 @@ void LoaderMNIST::Load() {
 		actual++;
 	}
 	
-	if (fast_cache && !IsFail()) {
-		PostCallback(THISBACK3(Progress, actual, total, "Saving fast cache: mnist_databank.bin"));
-		FileOut fast_file(ConfigFile("mnist_databank.bin"));
-		fast_file % bank;
-	}
+	ses->EndData();
 	
 	PostCallback(THISBACK(Close0));
 }

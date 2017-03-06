@@ -82,7 +82,7 @@ double Net::GetCostLoss(Volume& input, int pos, double y) {
 	throw Exception("Last layer doesnt implement ILastLayer interface");
 }
 
-double Net::GetCostLoss(Volume& input, const Vector<double>& y) {
+double Net::GetCostLoss(Volume& input, const VolumeDataBase& y) {
 	Forward(input);
 	
 	LastLayerBase* last_layer = dynamic_cast<LastLayerBase*>(&*layers[layers.GetCount() - 1]);
@@ -109,7 +109,7 @@ double Net::Backward(int pos, double y) {
 	throw Exception("Last layer doesnt implement ILastLayer interface");
 }
 
-double Net::Backward(const Vector<double>& y) {
+double Net::Backward(const VolumeDataBase& y) {
 	int n = layers.GetCount();
 	LastLayerBase* last_layer = dynamic_cast<LastLayerBase*>(&*layers[n - 1]);
 	if (last_layer != NULL) {

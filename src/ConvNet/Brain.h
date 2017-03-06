@@ -66,6 +66,7 @@ public:
 	int Forward(const Vector<double>& input_array);
 	void Backward(double reward);
 	
+	// TODO: fix ambiguity between Brain::GetAverageReward and Session::GetRewardAverage
 	double GetLatestReward() const {return latest_reward;}
 	double GetAverageReward() const {return average_reward_window.GetAverage();}
 	double GetAverageRewardWindowSize() const {return average_reward_window.GetCount();}
@@ -74,6 +75,9 @@ public:
 	int GetExperienceCount() const {return experience.GetCount();}
 	double GetEpsilon() const {return epsilon;}
 	int GetAge() const {return age;}
+	
+	virtual double GetLossAverage() const {return average_loss_window.GetAverage();}
+	virtual double GetRewardAverage() const {return average_reward_window.GetAverage();}
 	
 	void SetLearning(bool b) {learning = b;}
 	

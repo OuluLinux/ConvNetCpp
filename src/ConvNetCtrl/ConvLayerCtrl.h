@@ -12,6 +12,7 @@ class ConvLayerCtrl : public Ctrl {
 	Session* ses;
 	VectorMap<int, Image> gradient_cache;
 	int layer_id, height;
+	bool hide_gradients;
 	bool is_color;
 	
 public:
@@ -23,6 +24,7 @@ public:
 	void SetId(int i) {layer_id = i;}
 	void SetSession(Session& ses) {this->ses = &ses;}
 	void SetColor(bool b) {is_color = b;}
+	void HideGradients(bool b=true) {hide_gradients = b;}
 	void PaintSize(Draw& d, Size sz);
 	void ClearGradientCache() {gradient_cache.Clear();}
 	
@@ -37,6 +39,7 @@ class SessionConvLayers : public ParentCtrl {
 	Session* ses;
 	bool is_scrolling;
 	bool is_color;
+	bool hide_gradients;
 	
 public:
 	typedef SessionConvLayers CLASSNAME;
@@ -46,6 +49,7 @@ public:
 	void SetColor(bool b=true) {is_color = b;}
 	void Scroll();
 	void RefreshLayers();
+	void HideGradients(bool b=true) {hide_gradients = b;}
 	virtual bool Key(dword key, int);
 	virtual void MouseWheel(Point, int zdelta, dword);
 	virtual void Layout();

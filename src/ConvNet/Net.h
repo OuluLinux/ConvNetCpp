@@ -26,9 +26,9 @@ public:
 	virtual Volume& Forward(const Vector<VolumePtr>& inputs, bool is_training = false);
 	virtual Volume& Forward(Volume& input, bool is_training = false);
 	virtual double GetCostLoss(Volume& input, int pos, double y);
-	virtual double GetCostLoss(Volume& input, const Vector<double>& y);
+	virtual double GetCostLoss(Volume& input, const VolumeDataBase& y);
 	virtual double Backward(int pos, double y);
-	virtual double Backward(const Vector<double>& y);
+	virtual double Backward(const VolumeDataBase& y);
 	virtual int GetPrediction();
 	virtual Vector<ParametersAndGradients>& GetParametersAndGradients();
 	
