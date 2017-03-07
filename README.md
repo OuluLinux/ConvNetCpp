@@ -15,10 +15,13 @@ Screenshot of [a CIFAR-10 classification example](http://cs.stanford.edu/people/
 Screenshot of [a MNIST digit autoencoder example](http://cs.stanford.edu/people/karpathy/convnetjs/demo/autoencoder.html) translated to ConvNetC++. 
 ![MNIST Autoencoder example](https://github.com/sppp/ConvNetC-/raw/master/doc/autoencodemnist.png)
 
+Screenshot of [a toy 1d regression example](http://cs.stanford.edu/people/karpathy/convnetjs/demo/regression.html) translated to ConvNetC++. 
+![a toy 1d regression example](https://github.com/sppp/ConvNetC-/raw/master/doc/toy1dregression.png)
+
 Screenshot of [a toy 2d classification example](http://cs.stanford.edu/people/karpathy/convnetjs/demo/classify2d.html) translated to ConvNetC++. 
 ![Classify2D example](https://github.com/sppp/ConvNetC-/raw/master/doc/classify2d.png)
 
 Screenshot of [Deep Q Learning Demo](http://cs.stanford.edu/people/karpathy/convnetjs/demo/rldemo.html) translated to ConvNetC++. 
 ![Deep Q Learning Demo](https://github.com/sppp/ConvNetC-/raw/master/doc/deepqlearning.png)
 
-
+toy1

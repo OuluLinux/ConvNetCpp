@@ -17,6 +17,8 @@ class LayerView : public Ctrl {
 	Vector<double> gridy;
 	Vector<bool> gridl;
 	Vector<Pointf> tmp_pts;
+	Vector<Point> tmp_pts1;
+	Vector<Vector<Point> > tmp_pts2;
 	Vector<Image> tmp_imgs;
 	Vector<VolumeDataBase*> volumes;
 	Vector<Color> lbl_colors;
@@ -26,6 +28,7 @@ class LayerView : public Ctrl {
 	// tmp vars
 	int x_off, y_off, count, lix, d0, d1, vis_len, density, density_2;
 	
+	void PaintInputX(Draw& d);
 	void PaintInputXY(Draw& d);
 	void PaintInputImage(Draw& d);
 	

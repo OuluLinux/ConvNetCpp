@@ -19,6 +19,7 @@ Session::Session() {
 	data_w = 0;
 	data_h = 0;
 	data_d = 0;
+	is_data_result = false;
 	
 	SetWindowSize(100);
 }
@@ -69,6 +70,7 @@ void Session::ClearOwnedTrainer() {
 void Session::StartTraining() {
 	if (!is_training_stopped) return;
 	is_training = true;
+	is_training_stopped = false;
 	#ifdef flagMT
 	Thread::Start(THISBACK(Train));
 	#else
@@ -128,7 +130,10 @@ void Session::TrainIteration() {
 	TrainerBase& trainer = *this->trainer;
 	
 	const Vector<LayerBasePtr>& layers = net.GetLayers();
-	bool train_regression = dynamic_cast<RegressionLayer*>(layers[layers.GetCount()-1]);
+	bool train_regression = is_data_result ? false : dynamic_cast<RegressionLayer*>(layers[layers.GetCount()-1]) != NULL;
+	
+	if (is_data_result)
+		test_predict = false;
 	
 	try {
 	
@@ -136,7 +141,6 @@ void Session::TrainIteration() {
 			ASSERT(data[i]);
 			
 			x.SetData(Get(i));
-			int label = GetLabel(i);
 			
 			if (augmentation)
 				x.Augment(augmentation, -1, -1, augmentation_do_flip);
@@ -150,14 +154,16 @@ void Session::TrainIteration() {
 				forward_time = ts.Elapsed();
 				
 				int cls = net.GetPrediction();
-				accuracy_window.Add(cls == label ? 1.0 : 0.0);
+				accuracy_window.Add(cls == GetLabel(i) ? 1.0 : 0.0);
 			}
 			
 			TimeStop ts;
-			if (train_regression)
+			if (is_data_result)
+				trainer.Train(x, GetResult(i));
+			else if (train_regression)
 				trainer.Train(x, x.GetWeights()); // value
 			else
-				trainer.Train(x, label, 1.0); // value
+				trainer.Train(x, GetLabel(i), 1.0); // value
 			backward_time = ts.Elapsed();
 			double reward = trainer.GetReward();
 			double loss = trainer.GetLoss();
@@ -170,7 +176,7 @@ void Session::TrainIteration() {
 			// if last layer is softmax, then add prediction value to the average
 			if (test_predict) {
 				int cls = net.GetPrediction();
-				train_window.Add(cls == label ? 1.0 : 0.0); // add 1 when label is correct
+				train_window.Add(cls == GetLabel(i) ? 1.0 : 0.0); // add 1 when label is correct
 			}
 			
 			reward_window.Add(reward);
@@ -505,6 +511,10 @@ void Session::ClearData() {
 		delete test_data[i];
 	}
 	test_data.Clear();
+	for(int i = 0; i < result_data.GetCount(); i++) {
+		delete result_data[i];
+	}
+	result_data.Clear();
 	labels.Clear();
 	test_labels.Clear();
 	classes.Clear();
@@ -536,7 +546,10 @@ void Session::EndData() {
 		int a = Random(data.GetCount());
 		int b = Random(data.GetCount());
 		Swap(data[a],	data[b]);
-		Swap(labels[a],	labels[b]);
+		if (!is_data_result)
+			Swap(labels[a],	labels[b]);
+		else
+			Swap(result_data[a], result_data[b]);
 	}
 	
 }

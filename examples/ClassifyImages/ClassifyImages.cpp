@@ -74,7 +74,7 @@ ClassifyImages::ClassifyImages(int loader, int type)
 					"\t{\"type\":\"fc\", \"neuron_count\":2},\n"
 					"\t{\"type\":\"fc\", \"neuron_count\":50, \"activation\": \"tanh\"},\n"
 					"\t{\"type\":\"fc\", \"neuron_count\":50, \"activation\": \"tanh\"},\n"
-					"\t{\"type\":\"regression\", \"neuron_count\":1024},\n" // 30*30=900, 32*32=1024
+					"\t{\"type\":\"regression\", \"neuron_count\":3072},\n" // 3*32*32=3072
 					"\t{\"type\":\"adadelta\", \"learning_rate\":1, \"batch_size\":50, \"l1_decay\":0.001, \"l2_decay\":0.001}\n"
 					"]\n";
 			augmentation = 0;

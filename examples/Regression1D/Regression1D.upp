@@ -1,0 +1,17 @@
+description "ConvnetJS demo: toy 1D regression\377";
+
+uses
+	CtrlLib,
+	ConvNetCtrl,
+	Docking;
+
+file
+	main.cpp,
+	Regression1D.h,
+	Regression1D.cpp,
+	Regression1D.rc,
+	Regression1D.iml;
+
+mainconfig
+	"" = "GUI MT";
+

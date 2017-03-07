@@ -101,6 +101,11 @@ Volume& Volume::operator=(const Volume& src) {
 }
 
 Volume& Volume::Init(int width, int height, int depth) {
+	if (!owned_weights) {
+		owned_weights = true;
+		weights = new VolumeData<double>();
+	}
+	
 	// we were given dimensions of the vol
 	this->width = width;
 	this->height = height;
@@ -122,6 +127,11 @@ Volume& Volume::Init(int width, int height, int depth) {
 }
 
 Volume& Volume::Init(int width, int height, int depth, double default_value) {
+	if (!owned_weights) {
+		owned_weights = true;
+		weights = new VolumeData<double>();
+	}
+	
 	// we were given dimensions of the vol
 	this->width = width;
 	this->height = height;
@@ -195,6 +205,7 @@ void Volume::AddFromScaled(const Volume& volume, double a) {
 }
 
 void Volume::SetConst(double c) {
+	ASSERT(owned_weights);
 	for (int i = 0; i < weights->GetCount(); i++) {
 		weights->Set(i, weights->Get(i) + c);
 	}
@@ -217,6 +228,7 @@ void Volume::AddGradient(int i, double v) {
 }
 
 void Volume::Set(int i, double v) {
+	ASSERT(owned_weights);
 	weights->Set(i, v);
 }
 

@@ -14,6 +14,10 @@ void LayerView::ClearCache() {
 }
 	
 void LayerView::Paint(Draw& d) {
+	if (!lc->ses) {
+		d.DrawRect(GetSize(), White());
+		return;
+	}
 	
 	Session& ses = *lc->ses;
 	lix = lc->lix;
@@ -49,8 +53,13 @@ void LayerView::Paint(Draw& d) {
 	// Select drawing by input length
 	Volume& in = input->output_activation;
 	
+	
+	// 1D x input... 
+	if (in.GetLength() == 1)
+		PaintInputX(id);
+	
 	// 2D x,y input...
-	if (in.GetLength() == 2)
+	else if (in.GetLength() == 2)
 		PaintInputXY(id);
 	
 	// Image input, grayscale or color
@@ -61,6 +70,87 @@ void LayerView::Paint(Draw& d) {
 	ses.Leave();
 	
 	d.DrawImage(0, 0, id);
+}
+
+void LayerView::PaintInputX(Draw& id) {
+	Session& ses = *lc->ses;
+	Net& net = ses.GetNetwork();
+	LayerBase& layer = *net.GetLayers()[lix];
+	
+	Size sz = GetSize();
+	Volume netx(1,1,1,0);
+	
+	double min_x = +DBL_MAX;
+	double max_x = -DBL_MAX;
+	double min_y = +DBL_MAX;
+	double max_y = -DBL_MAX;
+	
+	#define X(v) (v - min_x) / diff_x * sz.cx
+	#define Y(v) (v - min_y) / diff_y * sz.cy
+	
+	int data_count = ses.GetDataCount();
+	for (int i = 0; i < data_count; i++) {
+		double x = ses.GetData(i, 0);
+		double y = ses.GetResult(i).Get(0);
+		min_x = min(min_x, x);
+		min_y = min(min_y, y);
+		max_x = max(max_x, x);
+		max_y = max(max_y, y);
+	}
+	double diff_x = max_x - min_x;
+	double diff_y = max_y - min_y;
+
+	// draw axes
+	id.DrawLine(0, Y(0) - 1, sz.cx, Y(0) - 1, 3, GrayColor());
+	id.DrawLine(X(0) - 1, 0, X(0) - 1, sz.cy, 3, GrayColor());
+	
+	// draw decisions in the grid
+	double density= 5.0;
+	bool draw_neuron_outputs = true;
+	
+	// draw final decision
+	Vector<VolumeDataBase*> neurons;
+	tmp_pts1.SetCount(0);
+	
+	int neuron_count = layer.output_activation.GetLength();
+	tmp_pts2.SetCount(neuron_count);
+	for(int i = 0; i < tmp_pts2.GetCount(); i++)
+		tmp_pts2[i].SetCount(0);
+	
+	for (double x = 0.0; x <= sz.cx; x += density) {
+		
+		netx.Set(0, x / sz.cx * diff_x + min_x);
+		
+		Volume& a = net.Forward(netx);
+		double y = Y(a.Get(0));
+		
+		// draw individual neurons on first layer
+		if (draw_neuron_outputs) {
+			Volume& out = layer.output_activation;
+			for (int i = 0; i < out.GetLength(); i++)
+				tmp_pts2[i].Add(Pointf(x, Y(out.Get(i))));
+		}
+		
+		tmp_pts1.Add(Pointf(x, y));
+	}
+	
+	for(int i = 0; i < tmp_pts2.GetCount(); i++)
+		id.DrawPolyline(tmp_pts2[i], 1, Color(250,50,50));
+	
+	id.DrawPolyline(tmp_pts1, 1, Black());
+	
+	// draw datapoints. Draw support vectors larger
+	int radius = 10;
+	int radius_2 = radius / 2;
+	for (int i = 0; i < data_count; i++) {
+		double x = X(ses.GetData(i, 0))			- radius_2;
+		double y = Y(ses.GetResult(i).Get(0))	- radius_2;
+		id.DrawEllipse(x, y, radius, radius, Black());
+	}
+	
+	Font font = Arial(16).Bold();
+	id.DrawText(5, 5, "Average loss: " + DblStr(ses.GetLossAverage()), font, Blue());
+	
 }
 
 void LayerView::PaintInputXY(Draw& id) {

@@ -10,7 +10,7 @@ class Session {
 protected:
 	typedef Exc RequiredArg;
 	
-	Vector<VolumeDataBase*> data, test_data;
+	Vector<VolumeDataBase*> data, test_data, result_data;
 	Vector<double> mins, maxs, session_last_input_array;
 	Vector<int> labels, test_labels;
 	Vector<LayerBasePtr> owned_layers;
@@ -31,6 +31,7 @@ protected:
 	bool is_training, is_training_stopped;
 	bool test_predict;
 	bool augmentation_do_flip;
+	bool is_data_result;
 	
 	const Value& ChkNotNull(const String& key, const Value& v);
 	void Train();
@@ -79,6 +80,7 @@ public:
 	TrainerBase* GetTrainer() const {return trainer;}
 	VolumeDataBase& Get(int i) {return *data[i];}
 	VolumeDataBase& GetTest(int i) {return *test_data[i];}
+	VolumeDataBase& GetResult(int i) {return *result_data[i];}
 	String GetClass(int i) const {return classes[i];}
 	double GetData(int i, int col) const;
 	double GetTestData(int i, int col) const;
@@ -109,12 +111,14 @@ public:
 	bool StoreOriginalJSON(String& json);
 	void BeginData(int cls_count, int count, int column_count, int test_count=0) {BeginDataClass<VolumeData<double> >(cls_count, count, 1, 1, column_count, test_count);}
 	void BeginData(int cls_count, int count, int width, int height, int depth, int test_count=0) {BeginDataClass<VolumeData<double> >(cls_count, count, width, height, depth, test_count);}
+	void BeginDataResult(int result_length, int count, int column_count, int test_count=0) {BeginDataResult<VolumeData<double> >(result_length, count, 1, 1, column_count, test_count);}
 	void EndData();
 	void SetMaxTrainIters(int count) {train_iter_limit = count;}
 	void SetPredictInterval(int i) {predict_interval = i;}
 	void SetTestPredict(bool b) {test_predict = b;}
 	void SetAugmentation(int i=0, bool flip=false) {augmentation = 0; augmentation_do_flip = flip;}
 	Session& SetData(int i, int col, double value) {data[i]->Set(col, value); return *this;}
+	Session& SetResult(int i, int col, double value) {result_data[i]->Set(col, value); return *this;}
 	Session& SetLabel(int i, int label) {labels[i] = label; return *this;}
 	Session& SetTestData(int i, int col, double value) {test_data[i]->Set(col, value); return *this;}
 	Session& SetTestLabel(int i, int label) {test_labels[i] = label; return *this;}
@@ -133,6 +137,8 @@ public:
 		data_w = width;
 		data_h = height;
 		data_d = depth;
+		
+		is_data_result = false;
 		
 		data.SetCount(count, NULL);
 		for(int i = 0; i < data.GetCount(); i++)
@@ -155,6 +161,38 @@ public:
 		classes.SetCount(cls_count);
 		
 	}
+	
+	template <class T>
+	void BeginDataResult(int result_length, int count, int width, int height, int depth, int test_count=0) {
+		ClearData();
+		
+		data_len = width * height * depth;
+		data_w = width;
+		data_h = height;
+		data_d = depth;
+		
+		is_data_result = true;
+		
+		data.SetCount(count, NULL);
+		for(int i = 0; i < data.GetCount(); i++)
+			data[i] = new T(data_len);
+		
+		result_data.SetCount(count, NULL);
+		for(int i = 0; i < result_data.GetCount(); i++)
+			result_data[i] = new T(result_length);
+		
+		test_data.SetCount(test_count, NULL);
+		for(int i = 0; i < test_data.GetCount(); i++)
+			test_data[i] = new T(data_len);
+		
+		mins.Clear();
+		mins.SetCount(data_len, DBL_MAX);
+		maxs.Clear();
+		maxs.SetCount(data_len, -DBL_MAX);
+		
+	}
+	
+	
 	
 };
 
