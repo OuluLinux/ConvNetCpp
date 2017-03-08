@@ -24,4 +24,8 @@ Screenshot of [a toy 2d classification example](http://cs.stanford.edu/people/ka
 Screenshot of [Deep Q Learning Demo](http://cs.stanford.edu/people/karpathy/convnetjs/demo/rldemo.html) translated to ConvNetC++. 
 ![Deep Q Learning Demo](https://github.com/sppp/ConvNetC-/raw/master/doc/deepqlearning.png)
 
-toy1
+Screenshot of [Image Painting Demo](http://cs.stanford.edu/people/karpathy/convnetjs/demo/image_regression.html) translated to ConvNetC++. 
+![Image Painting Demo](https://github.com/sppp/ConvNetC-/raw/master/doc/imagepainting.png)
+
+
+

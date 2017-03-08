@@ -10,6 +10,7 @@
 #include "ImagePrediction.h"
 #include "ConvLayerCtrl.h"
 #include "TrainingGraph.h"
+#include "ImageRegression.h"
 
 namespace ConvNet {
 using namespace Upp;

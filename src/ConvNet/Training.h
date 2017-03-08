@@ -42,6 +42,7 @@ public:
 	// TODO: make these protected
 	
 	
+	int GetIteration() const {return iter_count;}
 	int GetBatchSize() const {return batch_size;}
 	double GetCostLoss() const {return cost_loss;}
 	double GetBeta1() const {return Beta1;}

@@ -19,6 +19,8 @@ file
 	PointCtrl.cpp,
 	ConvLayerCtrl.h,
 	ConvLayerCtrl.cpp,
+	ImageRegression.h,
+	ImageRegression.cpp,
 	ImagePrediction.h,
 	ImagePrediction.cpp;
 

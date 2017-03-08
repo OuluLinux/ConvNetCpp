@@ -1,0 +1,17 @@
+description "Neural Network \"paints\" an image\377";
+
+uses
+	CtrlLib,
+	ConvNetCtrl,
+	Docking;
+
+file
+	main.cpp,
+	RegressionPainter.h,
+	RegressionPainter.cpp,
+	RegressionPainter.iml,
+	RegressionPainter.rc;
+
+mainconfig
+	"" = "GUI MT";
+

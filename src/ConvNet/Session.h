@@ -27,6 +27,7 @@ protected:
 	int data_w, data_h, data_d, data_len;
 	int forward_time, backward_time;
 	int step_cb_interal;
+	int iter_cb_interal;
 	int augmentation;
 	bool is_training, is_training_stopped;
 	bool test_predict;
@@ -100,6 +101,7 @@ public:
 	int GetDataDepth() const {return data_d;}
 	int GetClassCount() const {return classes.GetCount();}
 	int GetStepCount() const {return step_num;}
+	int GetIteration() const {return iter;}
 	bool IsTraining() const {return !is_training_stopped || is_training;}
 	void GetUniformClassData(int per_class, Vector<VolumeDataBase*>& volumes, Vector<int>& labels);
 	
@@ -127,7 +129,7 @@ public:
 	Session& SetWindowSize(int size, int min_size=1);
 	
 	Callback WhenSessionLoaded;
-	Callback1<int> WhenStepInterval;
+	Callback1<int> WhenStepInterval, WhenIterationInterval;
 	
 	template <class T>
 	void BeginDataClass(int cls_count, int count, int width, int height, int depth, int test_count=0) {

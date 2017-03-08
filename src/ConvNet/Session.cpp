@@ -14,6 +14,7 @@ Session::Session() {
 	forward_time = 0;
 	backward_time = 0;
 	step_cb_interal = 100;
+	iter_cb_interal = 100;
 	augmentation = 0;
 	augmentation_do_flip = false;
 	data_w = 0;
@@ -165,6 +166,7 @@ void Session::TrainIteration() {
 			else
 				trainer.Train(x, GetLabel(i), 1.0); // value
 			backward_time = ts.Elapsed();
+			
 			double reward = trainer.GetReward();
 			double loss = trainer.GetLoss();
 			double loss_l1d = trainer.GetL1DecayLoss();
@@ -191,10 +193,20 @@ void Session::TrainIteration() {
 		}
 		
 		iter++;
+		
+	
+		if ((iter % iter_cb_interal) == 0)
+			WhenIterationInterval(iter);
+		
 	}
 	catch (Exc e) {
 		lock.Leave();
 		LOG("Exception: " + e);
+		TrainEnd();
+	}
+	catch (...) {
+		lock.Leave();
+		LOG("Unknown exception");
 		TrainEnd();
 	}
 }
