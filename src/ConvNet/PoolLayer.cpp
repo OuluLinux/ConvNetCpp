@@ -127,4 +127,9 @@ void PoolLayer::Load(const ValueMap& map) {
 	switchy.SetCount(length, 0);
 }
 
+String PoolLayer::ToString() const {
+	return Format("Pool: w:%d, h:%d, d:%d stride:%d pad:%d",
+		output_width, output_height, output_depth, stride, pad);
+}
+
 }

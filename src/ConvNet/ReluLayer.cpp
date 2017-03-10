@@ -63,4 +63,9 @@ void ReluLayer::Load(const ValueMap& map) {
 	LOADVAR(output_height, out_sy);
 }
 
+String ReluLayer::ToString() const {
+	return Format("Relu: w:%d, h:%d, d:%d",
+		output_width, output_height, output_depth);
+}
+
 }

@@ -57,4 +57,9 @@ void TanhLayer::Load(const ValueMap& map) {
 	LOADVAR(output_height, out_sy);
 }
 
+String TanhLayer::ToString() const {
+	return Format("Tanh: w:%d, h:%d, d:%d",
+		output_width, output_height, output_depth);
+}
+
 }

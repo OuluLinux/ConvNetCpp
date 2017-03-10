@@ -1,0 +1,1 @@
+BINARY_MASK(data_txt, "*.txt" BZ2)

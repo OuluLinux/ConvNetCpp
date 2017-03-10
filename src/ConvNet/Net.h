@@ -34,6 +34,8 @@ public:
 	
 	void Clear() {layers.Clear();}
 	
+	String ToString() const;
+	
 };
 
 

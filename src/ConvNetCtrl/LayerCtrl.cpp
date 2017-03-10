@@ -74,6 +74,7 @@ void LayerView::Paint(Draw& d) {
 
 void LayerView::PaintInputX(Draw& id) {
 	Session& ses = *lc->ses;
+	SessionData& d = ses.Data();
 	Net& net = ses.GetNetwork();
 	LayerBase& layer = *net.GetLayers()[lix];
 	
@@ -88,10 +89,10 @@ void LayerView::PaintInputX(Draw& id) {
 	#define X(v) (v - min_x) / diff_x * sz.cx
 	#define Y(v) (v - min_y) / diff_y * sz.cy
 	
-	int data_count = ses.GetDataCount();
+	int data_count = d.GetDataCount();
 	for (int i = 0; i < data_count; i++) {
-		double x = ses.GetData(i, 0);
-		double y = ses.GetResult(i).Get(0);
+		double x = d.GetData(i, 0);
+		double y = d.GetResult(i).Get(0);
 		min_x = min(min_x, x);
 		min_y = min(min_y, y);
 		max_x = max(max_x, x);
@@ -143,8 +144,8 @@ void LayerView::PaintInputX(Draw& id) {
 	int radius = 10;
 	int radius_2 = radius / 2;
 	for (int i = 0; i < data_count; i++) {
-		double x = X(ses.GetData(i, 0))			- radius_2;
-		double y = Y(ses.GetResult(i).Get(0))	- radius_2;
+		double x = X(d.GetData(i, 0))			- radius_2;
+		double y = Y(d.GetResult(i).Get(0))	- radius_2;
 		id.DrawEllipse(x, y, radius, radius, Black());
 	}
 	
@@ -155,6 +156,7 @@ void LayerView::PaintInputX(Draw& id) {
 
 void LayerView::PaintInputXY(Draw& id) {
 	Session& ses = *lc->ses;
+	SessionData& d = ses.Data();
 	Net& net = ses.GetNetwork();
 	
 	int count2 = count * count;
@@ -169,8 +171,8 @@ void LayerView::PaintInputXY(Draw& id) {
 			lines[i].SetCount(count);
 	}
 	
-	int data_count = ses.GetDataCount();
-	double offset = max(max(-ses.GetMin(0), -ses.GetMin(1)), max(ses.GetMax(0), ses.GetMax(1)));
+	int data_count = d.GetDataCount();
+	double offset = max(max(-d.GetMin(0), -d.GetMin(1)), max(d.GetMax(0), d.GetMax(1)));
 	offset *= 1.1;
 	double diff = offset * 2;
 	double step = diff / (count - 1);
@@ -272,30 +274,31 @@ void LayerView::PaintInputXY(Draw& id) {
 	for(int i = 0; i < data_count; i++) {
 		
 		// also draw transformed data points while we're at it
-		netx.Set(0, 0, 0, ses.GetData(i, 0));
-		netx.Set(0, 0, 1, ses.GetData(i, 1));
+		netx.Set(0, 0, 0, d.GetData(i, 0));
+		netx.Set(0, 0, 1, d.GetData(i, 1));
 		Volume& a = net.Forward(netx, false);
 		
 		double scr_x = (output.Get(0,0,d0) - min_x) / diff_x * vis_len;
 		double scr_y = (output.Get(0,0,d1) - min_y) / diff_y * vis_len;
-		int label = ses.GetLabel(i);
+		int label = d.GetLabel(i);
 		
 		id.DrawEllipse(x_off + scr_x - radius_2, y_off + scr_y - radius_2, radius, radius, label ? clr_a2 : clr_b2, 1, Black());
 	}
 	
 }
 
-void LayerView::PaintInputImage(Draw& d) {
+void LayerView::PaintInputImage(Draw& id) {
 	Session& ses = *lc->ses;
+	SessionData& d = ses.Data();
 	Net& net = ses.GetNetwork();
 	
-	int data_w = ses.GetDataWidth();
-	int data_h = ses.GetDataHeight();
-	int data_d = ses.GetDataDepth();
+	int data_w = d.GetDataWidth();
+	int data_h = d.GetDataHeight();
+	int data_d = d.GetDataDepth();
 	bool is_color = data_d == 3;
 	
 	if (volumes.IsEmpty()) {
-		ses.GetUniformClassData(16, volumes, labels);
+		d.GetUniformClassData(16, volumes, labels);
 		tmp_imgs.SetCount(volumes.GetCount());
 		for(int i = 0; i < volumes.GetCount(); i++) {
 			VolumeDataBase& data = *volumes[i];
@@ -327,7 +330,7 @@ void LayerView::PaintInputImage(Draw& d) {
 		}
 		
 		
-		int cls_count = ses.GetClassCount();
+		int cls_count = d.GetClassCount();
 		lbl_colors.SetCount(cls_count);
 		for(int i = 0; i < cls_count; i++) {
 			lbl_colors[i] = Rainbow((double)i / cls_count);
@@ -377,13 +380,13 @@ void LayerView::PaintInputImage(Draw& d) {
 		double scr_y = (p.y - min_y) / diff_y * vis_len;
 		int label = labels[i];
 		
-		d.DrawRect(
+		id.DrawRect(
 			x_off + scr_x - w_2 - 2,
 			y_off + scr_y - h_2 - 2,
 			data_w + 4,
 			data_h + 4,
 			lbl_colors[label]);
-		d.DrawImage(
+		id.DrawImage(
 			x_off + scr_x - w_2,
 			y_off + scr_y - h_2,
 			tmp_imgs[i]);

@@ -35,7 +35,7 @@ void ConvLayer::UpdateOutputSize() {
 	// initializations
 	double bias = bias_pref;
 	
-	filters.Clear();
+	filters.SetCount(0);
 	
 	for (int i = 0; i < output_depth; i++) {
 		filters.Add().Init(width, height, input_depth);
@@ -211,6 +211,11 @@ void ConvLayer::Load(const ValueMap& map) {
 		this->filters.Add().Init(width, height, input_depth);
 	}
 	
+}
+
+String ConvLayer::ToString() const {
+	return Format("Conv: w:%d, h:%d, d:%d, bias-pref:%2!,n, filters:%d l1-decay:%2!,n l2-decay:%2!,n stride:%d pad:%d",
+		width, height, input_depth, bias_pref, filter_count, l1_decay_mul, l2_decay_mul, stride, pad);
 }
 
 }

@@ -78,4 +78,9 @@ void SvmLayer::Load(const ValueMap& map) {
 	LOADVAR(class_count, num_inputs);
 }
 
+String SvmLayer::ToString() const {
+	return Format("SVM: w:%d, h:%d, d:%d, classes:%d",
+		output_width, output_height, output_depth, class_count);
+}
+
 }

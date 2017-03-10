@@ -96,7 +96,7 @@ void Brain::Init(int num_states, int num_actions, Vector<double>* random_action_
 	// for example in flappy bird, we may want to choose to not flap more often
 	if (random_action_distribution) {
 		
-		// this better sum to 1 by the way, and be of length this.num_actions
+		// this better sum to 1 by the way, and be of length num_actions
 		this->random_action_distribution <<= *random_action_distribution;
 		
 		if (random_action_distribution->GetCount() != num_actions) {

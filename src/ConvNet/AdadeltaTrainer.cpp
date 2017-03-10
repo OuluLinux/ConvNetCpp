@@ -81,5 +81,17 @@ void AdadeltaTrainer::Backward(const VolumeDataBase& y) {
 	l1_decay_loss = 0.0;
 }
 
+void AdadeltaTrainer::Reset() {
+	TrainerBase::Reset();
+	gsum.Clear();
+	xsum.Clear();
+}
+
+String AdadeltaTrainer::ToString() const {
+	return Format("Adadelta: batch_size:%d, cost_loss:%2!,n, cost_reward:%2!,n, Beta1:%2!,n, Beta2:%2!,n,"
+		"l1_decay:%2!,n, l2_decay:%2!,n, l1_decay_loss:%2!,n, l2_decay_loss:%2!,n, learning_rate:%2!,n, momentum:%2!,n, eps:%2!,n, ro:%2!,n",
+		batch_size, cost_loss, cost_reward, Beta1, Beta2,
+		l1_decay, l2_decay, l1_decay_loss, l2_decay_loss, learning_rate, momentum, eps, ro);
+}
 
 }

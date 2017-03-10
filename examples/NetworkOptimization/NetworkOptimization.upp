@@ -1,0 +1,22 @@
+description "ConvNetJS Automatic Prediction demo using MagicNet class.\377";
+
+uses
+	CtrlLib,
+	ConvNetCtrl,
+	Docking,
+	plugin/bz2;
+
+file
+	main.cpp,
+	NetworkOptimization.h,
+	NetworkOptimization.cpp,
+	NetworkOptimization.rc,
+	NetworkOptimization.brc,
+	NetworkOptimization.iml,
+	DataCarEval.txt,
+	DataYeast.txt,
+	DataIris.txt;
+
+mainconfig
+	"" = "GUI MT";
+

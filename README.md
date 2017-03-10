@@ -27,5 +27,8 @@ Screenshot of [Deep Q Learning Demo](http://cs.stanford.edu/people/karpathy/conv
 Screenshot of [Image Painting Demo](http://cs.stanford.edu/people/karpathy/convnetjs/demo/image_regression.html) translated to ConvNetC++. 
 ![Image Painting Demo](https://github.com/sppp/ConvNetC-/raw/master/doc/imagepainting.png)
 
+Screenshot of [Automatic Prediction Demo](http://cs.stanford.edu/people/karpathy/convnetjs/demo/automatic.html) translated to ConvNetC++. 
+![Automatic Prediction Demo](https://github.com/sppp/ConvNetC-/raw/master/doc/optimization.png)
+
 
 

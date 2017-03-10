@@ -136,8 +136,9 @@ int Net::GetPrediction() {
 	int maxi = 0;
 	
 	for (int i = 1; i < softmax_layer->output_activation.GetLength(); i++) {
-		if (softmax_layer->output_activation.Get(i) > maxv) {
-			maxv = softmax_layer->output_activation.Get(i);
+		double d = softmax_layer->output_activation.Get(i);
+		if (d > maxv) {
+			maxv = d;
 			maxi = i;
 		}
 	}
@@ -163,6 +164,13 @@ Vector<ParametersAndGradients>& Net::GetParametersAndGradients() {
 	response.SetCount(count);
 	
 	return response;
+}
+
+String Net::ToString() const {
+	String s;
+	for(int i = 0; i < layers.GetCount(); i++)
+		s << layers[i]->ToString() << "\n";
+	return s;
 }
 
 }

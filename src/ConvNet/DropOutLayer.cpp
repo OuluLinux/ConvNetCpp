@@ -18,7 +18,7 @@ void DropOutLayer::Init(int input_width, int input_height, int input_depth) {
 	output_height = input_height;
 	output_depth = input_depth;
 	
-	dropped.Clear();
+	dropped.SetCount(0);
 	dropped.SetCount(output_width * output_height * output_depth, false);
 }
 
@@ -46,7 +46,7 @@ Volume& DropOutLayer::Forward(Volume& input, bool is_training) {
 		for (int i = 0; i < length; i++) {
 			// NOTE:
 			//  in direct C# version translation: output->Set(i, output.Get(i) * (1 - drop_prob));
-			//  but in original JS version was V2.w[i]*=this.drop_prob;
+			//  but in original JS version was V2.w[i]*=drop_prob;
 			output.Set(i, output.Get(i) * drop_prob);
 		}
 	}
@@ -85,6 +85,11 @@ void DropOutLayer::Load(const ValueMap& map) {
 	LOADVAR(output_width, out_sx);
 	LOADVAR(output_height, out_sy);
 	LOADVAR(drop_prob, drop_prob);
+}
+
+String DropOutLayer::ToString() const {
+	return Format("Dropout: w:%d, h:%d, d:%d, probability:%2!,n",
+		output_width, output_height, output_depth, drop_prob);
 }
 
 }

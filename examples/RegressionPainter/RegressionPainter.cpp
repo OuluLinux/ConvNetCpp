@@ -143,15 +143,16 @@ void RegressionPainter::SetImage() {
 	if (sz.cx * sz.cy <= 0) return;
 	
 	int count = sz.cx * sz.cy;
-	ses.BeginDataResult(3, count, 2);
+	SessionData& d = ses.Data();
+	d.BeginDataResult(3, count, 2);
 	
 	const RGBA* it = img.Begin();
 	
 	int i = 0;
 	for (int y = 0; y < sz.cy; y++) {
 		for (int x = 0; x < sz.cx; x++) {
-			VolumeDataBase& in_data		= ses.Get(i);
-			VolumeDataBase& out_data	= ses.GetResult(i);
+			VolumeDataBase& in_data		= d.Get(i);
+			VolumeDataBase& out_data	= d.GetResult(i);
 			in_data.Set(0, (double)x / sz.cx - 0.5);
 			in_data.Set(1, (double)y / sz.cy - 0.5);
 			out_data.Set(0, it->r / 255.0);
@@ -162,7 +163,7 @@ void RegressionPainter::SetImage() {
 		}
 	}
 	
-	ses.EndData();
+	d.EndData();
 	
 	slider.SetData(1000);
 	lbl_slider.SetLabel("Learning rate: 0.01");

@@ -3,6 +3,8 @@
 namespace ConvNet {
 
 Session::Session() {
+	used_data = &owned_data;
+	
 	is_training = false;
 	is_training_stopped = true;
 	train_iter_limit = 0;
@@ -17,10 +19,6 @@ Session::Session() {
 	iter_cb_interal = 100;
 	augmentation = 0;
 	augmentation_do_flip = false;
-	data_w = 0;
-	data_h = 0;
-	data_d = 0;
-	is_data_result = false;
 	
 	SetWindowSize(100);
 }
@@ -29,7 +27,6 @@ Session::~Session() {
 	StopTraining();
 	ClearOwnedLayers();
 	ClearOwnedTrainer();
-	ClearData();
 }
 
 Session& Session::SetWindowSize(int size, int min_size) {
@@ -115,7 +112,8 @@ void Session::TrainBegin() {
 	
 	iter = 0;
 	
-	x.Init(data_w, data_h, data_d, 0.0);
+	SessionData& d = Data();
+	x.Init(d.data_w, d.data_h, d.data_d, 0.0);
 	
 	// reinit windows that keep track of val/train accuracies
 	loss_window.Clear();
@@ -129,19 +127,20 @@ void Session::TrainBegin() {
 
 void Session::TrainIteration() {
 	TrainerBase& trainer = *this->trainer;
+	SessionData& d = Data();
 	
 	const Vector<LayerBasePtr>& layers = net.GetLayers();
-	bool train_regression = is_data_result ? false : dynamic_cast<RegressionLayer*>(layers[layers.GetCount()-1]) != NULL;
+	bool train_regression = d.is_data_result ? false : dynamic_cast<RegressionLayer*>(layers[layers.GetCount()-1]) != NULL;
 	
-	if (is_data_result)
+	if (d.is_data_result)
 		test_predict = false;
 	
 	try {
 	
-		for(int i = 0; i < GetDataCount() && is_training; i++) {
-			ASSERT(data[i]);
+		for(int i = 0; i < d.GetDataCount() && is_training; i++) {
+			ASSERT(d.data[i]);
 			
-			x.SetData(Get(i));
+			x.SetData(d.Get(i));
 			
 			if (augmentation)
 				x.Augment(augmentation, -1, -1, augmentation_do_flip);
@@ -155,16 +154,16 @@ void Session::TrainIteration() {
 				forward_time = ts.Elapsed();
 				
 				int cls = net.GetPrediction();
-				accuracy_window.Add(cls == GetLabel(i) ? 1.0 : 0.0);
+				accuracy_window.Add(cls == d.GetLabel(i) ? 1.0 : 0.0);
 			}
 			
 			TimeStop ts;
-			if (is_data_result)
-				trainer.Train(x, GetResult(i));
+			if (d.is_data_result)
+				trainer.Train(x, d.GetResult(i));
 			else if (train_regression)
 				trainer.Train(x, x.GetWeights()); // value
 			else
-				trainer.Train(x, GetLabel(i), 1.0); // value
+				trainer.Train(x, d.GetLabel(i), 1.0); // value
 			backward_time = ts.Elapsed();
 			
 			double reward = trainer.GetReward();
@@ -178,7 +177,7 @@ void Session::TrainIteration() {
 			// if last layer is softmax, then add prediction value to the average
 			if (test_predict) {
 				int cls = net.GetPrediction();
-				train_window.Add(cls == GetLabel(i) ? 1.0 : 0.0); // add 1 when label is correct
+				train_window.Add(cls == d.GetLabel(i) ? 1.0 : 0.0); // add 1 when label is correct
 			}
 			
 			reward_window.Add(reward);
@@ -225,18 +224,6 @@ Net& Session::GetNetwork() {
 InputLayer* Session::GetInput() const {
 	if (net.GetLayers().IsEmpty()) return NULL;
 	return dynamic_cast<InputLayer*>(&*net.GetLayers()[0]);
-}
-
-double Session::GetData(int i, int col) const {
-	return data[i]->Get(col);
-}
-
-double Session::GetTestData(int i, int col) const {
-	return test_data[i]->Get(col);
-}
-
-int Session::GetDataCount() const {
-	return data.GetCount();
 }
 
 const Value& Session::ChkNotNull(const String& key, const Value& v) {
@@ -515,55 +502,16 @@ bool Session::StoreOriginalJSON(String& json) {
 
 void Session::ClearData() {
 	Enter();
-	for(int i = 0; i < data.GetCount(); i++) {
-		delete data[i];
-	}
-	data.Clear();
-	for(int i = 0; i < test_data.GetCount(); i++) {
-		delete test_data[i];
-	}
-	test_data.Clear();
-	for(int i = 0; i < result_data.GetCount(); i++) {
-		delete result_data[i];
-	}
-	result_data.Clear();
-	labels.Clear();
-	test_labels.Clear();
-	classes.Clear();
+	Data().ClearData();
 	step_num = 0;
 	Leave();
 }
 
-void Session::EndData() {
-	for(int i = 0; i < data.GetCount(); i++) {
-		VolumeDataBase* vol = data[i];
-		if (!vol) {
-			data.Remove(i);
-			labels.Remove(i);
-			i--;
-			continue;
-		}
-		for(int j = 0; j < vol->GetCount(); j++) {
-			double d = vol->Get(j);
-			double& mind = mins[j];
-			double& maxd = maxs[j];
-			mind = min(mind, d);
-			maxd = max(maxd, d);
-		}
+void Session::Reset() {
+	for(int i = 0; i < net.GetLayers().GetCount(); i++) {
+		net.GetLayers()[i]->Reset();
 	}
-	
-	// Randomize data
-	int count = data.GetCount() / 2;
-	for(int i = 0; i < count; i++) {
-		int a = Random(data.GetCount());
-		int b = Random(data.GetCount());
-		Swap(data[a],	data[b]);
-		if (!is_data_result)
-			Swap(labels[a],	labels[b]);
-		else
-			Swap(result_data[a], result_data[b]);
-	}
-	
+	trainer->Reset();
 }
 
 FullyConnLayer& Session::AddFullyConnLayer(int neuron_count, double l1_decay_mul, double l2_decay_mul, double bias_pref) {
@@ -670,27 +618,6 @@ SvmLayer& Session::AddSVMLayer(int class_count) {
 	owned_layers.Add(svm);
 	net.AddLayer(*svm);
 	return *svm;
-}
-
-void Session::GetUniformClassData(int per_class, Vector<VolumeDataBase*>& volumes, Vector<int>& labels) {
-	ASSERT(per_class >= 0);
-	Vector<int> counts;
-	counts.SetCount(classes.GetCount(), 0);
-	int remaining = per_class * classes.GetCount();
-	volumes.SetCount(remaining);
-	labels.SetCount(remaining);
-	
-	for(int i = 0; i < this->labels.GetCount() && remaining > 0; i++) {
-		int label = this->labels[i];
-		int& count = counts[label];
-		if (count < per_class) {
-			count++;
-			remaining--;
-			volumes[remaining] = data[i];
-			labels[remaining] = label;
-		}
-	}
-	
 }
 
 }

@@ -50,18 +50,20 @@ void LoaderCIFAR10::Load() {
 	// .brc file embedding fails with these files
 	int cifar_data_count = 6;
 	
-	ses->BeginDataClass<VolumeDataDivider<byte, 255> >(10, 50000, 32, 32, 3, 10000);
+	SessionData& d = ses->Data();
 	
-	ses->SetClass(0, "airplane");
-	ses->SetClass(1, "automobile");
-	ses->SetClass(2, "bird");
-	ses->SetClass(3, "cat");
-	ses->SetClass(4, "deer");
-	ses->SetClass(5, "dog");
-	ses->SetClass(6, "frog");
-	ses->SetClass(7, "horse");
-	ses->SetClass(8, "ship");
-	ses->SetClass(9, "truck");
+	d.BeginDataClass<VolumeDataDivider<byte, 255> >(10, 50000, 32, 32, 3, 10000);
+	
+	d.SetClass(0, "airplane");
+	d.SetClass(1, "automobile");
+	d.SetClass(2, "bird");
+	d.SetClass(3, "cat");
+	d.SetClass(4, "deer");
+	d.SetClass(5, "dog");
+	d.SetClass(6, "frog");
+	d.SetClass(7, "horse");
+	d.SetClass(8, "ship");
+	d.SetClass(9, "truck");
 	
 	int actual = 0;
 	int total = cifar_data_count * 2 + 1;
@@ -106,11 +108,11 @@ void LoaderCIFAR10::Load() {
 			ASSERT(cls >= 0 && cls < 10);
 			
 			if (main)
-				ses->SetLabel(base + j, cls);
+				d.SetLabel(base + j, cls);
 			else
-				ses->SetTestLabel(base + j, cls);
+				d.SetTestLabel(base + j, cls);
 			
-			VolumeDataBase& out = main ? ses->Get(base + j) : ses->GetTest(base + j);
+			VolumeDataBase& out = main ? d.Get(base + j) : d.GetTest(base + j);
 			
 			for (int clr = 0; clr < 3; clr++) {
 				for (int y = 0; y < rows; y++) {
@@ -131,7 +133,7 @@ void LoaderCIFAR10::Load() {
 		actual++;
 	}
 	
-	ses->EndData();
+	d.EndData();
 	
 	PostCallback(THISBACK(Close0));
 }

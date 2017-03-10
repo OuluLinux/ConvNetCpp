@@ -7,5 +7,7 @@
 #include "Training.h"
 #include "Session.h"
 #include "Brain.h"
+#include "MetaSession.h"
+#include "MagicNet.h"
 
 #endif

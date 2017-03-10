@@ -17,10 +17,11 @@ void PointCtrl::RefreshData() {
 	Refresh();
 }
 
-void PointCtrl::Paint(Draw& d) {
-	if (!ses) {d.DrawRect(GetSize(), White()); return;}
+void PointCtrl::Paint(Draw& draw) {
+	if (!ses) {draw.DrawRect(GetSize(), White()); return;}
 	
 	Session& ses = *this->ses;
+	SessionData& d = ses.Data();
 	
 	Size sz = GetSize();
 	int vis_len = min(sz.cx, sz.cy);
@@ -28,7 +29,7 @@ void PointCtrl::Paint(Draw& d) {
 	
 	int count = vis_len / density;
 	if (count < 2) {
-		d.DrawRect(sz, White());
+		draw.DrawRect(sz, White());
 		return;
 	}
 	
@@ -45,8 +46,8 @@ void PointCtrl::Paint(Draw& d) {
 		ses.Leave();
 		return;
 	}
-	int data_count = ses.GetDataCount();
-	double offset = max(max(-ses.GetMin(0), -ses.GetMin(1)), max(ses.GetMax(0), ses.GetMax(1)));
+	int data_count = d.GetDataCount();
+	double offset = max(max(-d.GetMin(0), -d.GetMin(1)), max(d.GetMax(0), d.GetMax(1)));
 	offset *= 1.1;
 	double diff = offset * 2;
 	double step = diff / (count - 1);
@@ -96,9 +97,9 @@ void PointCtrl::Paint(Draw& d) {
 	double radius = 13.0;
 	double radius_2 = radius / 2.0;
 	for(int i = 0; i < data_count; i++) {
-		double x = ses.GetData(i, 0);
-		double y = ses.GetData(i, 1);
-		int label = ses.GetLabel(i);
+		double x = d.GetData(i, 0);
+		double y = d.GetData(i, 1);
+		int label = d.GetLabel(i);
 		double x_fac = (x + offset) / diff;
 		double y_fac = (y + offset) / diff;
 		int xi = max(0, min(count-1, (int)(x_fac * count)));
@@ -111,7 +112,7 @@ void PointCtrl::Paint(Draw& d) {
 	
 	ses.Leave();
 	
-	d.DrawImage(0, 0, id);
+	draw.DrawImage(0, 0, id);
 }
 
 void PointCtrl::LeftDown(Point p, dword keyflags) {

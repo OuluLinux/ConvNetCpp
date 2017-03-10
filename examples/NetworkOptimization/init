@@ -1,0 +1,7 @@
+#ifndef _NetworkOptimization_icpp_init_stub
+#define _NetworkOptimization_icpp_init_stub
+#include "CtrlLib/init"
+#include "ConvNetCtrl/init"
+#include "Docking/init"
+#include "plugin/bz2/init"
+#endif

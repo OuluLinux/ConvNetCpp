@@ -68,6 +68,19 @@ Volume::~Volume() {
 	weights = NULL;
 }
 
+int Volume::GetMaxColumn() const {
+	double max = -DBL_MAX;
+	int pos = -1;
+	for(int i = 0; i < weights->GetCount(); i++) {
+		double d = weights->Get(i);
+		if (d > max) {
+			max = d;
+			pos = i;
+		}
+	}
+	return pos;
+}
+
 void Volume::SetData(VolumeDataBase& data) {
 	if (owned_weights && weights)
 		delete weights;
@@ -77,7 +90,7 @@ void Volume::SetData(VolumeDataBase& data) {
 }
 
 Volume& Volume::operator=(const Volume& src) {
-	ASSERT(weights);
+	
 	//if (!owned_weights) {
 	//	this->weights = new VolumeData<double>();
 	//	this->weights->SetCount(src.weights->GetCount());
@@ -87,6 +100,7 @@ Volume& Volume::operator=(const Volume& src) {
 	depth = src.depth;
 	length = src.length;
 	if (owned_weights) {
+		ASSERT(weights);
 		weights->SetCount(src.weights->GetCount());
 		for(int i = 0; i < weights->GetCount(); i++)
 			weights->Set(i, src.weights->Get(i));
@@ -164,6 +178,10 @@ void Volume::Set(int x, int y, int d, double v) {
 void Volume::Add(int x, int y, int d, double v) {
 	int ix = ((width * y) + x) * depth + d;
 	weights->Set(ix, weights->Get(ix) + v);
+}
+
+void Volume::Add(int i, double v) {
+	weights->Set(i, weights->Get(i) + v);
 }
 
 double Volume::GetGradient(int x, int y, int d) const {
@@ -332,6 +350,29 @@ void Volume::SwapData(Volume& vol) {
 	Swap(vol.depth, depth);
 	Swap(vol.length, length);
 	
+}
+
+
+
+
+
+
+
+void RandomPermutation(int n, Vector<int>& array) {
+	int i = n;
+	int j = 0;
+	
+	array.SetCount(n);
+	
+	for (int q = 0; q < n; q++)
+		array[q] = q;
+	
+	while (i--) {
+		j = floor(Randomf() * (i+1));
+		int temp = array[i];
+		array[i] = array[j];
+		array[j] = temp;
+	}
 }
 
 }

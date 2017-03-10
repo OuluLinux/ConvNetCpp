@@ -2,4 +2,5 @@
 #define _ConvNetCtrl_icpp_init_stub
 #include "CtrlLib/init"
 #include "ConvNet/init"
+#include "PlotCtrl/init"
 #endif

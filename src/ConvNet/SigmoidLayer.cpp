@@ -57,4 +57,9 @@ void SigmoidLayer::Load(const ValueMap& map) {
 	LOADVAR(output_height, out_sy);
 }
 
+String SigmoidLayer::ToString() const {
+	return Format("Sigmoid: w:%d, h:%d, d:%d",
+		output_width, output_height, output_depth);
+}
+
 }

@@ -95,6 +95,7 @@ public:
 	const VolumeDataBase& GetWeights() const {return *weights;}
 	const Vector<double>& GetGradients() const {return weight_gradients;}
 	
+	void Add(int i, double v);
 	void Add(int x, int y, int d, double v);
 	void AddFrom(const Volume& volume);
 	void AddFromScaled(const Volume& volume, double a);
@@ -121,6 +122,7 @@ public:
 	int GetHeight() const {return height;}
 	int GetDepth()  const {return depth;}
 	int GetLength() const {return length;}
+	int GetMaxColumn() const;
 	
 };
 
@@ -261,6 +263,9 @@ public:
 	}
 
 };
+
+
+void RandomPermutation(int n, Vector<int>& array);
 
 }
 

@@ -33,6 +33,10 @@ public:
 	
 	virtual void Store(ValueMap& map) const {}
 	virtual void Load(const ValueMap& map) {}
+	virtual String ToString() const = 0;
+	
+	
+	void Reset() {Init(input_width, input_height, input_depth);}
 	
 };
 

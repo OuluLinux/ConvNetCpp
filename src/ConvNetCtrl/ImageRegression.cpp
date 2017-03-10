@@ -48,17 +48,18 @@ void ImageRegression::Paint(Draw& d) {
 void ImageRegression::RefreshData() {
 	if (!ses) return;
 	Session& ses = *this->ses;
+	SessionData& d = ses.Data();
 	
 	Net& net = ses.GetNetwork();
 	
-	int pixel_count = ses.GetDataCount();
+	int pixel_count = d.GetDataCount();
 	if (!pixel_count) return;
 	
 	tmp.SetCount(pixel_count*3);
 	
 	int width = img_a.GetWidth();
 	int height = img_a.GetHeight();
-	int depth = ses.GetResult(0).GetCount();
+	int depth = d.GetResult(0).GetCount();
 	Volume in(1, 1, depth, 0);
 	
 	ses.Enter();

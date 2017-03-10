@@ -47,18 +47,20 @@ void LoaderMNIST::Load() {
 		#define SWAP32(x)
 	#endif
 	
-	ses->BeginDataClass<VolumeDataDivider<byte, 255> >(10, 60000, 28, 28, 1, 10000);
+	SessionData& d = ses->Data();
 	
-	ses->SetClass(0, "0");
-	ses->SetClass(1, "1");
-	ses->SetClass(2, "2");
-	ses->SetClass(3, "3");
-	ses->SetClass(4, "4");
-	ses->SetClass(5, "5");
-	ses->SetClass(6, "6");
-	ses->SetClass(7, "7");
-	ses->SetClass(8, "8");
-	ses->SetClass(9, "9");
+	d.BeginDataClass<VolumeDataDivider<byte, 255> >(10, 60000, 28, 28, 1, 10000);
+	
+	d.SetClass(0, "0");
+	d.SetClass(1, "1");
+	d.SetClass(2, "2");
+	d.SetClass(3, "3");
+	d.SetClass(4, "4");
+	d.SetClass(5, "5");
+	d.SetClass(6, "6");
+	d.SetClass(7, "7");
+	d.SetClass(8, "8");
+	d.SetClass(9, "9");
 	
 	int mnist_data_count = 4;
 	int actual = 0;
@@ -107,9 +109,9 @@ void LoaderMNIST::Load() {
 				byte label;
 				in.Get(&label, 1);
 				if (main)
-					ses->SetLabel(j, label);
+					d.SetLabel(j, label);
 				else
-					ses->SetTestLabel(j, label);
+					d.SetTestLabel(j, label);
 			}
 			LOG("Read OK: " << file);
 		}
@@ -136,7 +138,7 @@ void LoaderMNIST::Load() {
 			int len = rows * cols;
 			
 			for(int j = 0; j < items && !in.IsEof() && !IsFail(); j++) {
-				VolumeDataBase& out = main ? ses->Get(j) : ses->GetTest(j);
+				VolumeDataBase& out = main ? d.Get(j) : d.GetTest(j);
 				for (int p = 0; p < len && !in.IsEof(); p++) {
 					byte pixel;
 					in.Get(&pixel, 1);
@@ -154,7 +156,7 @@ void LoaderMNIST::Load() {
 		actual++;
 	}
 	
-	ses->EndData();
+	d.EndData();
 	
 	PostCallback(THISBACK(Close0));
 }

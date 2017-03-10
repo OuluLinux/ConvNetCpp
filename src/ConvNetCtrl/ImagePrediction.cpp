@@ -32,23 +32,24 @@ void ImagePrediction::RefreshData() {
 	lock.Enter();
 	
 	Net& net = ses->GetNetwork();
+	SessionData& d = ses->Data();
 	int layer_count = net.GetLayers().GetCount();
 	ASSERT(layer_count);
 	
 	int num_classes = net.GetLayers()[layer_count-1]->output_depth;
 	
-	int data_w = ses->GetDataWidth();
-	int data_h = ses->GetDataHeight();
-	int data_d = ses->GetDataDepth();
+	int data_w = d.GetDataWidth();
+	int data_h = d.GetDataHeight();
+	int data_d = d.GetDataDepth();
 	
 	// grab a random test image
 	int tests = 50;
 	imgs.SetCount(tests);
 	for (int num = 0; num < tests; num++) {
 		
-		int i = Random(ses->GetDataCount());
-		VolumeDataBase& vol = ses->Get(i);
-		int label = ses->GetLabel(i);
+		int i = Random(d.GetDataCount());
+		VolumeDataBase& vol = d.Get(i);
+		int label = d.GetLabel(i);
 		
 		Image& img = imgs[num];
 		ImageBuffer ib(data_w, data_h);
@@ -96,7 +97,7 @@ void ImagePrediction::RefreshData() {
 		}
 		SortByValue(preds, StdGreater<double>());
 		
-		Add(img, ses->GetClass(label), label_val, ses->GetClass(preds.GetKey(0)), preds[0], ses->GetClass(preds.GetKey(1)), preds[1]);
+		Add(img, d.GetClass(label), label_val, d.GetClass(preds.GetKey(0)), preds[0], d.GetClass(preds.GetKey(1)), preds[1]);
 		
 	}
 	

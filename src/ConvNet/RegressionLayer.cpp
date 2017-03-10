@@ -74,4 +74,9 @@ void RegressionLayer::Load(const ValueMap& map) {
 	LOADVAR(output_height, out_sy);
 }
 
+String RegressionLayer::ToString() const {
+	return Format("Regression: w:%d, h:%d, d:%d",
+		output_width, output_height, output_depth);
+}
+
 }

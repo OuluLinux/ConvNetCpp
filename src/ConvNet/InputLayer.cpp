@@ -44,4 +44,9 @@ void InputLayer::Load(const ValueMap& map) {
 	LOADVAR(output_height, out_sy);
 }
 
+String InputLayer::ToString() const {
+	return Format("Input: w:%d, h:%d, d:%d",
+		output_width, output_height, output_depth);
+}
+
 }

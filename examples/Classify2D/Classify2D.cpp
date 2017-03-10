@@ -82,85 +82,89 @@ void Classify2D::Reload() {
 
 void Classify2D::RandomData(int count) {
 	session.StopTraining();
-	session.BeginData(2, count, 2);
+	SessionData& d = session.Data();
+	d.BeginData(2, count, 2);
 	for(int k=0; k < count; k++) {
-		session.SetData(k, 0, Randomf() * 10.0 - 5.0);
-		session.SetData(k, 1, Randomf() * 10.0 - 5.0);
-		session.SetLabel(k, Randomf() > 0.5 ? 1 : 0);
+		d.SetData(k, 0, Randomf() * 10.0 - 5.0);
+		d.SetData(k, 1, Randomf() * 10.0 - 5.0);
+		d.SetLabel(k, Randomf() > 0.5 ? 1 : 0);
 	}
-	session.EndData();
+	d.EndData();
 	Reload();
 }
 
 void Classify2D::OriginalData() {
 	session.StopTraining();
-	session.BeginData(2, 13, 2);
-	session.SetData(0, 0, -0.4326)	.SetData(0, 1, 1.1909)	.SetLabel(0, 1);
-	session.SetData(1, 0, 3.0)		.SetData(1, 1, 4.0)		.SetLabel(1, 1);
-	session.SetData(2, 0, 0.1253)	.SetData(2, 1, -0.0376)	.SetLabel(2, 1);
-	session.SetData(3, 0, 0.2877)	.SetData(3, 1, 0.3273)	.SetLabel(3, 1);
-	session.SetData(4, 0, -1.1465)	.SetData(4, 1, 0.1746)	.SetLabel(4, 1);
-	session.SetData(5, 0, 1.8133)	.SetData(5, 1, 1.0139)	.SetLabel(5, 0);
-	session.SetData(6, 0, 2.7258)	.SetData(6, 1, 1.0668)	.SetLabel(6, 0);
-	session.SetData(7, 0, 1.4117)	.SetData(7, 1, 0.5593)	.SetLabel(7, 0);
-	session.SetData(8, 0, 4.1832)	.SetData(8, 1, 0.3044)	.SetLabel(8, 0);
-	session.SetData(9, 0, 1.8636)	.SetData(9, 1, 0.1677)	.SetLabel(9, 0);
-	session.SetData(10, 0, 0.5)		.SetData(10, 1, 3.2)	.SetLabel(10, 1);
-	session.SetData(11, 0, 0.8)		.SetData(11, 1, 3.2)	.SetLabel(11, 1);
-	session.SetData(12, 0, 1.0)		.SetData(12, 1, -2.2)	.SetLabel(12, 1);
-	session.EndData();
+	SessionData& d = session.Data();
+	d.BeginData(2, 13, 2);
+	d.SetData(0, 0, -0.4326)	.SetData(0, 1, 1.1909)	.SetLabel(0, 1);
+	d.SetData(1, 0, 3.0)		.SetData(1, 1, 4.0)		.SetLabel(1, 1);
+	d.SetData(2, 0, 0.1253)	.SetData(2, 1, -0.0376)	.SetLabel(2, 1);
+	d.SetData(3, 0, 0.2877)	.SetData(3, 1, 0.3273)	.SetLabel(3, 1);
+	d.SetData(4, 0, -1.1465)	.SetData(4, 1, 0.1746)	.SetLabel(4, 1);
+	d.SetData(5, 0, 1.8133)	.SetData(5, 1, 1.0139)	.SetLabel(5, 0);
+	d.SetData(6, 0, 2.7258)	.SetData(6, 1, 1.0668)	.SetLabel(6, 0);
+	d.SetData(7, 0, 1.4117)	.SetData(7, 1, 0.5593)	.SetLabel(7, 0);
+	d.SetData(8, 0, 4.1832)	.SetData(8, 1, 0.3044)	.SetLabel(8, 0);
+	d.SetData(9, 0, 1.8636)	.SetData(9, 1, 0.1677)	.SetLabel(9, 0);
+	d.SetData(10, 0, 0.5)		.SetData(10, 1, 3.2)	.SetLabel(10, 1);
+	d.SetData(11, 0, 0.8)		.SetData(11, 1, 3.2)	.SetLabel(11, 1);
+	d.SetData(12, 0, 1.0)		.SetData(12, 1, -2.2)	.SetLabel(12, 1);
+	d.EndData();
 	Reload();
 }
 
 void Classify2D::CircleData(int count) {
 	session.StopTraining();
-	session.BeginData(2, count, 2);
+	SessionData& d = session.Data();
+	d.BeginData(2, count, 2);
 	int count_a = count / 2;
 	int count_b = count - count_a;
 	int j = 0;
 	for(int i = 0; i < count_a; i++) {
 		double r = Randomf() * 2.0;
 		double t = Randomf() * 2.0*M_PI;
-		session.SetData(j, 0, r*sin(t));
-		session.SetData(j, 1, r*cos(t));
-		session.SetLabel(j, 1);
+		d.SetData(j, 0, r*sin(t));
+		d.SetData(j, 1, r*cos(t));
+		d.SetLabel(j, 1);
 		j++;
 	}
 	for(int i=0; i < count_b; i++) {
 		double r = Randomf() * 2.0 + 3.0;
 		double t = 2.0*M_PI*i/50.0;
-		session.SetData(j, 0, r*sin(t));
-		session.SetData(j, 1, r*cos(t));
-		session.SetLabel(j, 0);
+		d.SetData(j, 0, r*sin(t));
+		d.SetData(j, 1, r*cos(t));
+		d.SetLabel(j, 0);
 		j++;
 	}
-	session.EndData();
+	d.EndData();
 	Reload();
 }
 
 void Classify2D::SpiralData(int count) {
 	session.StopTraining();
-	session.BeginData(2, count, 2);
+	SessionData& d = session.Data();
+	d.BeginData(2, count, 2);
 	int count_a = count / 2;
 	int count_b = count - count_a;
 	int j = 0;
 	for(int i = 0; i < count_a; i++) {
 		double r = (double)i / count_a * 5.0 + Randomf() * 0.2 - 0.1;
 		double t = 1.25*(double)i/count_a*2*M_PI + Randomf() * 0.2 - 0.1;
-		session.SetData(j, 0, r*sin(t));
-		session.SetData(j, 1, r*cos(t));
-		session.SetLabel(j, 1);
+		d.SetData(j, 0, r*sin(t));
+		d.SetData(j, 1, r*cos(t));
+		d.SetLabel(j, 1);
 		j++;
 	}
 	for(int i=0; i < count_b; i++) {
 		double r = (double)i/count_b*5.0 + Randomf() * 0.2 - 0.1;
 		double t = 1.25*(double)i/count_b*2*M_PI + M_PI + Randomf() * 0.2 - 0.1;
-		session.SetData(j, 0, r*sin(t));
-		session.SetData(j, 1, r*cos(t));
-		session.SetLabel(j, 0);
+		d.SetData(j, 0, r*sin(t));
+		d.SetData(j, 1, r*cos(t));
+		d.SetLabel(j, 0);
 		j++;
 	}
-	session.EndData();
+	d.EndData();
 	Reload();
 }
 

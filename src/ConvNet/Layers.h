@@ -59,6 +59,7 @@ public:
 	virtual String GetKey() const {return "conv";}
 	virtual void Store(ValueMap& map) const;
 	virtual void Load(const ValueMap& map);
+	virtual String ToString() const;
 };
 
 class DropOutLayer : public LayerBase {
@@ -80,6 +81,7 @@ public:
 	virtual String GetKey() const {return "dropout";}
 	virtual void Store(ValueMap& map) const;
 	virtual void Load(const ValueMap& map);
+	virtual String ToString() const;
 };
 
 
@@ -110,6 +112,7 @@ public:
 	virtual String GetKey() const {return "fc";}
 	virtual void Store(ValueMap& map) const;
 	virtual void Load(const ValueMap& map);
+	virtual String ToString() const;
 };
 
 class InputLayer : public LayerBase {
@@ -127,6 +130,7 @@ public:
 	virtual String GetKey() const {return "input";}
 	virtual void Store(ValueMap& map) const;
 	virtual void Load(const ValueMap& map);
+	virtual String ToString() const;
 };
 
 
@@ -154,6 +158,7 @@ public:
 	virtual String GetKey() const {return "maxout";}
 	virtual void Store(ValueMap& map) const;
 	virtual void Load(const ValueMap& map);
+	virtual String ToString() const;
 };
 
 class PoolLayer : public LayerBase {
@@ -179,6 +184,7 @@ public:
 	virtual String GetKey() const {return "pool";}
 	virtual void Store(ValueMap& map) const;
 	virtual void Load(const ValueMap& map);
+	virtual String ToString() const;
 };
 
 
@@ -202,6 +208,7 @@ public:
 	virtual String GetKey() const {return "regression";}
 	virtual void Store(ValueMap& map) const;
 	virtual void Load(const ValueMap& map);
+	virtual String ToString() const;
 };
 
 
@@ -223,6 +230,7 @@ public:
 	virtual String GetKey() const {return "relu";}
 	virtual void Store(ValueMap& map) const;
 	virtual void Load(const ValueMap& map);
+	virtual String ToString() const;
 };
 
 
@@ -244,6 +252,7 @@ public:
 	virtual String GetKey() const {return "sigmoid";}
 	virtual void Store(ValueMap& map) const;
 	virtual void Load(const ValueMap& map);
+	virtual String ToString() const;
 };
 
 
@@ -268,6 +277,7 @@ public:
 	virtual String GetKey() const {return "softmax";}
 	virtual void Store(ValueMap& map) const;
 	virtual void Load(const ValueMap& map);
+	virtual String ToString() const;
 };
 
 
@@ -288,6 +298,7 @@ public:
 	virtual String GetKey() const {return "svm";}
 	virtual void Store(ValueMap& map) const;
 	virtual void Load(const ValueMap& map);
+	virtual String ToString() const;
 };
 
 
@@ -306,6 +317,7 @@ public:
 	virtual String GetKey() const {return "tanh";}
 	virtual void Store(ValueMap& map) const;
 	virtual void Load(const ValueMap& map);
+	virtual String ToString() const;
 };
 
 
@@ -322,6 +334,7 @@ public:
 	virtual String GetKey() const {return "lrn";}
 	virtual void Store(ValueMap& map) const;
 	virtual void Load(const ValueMap& map);
+	virtual String ToString() const;
 };
 
 }

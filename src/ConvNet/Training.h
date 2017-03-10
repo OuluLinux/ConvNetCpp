@@ -58,6 +58,7 @@ public:
 	virtual double GetLoss() {return cost_loss;}
 	virtual double GetReward() {return cost_reward;}
 	
+	virtual String ToString() const = 0;
 	
 	TrainerBase& SetBatchSize(int i) {batch_size = i; return *this;}
 	TrainerBase& SetCostLoss(double d) {cost_loss = d; return *this;}
@@ -81,9 +82,9 @@ public:
 	
 protected:
 	virtual void TrainImplem() = 0;
-	
 	virtual void Backward(int pos, double y);
 	virtual void Backward(const VolumeDataBase& y);
+	virtual void Reset();
 	
 };
 
@@ -104,6 +105,8 @@ protected:
 	virtual void TrainImplem();
 	virtual void Backward(int pos, double y);
 	virtual void Backward(const VolumeDataBase& y);
+	virtual void Reset();
+	virtual String ToString() const;
 	
 };
 
@@ -122,6 +125,8 @@ protected:
 	virtual void TrainImplem();
 	virtual void Backward(int pos, double y);
 	virtual void Backward(const VolumeDataBase& y);
+	virtual void Reset();
+	virtual String ToString() const;
 	
 };
 
@@ -142,6 +147,8 @@ protected:
 	virtual void TrainImplem();
 	virtual void Backward(int pos, double y);
 	virtual void Backward(const VolumeDataBase& y);
+	virtual void Reset();
+	virtual String ToString() const;
 	
 };
 
@@ -160,6 +167,8 @@ protected:
 	virtual void TrainImplem();
 	virtual void Backward(int pos, double y);
 	virtual void Backward(const VolumeDataBase& y);
+	virtual void Reset();
+	virtual String ToString() const;
 	
 };
 
@@ -180,6 +189,8 @@ protected:
 	virtual void TrainImplem();
 	virtual void Backward(int pos, double y);
 	virtual void Backward(const VolumeDataBase& y);
+	virtual void Reset();
+	virtual String ToString() const;
 	
 };
 
@@ -202,6 +213,8 @@ protected:
 	virtual void TrainImplem();
 	virtual void Backward(int pos, double y);
 	virtual void Backward(const VolumeDataBase& y);
+	virtual void Reset();
+	virtual String ToString() const;
 	
 };
 

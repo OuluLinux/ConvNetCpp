@@ -65,4 +65,8 @@ void TrainerBase::Forward(const Vector<VolumePtr>& x) {
 	net->Forward(x, true); // also set the flag that lets the net know we're just training
 }
 
+void TrainerBase::Reset() {
+	iter_count = 0;
+}
+
 }

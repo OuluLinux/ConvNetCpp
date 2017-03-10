@@ -121,4 +121,9 @@ void MaxoutLayer::Load(const ValueMap& map) {
 	switches.SetCount(output_width * output_height * output_depth, 0);
 }
 
+String MaxoutLayer::ToString() const {
+	return Format("Maxout: w:%d, h:%d, d:%d, groups:%d",
+		output_width, output_height, output_depth, group_size);
+}
+
 }

@@ -3,4 +3,5 @@
 #include "ConvNet/init"
 #include "CtrlLib/init"
 #include "ConvNetCtrl/init"
+#include "plugin/z/init"
 #endif
