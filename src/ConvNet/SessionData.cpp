@@ -40,10 +40,6 @@ double SessionData::GetTestData(int i, int col) const {
 	return test_data[i]->Get(col);
 }
 
-int SessionData::GetDataCount() const {
-	return data.GetCount();
-}
-
 void SessionData::EndData() {
 	for(int i = 0; i < data.GetCount(); i++) {
 		VolumeDataBase* vol = data[i];

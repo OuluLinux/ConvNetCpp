@@ -74,7 +74,7 @@ class NetworkOptimization : public DockWindow {
 	Label status;
 	
 	// Main view
-	PlotCtrl plot;
+	MetaSessionGraph graph;
 	Mutex plot_lock;
 	
 	
@@ -101,7 +101,6 @@ public:
 	void FillData(int src);
 	void ImportData(Vector<Vector<String> >& arr, Data& data);
 	void Start();
-	void Step();
 	void Runner();
 	void StartTrainer();
 	void ContinueTrainer();
@@ -109,9 +108,6 @@ public:
 	void RefreshStatus();
 	void RefreshBestNetwork();
 	void PostRefreshBestNetwork() {PostCallback(THISBACK(RefreshBestNetwork));}
-	void ClearPlotter();
-	void RefreshPlotter();
-	void PostClearPlotter() {PostCallback(THISBACK(ClearPlotter));}
 	void ImportTrainData();
 	void ImportTestData();
 	

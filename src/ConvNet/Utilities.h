@@ -216,6 +216,8 @@ public:
 		}
 	}
 	
+	double GetLatest() const {return v.Top();}
+	
 	double GetAverage() const {
 		if (v.GetCount() < minsize)
 			return -1;
@@ -224,6 +226,7 @@ public:
 	}
 	
 	int GetCount() const {return size;}
+	int GetBufferCount() const {return v.GetCount();}
 	
 	void Clear() {
 		v.Clear();

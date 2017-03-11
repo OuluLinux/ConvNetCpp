@@ -94,11 +94,10 @@ NetworkOptimization::NetworkOptimization() {
 	
 	FillData(1);
 	
-	Add(plot.SizePos());
+	graph.SetMetaSession(mnet);
+	Add(graph.SizePos());
 	
-	mnet.WhenFinishFold << THISBACK(PostClearPlotter);
 	mnet.WhenFinishBatch << THISBACK(PostRefreshBestNetwork);
-	
 	
 	ImportTrainData();
 }
@@ -119,7 +118,8 @@ void NetworkOptimization::DockInit() {
 void NetworkOptimization::StartTrainer() {
 	StopTrainer();
 	
-	ClearPlotter();
+	graph.Clear();
+	status.SetLabel("No finished folds yet...");
 	
 	mnet.SetTrainingRatio( (int)train_perc.GetData() / 100.0 );
 	mnet.SetFoldsCount( folds_per_cand.GetData() );
@@ -158,6 +158,8 @@ void NetworkOptimization::RefreshBestNetwork() {
 		best_cand.StoreOriginalJSON(net);
 		best_net.SetData(net);
 	}
+	
+	RefreshStatus();
 }
 
 void NetworkOptimization::FillData(int src) {
@@ -329,46 +331,9 @@ void NetworkOptimization::TestEvaluation(MagicNet& net) {
 
 void NetworkOptimization::Runner() {
 	while (trainer_running && !Thread::IsShutdownThreads()) {
-		Step();
+		mnet.Step();
 	}
 	trainer_stopped = true;
-}
-
-void NetworkOptimization::RefreshPlotter() {
-	plot.Sync();
-	plot.Refresh();
-	RefreshStatus();
-}
-
-void NetworkOptimization::Step() {
-	iter++;
-	
-	mnet.Step();
-	
-	if(iter % 300 == 0) {
-		
-		Vector<double> vals;
-		mnet.EvaluateValueErrors(vals);
-		
-		
-		plot_lock.Enter();
-		
-		int mnet_iter = mnet.GetIteration();
-		int session_count = mnet.GetSessionCount();
-		for(int i = 0; i < session_count; i++) {
-			const Session& ses = mnet.GetSession(i);
-			double d = vals[i];
-			plot.data[i].AddXY(mnet_iter, d);
-		}
-		
-		plot.SetLimits(plot.data[0][0].x, mnet_iter, 0, 1);
-		plot.SetModify();
-		
-		plot_lock.Leave();
-		
-		
-		PostCallback(THISBACK(RefreshPlotter));
-	}
 }
 
 void NetworkOptimization::ImportTrainData() {
@@ -445,26 +410,4 @@ void NetworkOptimization::AddLog(const String& line) {
 	LOG(line);
 	log.Insert(log.GetLength(), line + "\n");
 	log.SetCursor(log.GetLength());
-}
-
-void NetworkOptimization::ClearPlotter() {
-	
-	plot_lock.Enter();
-	
-	// PlotCtrl has zooming prompt bugs, so we create new one when resetting
-	
-	plot.data.SetCount( mnet.GetSessionCount());
-	for(int i = 0; i < mnet.GetSessionCount(); i++) {
-		plot.data[i].SetCount(0);
-		plot.data[i]
-			.SetTitle("Model " + IntStr(i))
-			.SetThickness(1.0)
-			.SetColor(Rainbow((double)i / mnet.GetSessionCount()));
-		plot.data[i].AddXY(0,0);
-	}
-	plot.SetLimits(-1, 1, -1, 1);
-	plot.SetModify();
-	
-	plot_lock.Leave();
-	
 }

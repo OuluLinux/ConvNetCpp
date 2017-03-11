@@ -38,7 +38,9 @@ public:
 	double GetMax(int col) const {return maxs[col];}
 	double GetMin(int col) const {return mins[col];}
 	int GetLabel(int i) const {return labels[i];}
-	int GetDataCount() const;
+	int GetTestLabel(int i) const {return test_labels[i];}
+	int GetDataCount() const {return data.GetCount();}
+	int GetTestCount() const {return test_data.GetCount();}
 	int GetDataLength() const {return data_w * data_h * data_d;}
 	int GetDataWidth() const {return data_w;}
 	int GetDataHeight() const {return data_h;}

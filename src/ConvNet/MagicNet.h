@@ -44,13 +44,12 @@ protected:
 	
 	struct CandidateSorter {
 		bool operator() (const Session& a, const Session& b) const {
-			return a.accuracy_window.GetAverage() > b.accuracy_window.GetAverage();
+			return a.accuracy_result_window.GetAverage() > b.accuracy_result_window.GetAverage();
 		}
 	};
 	
 	// tmp
 	Vector<double> val_acc;
-	Volume tmp_in, tmp_out;
 	
 	
 public:
@@ -83,13 +82,6 @@ public:
 	void Predict(Volume& in);
 	int PredictSoftLabel(Volume& in);
 	
-	// callback functions
-	// called when a fold is finished, while evaluating a batch
-	Callback WhenFinishFold;
-	
-	// called when a batch of candidates has finished evaluating
-	Callback WhenFinishBatch;
-
 	
 	virtual void Store(ValueMap& map) const;
 	virtual void Load(const ValueMap& map);
@@ -98,7 +90,6 @@ public:
 	Session& GetEvaluatedCandidate(int i) {return evaluated_candidates[i];}
 	int GetEvaluatedCandidateCount() const {return evaluated_candidates.GetCount();}
 	
-	int GetIteration() const {return iter;}
 	int GetFold() const {return foldix;}
 	
 };

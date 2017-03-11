@@ -25,12 +25,14 @@ class ClassifyImages : public DockWindow {
 	Button apply, save_net, load_net;
 	TrainingGraph graph;
 	Label status;
-	ParentCtrl net_ctrl;
-	DocEdit net_edit;
-	Button reload_btn;
 	SessionConvLayers layer_view;
 	ImagePrediction pred_view;
 	LayerCtrl aenc_view;
+	
+	// Network
+	ParentCtrl net_ctrl;
+	DocEdit net_edit;
+	Button reload_btn;
 	
 	Splitter v_split;
 	

@@ -80,14 +80,8 @@ void MagicNet::SampleCandidate(Session& cand) {
 		
 		double bias_pref = act == 2 ? 0.1 : 0.0; // 0.1 for relu
 		
-		if (Randomf() < 0.5) {
-			FullyConnLayer& fc = cand.AddFullyConnLayer(ni);
-			fc.bias_pref = bias_pref;
-		} else {
-			FullyConnLayer& fc = cand.AddFullyConnLayer(ni);
-			fc.bias_pref = bias_pref;
-		}
-		
+		FullyConnLayer& fc = cand.AddFullyConnLayer(ni);
+		fc.bias_pref = bias_pref;
 		
 		if (act == 0) {
 			cand.AddTanhLayer();
@@ -96,9 +90,13 @@ void MagicNet::SampleCandidate(Session& cand) {
 			cand.AddMaxoutLayer(2); // 2 is default
 		}
 		else if (act == 2) {
-			cand.AddDropoutLayer(Randomf()); // random dropout probability
+			cand.AddReluLayer();
 		}
 		else Panic("What activation");
+		
+		if (Randomf() < 0.5) {
+			cand.AddDropoutLayer(Randomf());
+		}
 	}
 	
 	cand.AddFullyConnLayer(num_classes);
@@ -148,6 +146,7 @@ void MagicNet::Step() {
 	
 	// run an example through current candidate
 	iter++;
+	total_iter++;
 	
 	// step all candidates on a random data point
 	Vector<int>& fold = train_folds[foldix]; // active fold
@@ -164,6 +163,15 @@ void MagicNet::Step() {
 		session[k].GetTrainer()->Train(tmp_in, l, 1.0);
 	}
 	
+	if ((total_iter % 100) == 0) {
+		EvaluateValueErrors(val_acc);
+		for (int k = 0; k < session.GetCount(); k++) {
+			Session& c = session[k];
+			c.accuracy_window.Add(val_acc[k]);
+		}
+		WhenStepInterval(total_iter);
+	}
+	
 	// process consequences: sample new folds, or candidates
 	int lastiter = num_epochs * fold.GetCount();
 	if (iter >= lastiter) {
@@ -172,14 +180,13 @@ void MagicNet::Step() {
 		EvaluateValueErrors(val_acc);
 		for (int k = 0; k < session.GetCount(); k++) {
 			Session& c = session[k];
-			c.accuracy_window.Add(val_acc[k]);
+			c.accuracy_result_window.Add(val_acc[k]);
 		}
 		iter = 0; // reset step number
 		foldix++; // increment fold
 		datapos = 0;
 		
 		WhenFinishFold();
-		
 		
 		if (foldix >= train_folds.GetCount()) {
 			// we finished all folds as well! Record these candidates

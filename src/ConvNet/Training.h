@@ -59,6 +59,7 @@ public:
 	virtual double GetReward() {return cost_reward;}
 	
 	virtual String ToString() const = 0;
+	virtual String GetKey() const = 0;
 	
 	TrainerBase& SetBatchSize(int i) {batch_size = i; return *this;}
 	TrainerBase& SetCostLoss(double d) {cost_loss = d; return *this;}
@@ -107,6 +108,7 @@ protected:
 	virtual void Backward(const VolumeDataBase& y);
 	virtual void Reset();
 	virtual String ToString() const;
+	virtual String GetKey() const {return "adadelta";}
 	
 };
 
@@ -127,6 +129,7 @@ protected:
 	virtual void Backward(const VolumeDataBase& y);
 	virtual void Reset();
 	virtual String ToString() const;
+	virtual String GetKey() const {return "adagrad";}
 	
 };
 
@@ -149,6 +152,7 @@ protected:
 	virtual void Backward(const VolumeDataBase& y);
 	virtual void Reset();
 	virtual String ToString() const;
+	virtual String GetKey() const {return "adam";}
 	
 };
 
@@ -169,6 +173,7 @@ protected:
 	virtual void Backward(const VolumeDataBase& y);
 	virtual void Reset();
 	virtual String ToString() const;
+	virtual String GetKey() const {return "netsterov";}
 	
 };
 
@@ -191,6 +196,7 @@ protected:
 	virtual void Backward(const VolumeDataBase& y);
 	virtual void Reset();
 	virtual String ToString() const;
+	virtual String GetKey() const {return "sgd";}
 	
 };
 
@@ -215,6 +221,7 @@ protected:
 	virtual void Backward(const VolumeDataBase& y);
 	virtual void Reset();
 	virtual String ToString() const;
+	virtual String GetKey() const {return "windowgrad";}
 	
 };
 

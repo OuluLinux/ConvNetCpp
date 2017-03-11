@@ -36,6 +36,7 @@ Session& Session::SetWindowSize(int size, int min_size) {
 	l2_loss_window.Init(size, min_size);
 	train_window.Init(size, min_size);
 	accuracy_window.Init(size, min_size);
+	test_window.Init(size, min_size);
 	return *this;
 }
 
@@ -43,6 +44,8 @@ void Session::Clear() {
 	StopTraining();
 	ClearOwnedLayers();
 	ClearOwnedTrainer();
+	Reset();
+	ResetTraining();
 	train_iter_limit = 0;
 }
 
@@ -122,6 +125,7 @@ void Session::TrainBegin() {
 	l2_loss_window.Clear();
 	train_window.Clear();
 	accuracy_window.Clear();
+	test_window.Clear();
 	
 }
 
@@ -507,11 +511,29 @@ void Session::ClearData() {
 	Leave();
 }
 
+// Variables, what are being used during training iterations
 void Session::Reset() {
+	session_last_input_array.Clear();
+	
+	loss_window.Clear();
+	reward_window.Clear();
+	l1_loss_window.Clear();
+	l2_loss_window.Clear();
+	train_window.Clear();
+	accuracy_window.Clear();
+	
 	for(int i = 0; i < net.GetLayers().GetCount(); i++) {
 		net.GetLayers()[i]->Reset();
 	}
-	trainer->Reset();
+	if (trainer)
+		trainer->Reset();
+}
+
+// Variables, what are being used at the end or beginning of training
+void Session::ResetTraining() {
+	
+	accuracy_result_window.Clear();
+	
 }
 
 FullyConnLayer& Session::AddFullyConnLayer(int neuron_count, double l1_decay_mul, double l2_decay_mul, double bias_pref) {

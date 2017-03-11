@@ -10,19 +10,24 @@ class Session {
 	
 protected:
 	friend class MagicNet;
+	friend class MetaSession;
 	
 	typedef Exc RequiredArg;
 	
 	SessionData owned_data;
 	SessionData* used_data;
 	
+	// Statistical variables for values during training
+	Window loss_window, reward_window, l1_loss_window, l2_loss_window, train_window, accuracy_window, test_window;
+	
+	// Statistical variables for values for training results
+	Window accuracy_result_window;
 	
 	TrainerBasePtr owned_trainer, trainer;
 	SpinLock lock;
 	Net net;
 	TimeStop ts;
 	Volume x;
-	Window loss_window, reward_window, l1_loss_window, l2_loss_window, train_window, accuracy_window;
 	Vector<double> session_last_input_array;
 	Vector<LayerBasePtr> owned_layers;
 	int predict_interval, step_num;
@@ -58,6 +63,7 @@ public:
 	void Clear();
 	void ClearData();
 	void Reset();
+	void ResetTraining();
 	
 	SessionData& GetData()	{return *used_data;}
 	SessionData& Data()		{return *used_data;}
@@ -87,10 +93,13 @@ public:
 	Net& GetNetwork();
 	InputLayer* GetInput() const;
 	TrainerBase* GetTrainer() const {return trainer;}
+	const Window& GetLossWindow() const {return loss_window;}
 	const Window& GetAccuracyWindow() const {return accuracy_window;}
+	const Window& GetTrainingWindow() const {return train_window;}
+	const Window& GetTestingAccuracyWindow() const {return test_window;}
 	double GetL1DecayLossAverage() const {return l1_loss_window.GetAverage();}
 	double GetL2DecayLossAverage() const {return l2_loss_window.GetAverage();}
-	double GetTrainingAccuracyAverage() const {return train_window.GetAverage();}
+	double GetTrainingAccuracyAverage() const {return accuracy_window.GetAverage();}
 	double GetValidationAccuracyAverage() const {return accuracy_window.GetAverage();}
 	int GetForwardTime() const {return forward_time;}
 	int GetBackwardTime() const {return backward_time;}

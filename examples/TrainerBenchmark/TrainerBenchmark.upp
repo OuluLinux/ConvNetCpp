@@ -1,0 +1,19 @@
+description "ConvNetJS: Trainer benchmark demo on MNIST\377";
+
+uses
+	CtrlLib,
+	ConvNetCtrl,
+	Docking;
+
+file
+	main.cpp,
+	TrainerBenchmark.h,
+	TrainerBenchmark.cpp,
+	TrainerBenchmark.iml,
+	TrainerBenchmark.rc,
+	LoaderMNIST.h,
+	LoaderMNIST.cpp;
+
+mainconfig
+	"" = "GUI MT";
+

@@ -30,5 +30,8 @@ Screenshot of [Image Painting Demo](http://cs.stanford.edu/people/karpathy/convn
 Screenshot of [Automatic Prediction Demo](http://cs.stanford.edu/people/karpathy/convnetjs/demo/automatic.html) translated to ConvNetC++. 
 ![Automatic Prediction Demo](https://github.com/sppp/ConvNetC-/raw/master/doc/optimization.png)
 
+Screenshot of [Trainer demo on MNIST](http://cs.stanford.edu/people/karpathy/convnetjs/demo/trainers.html) translated to ConvNetC++. 
+![Trainer demo on MNIST](https://github.com/sppp/ConvNetC-/raw/master/doc/benchmark.png)
+
 
 

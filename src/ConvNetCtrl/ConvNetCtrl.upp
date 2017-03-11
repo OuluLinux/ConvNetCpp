@@ -9,6 +9,8 @@ file
 	ConvNetCtrl.h,
 	TrainingGraph.h,
 	TrainingGraph.cpp,
+	MetaSessionGraph.h,
+	MetaSessionGraph.cpp,
 	BarView.h,
 	BarView.cpp,
 	HeatmapView.h,
