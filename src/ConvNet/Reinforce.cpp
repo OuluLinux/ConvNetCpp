@@ -100,6 +100,8 @@ Volume& ReinforceTanh::Forward(Volume& input, bool is_training) {
 	for (int i = 0; i < n; i++) {
 		output.Set(i, tanh(input.Get(i)));
 	}
+	
+	return output;
 }
 
 void ReinforceTanh::Backward() {
@@ -137,6 +139,8 @@ Volume& ReinforceSigmoid::Forward(Volume& input, bool is_training) {
 	for (int i = 0; i < n; i++) {
 		output.Set(i, sig(input.Get(i)));
 	}
+	
+	return output;
 }
 
 void ReinforceSigmoid::Backward() {
@@ -173,6 +177,8 @@ Volume& ReinforceRelu::Forward(Volume& input, bool is_training) {
 	for (int i = 0; i < n; i++) {
 		output.Set(i, max(0.0, input.Get(i))); // relu
 	}
+	
+	return output;
 }
 
 void ReinforceRelu::Backward() {
@@ -349,6 +355,8 @@ Volume& ReinforceEltMul::Forward(Volume& input1, Volume& input2, bool is_trainin
 	for (int i = 0; i < input1.GetLength(); i++) {
 		output.Set(i, input1.Get(i) * input2.Get(i));
 	}
+	
+	return output;
 }
 
 void ReinforceEltMul::Backward() {
