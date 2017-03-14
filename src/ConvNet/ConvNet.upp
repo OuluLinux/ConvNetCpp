@@ -45,5 +45,12 @@ file
 	AdamTrainer.cpp,
 	NetsterovTrainer.cpp,
 	SgdTrainer.cpp,
-	WindowgradTrainer.cpp;
+	WindowgradTrainer.cpp,
+	"Recurrent NN" readonly separator,
+	Agent.h,
+	Agent.cpp,
+	Reinforce.h,
+	Reinforce.cpp,
+	LSTM.h,
+	LSTM.cpp;
 

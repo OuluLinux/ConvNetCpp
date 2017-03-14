@@ -1,4 +1,4 @@
-description "Reinforcement Learning with Deep Q Learning \377";
+description "ConvNetJS: Reinforcement Learning with Deep Q Learning \377";
 
 uses
 	ConvNetCtrl,

@@ -165,10 +165,11 @@ void RegressionPainter::SetImage() {
 	
 	d.EndData();
 	
+	Reload();
+	
 	slider.SetData(1000);
 	lbl_slider.SetLabel("Learning rate: 0.01");
-	
-	Reload();
+	RefreshLearningRate();
 	
 	img_ctrl.SetSource(img);
 	

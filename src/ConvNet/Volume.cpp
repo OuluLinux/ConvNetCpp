@@ -140,6 +140,7 @@ Volume& Volume::Init(int width, int height, int depth) {
 	return *this;
 }
 
+
 Volume& Volume::Init(int width, int height, int depth, double default_value) {
 	if (!owned_weights) {
 		owned_weights = true;
@@ -225,7 +226,7 @@ void Volume::AddFromScaled(const Volume& volume, double a) {
 void Volume::SetConst(double c) {
 	ASSERT(owned_weights);
 	for (int i = 0; i < weights->GetCount(); i++) {
-		weights->Set(i, weights->Get(i) + c);
+		weights->Set(i, c);
 	}
 }
 

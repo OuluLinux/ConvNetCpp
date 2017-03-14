@@ -41,7 +41,7 @@ bool LoaderCIFAR10::SubProgress(int actual, int total) {
 
 void LoaderCIFAR10::Load() {
 	
-	#ifdef LITTLEENDIAN
+	#ifdef CPU_LITTLE_ENDIAN
 		#define SWAP32(x) x = SwapEndian32(x)
 	#else
 		#define SWAP32(x)

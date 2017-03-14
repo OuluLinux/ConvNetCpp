@@ -22,6 +22,7 @@ public:
 	int input_depth;
 	int input_width;
 	int input_height;
+	
 	LayerBase();
 	virtual ~LayerBase();
 	virtual Volume& Forward(Volume& input, bool is_training = false);

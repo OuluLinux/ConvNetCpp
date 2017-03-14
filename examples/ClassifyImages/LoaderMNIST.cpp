@@ -41,7 +41,7 @@ bool LoaderMNIST::SubProgress(int actual, int total) {
 
 void LoaderMNIST::Load() {
 	
-	#ifdef LITTLEENDIAN
+	#ifdef CPU_LITTLE_ENDIAN
 		#define SWAP32(x) x = SwapEndian32(x)
 	#else
 		#define SWAP32(x)
@@ -74,7 +74,7 @@ void LoaderMNIST::Load() {
 			case 3: file = "train-labels.idx1-ubyte.bin"; break;
 		}
 		if (!FileExists(GetExeDirFile(file))) {
-			PromptOK("Error: CIFAR-10 dataset file " + file + " is not included with this executable.");
+			PromptOK("Error: MNIST dataset file " + file + " is not included with this executable.");
 			ret_value = 1;
 			PostCallback(THISBACK(Close0));
 			return;

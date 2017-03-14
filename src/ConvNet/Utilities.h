@@ -79,12 +79,14 @@ public:
 
 	
 	Volume();
+	Volume(int, int);
 	Volume(int width, int height, int depth, Volume& vol);
 	Volume(int width, int height, int depth, VolumeDataBase& weights);
 	Volume(const Volume& o) {owned_weights = false; weights = NULL; *this = o;}
 	Volume(int width, int height, int depth); // Volume will be filled with random numbers
 	Volume(int width, int height, int depth, double default_value);
 	Volume(const Vector<double>& weights);
+	Volume& Init(const Volume& v, double default_value=0.0) {return Init(v.GetWidth(), v.GetHeight(), v.GetDepth(), default_value);}
 	Volume& Init(int width, int height, int depth); // Volume will be filled with random numbers
 	Volume& Init(int width, int height, int depth, double default_value);
 	
@@ -100,6 +102,7 @@ public:
 	void AddFrom(const Volume& volume);
 	void AddFromScaled(const Volume& volume, double a);
 	void AddGradient(int x, int y, int d, double v);
+	void AddGradient(int i, double v);
 	void AddGradientFrom(const Volume& volume);
 	double Get(int x, int y, int d) const;
 	double GetGradient(int x, int y, int d) const;
@@ -110,7 +113,6 @@ public:
 	void Set(int i, double v);
 	double GetGradient(int i) const;
 	void SetGradient(int i, double v);
-	void AddGradient(int i, double v);
 	void ZeroGradients();
 	void Store(ValueMap& map) const;
 	void Load(const ValueMap& map);
@@ -126,6 +128,7 @@ public:
 	
 };
 
+  
 typedef Volume* VolumePtr;
 
 class ParametersAndGradients : Moveable<ParametersAndGradients> {

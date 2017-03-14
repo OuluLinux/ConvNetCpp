@@ -1,4 +1,4 @@
-description "Trains a Convolutional Neural Network on the image dataset.\377";
+description "ConvNetJS: Trains a Convolutional Neural Network on the image dataset.\377";
 
 uses
 	CtrlLib,
@@ -20,5 +20,6 @@ file
 	LoaderMNIST.cpp;
 
 mainconfig
-	"" = "GUI MT";
+	"" = "GUI MT",
+	"" = "GUI MT NOGTK";
 

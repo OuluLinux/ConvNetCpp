@@ -1,4 +1,4 @@
-description "Neural Network \"paints\" an image\377";
+description "ConvNetJS: Neural Network \"paints\" an image\377";
 
 uses
 	CtrlLib,

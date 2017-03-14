@@ -1,0 +1,15 @@
+description "ReinforceJS:  A toy environment called Gridworld, that is often used as a toy model in the Reinforcement Learning literature.\377";
+
+uses
+	CtrlLib,
+	ConvNetCtrl;
+
+file
+	main.cpp,
+	GridWorld.h,
+	GridWorld.cpp,
+	GridWorld.iml;
+
+mainconfig
+	"" = "GUI MT";
+

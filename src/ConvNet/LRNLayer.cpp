@@ -41,7 +41,7 @@ String LrnLayer::ToString() const {
   // a bit experimental layer for now. I think it works but I'm not 100%
   // the gradient check is a bit funky. I'll look into this a bit later.
   // Local Response Normalization in window, along depths of volumes
-  var LrnLayer = function(opt) {
+  var LrnLayer(opt) {
     var opt = opt || {};
 
     // required
@@ -57,7 +57,7 @@ String LrnLayer::ToString() const {
     layer_type = 'lrn';
 
     // checks
-    if(n%2 === 0) { console.log('WARNING n should be odd for LRN layer'); }
+    if(n%2 == 0) { console.log('WARNING n should be odd for LRN layer'); }
   }
   LrnLayer.prototype = {
     forward: function(V, is_training) {
@@ -110,7 +110,7 @@ String LrnLayer::ToString() const {
             for(var j=Math.max(0,i-n2);j<=Math.min(i+n2,V.depth-1);j++) {
               var aj = V.get(x,y,j); 
               var g = -aj*beta*Math.pow(S,beta-1)*alpha/n*2*aj;
-              if(j===i) g+= SB;
+              if(j==i) g+= SB;
               g /= SB2;
               g *= chain_grad;
               V.add_grad(x,y,j,g);

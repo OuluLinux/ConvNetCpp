@@ -1,4 +1,4 @@
-description "Interactively classify toy 2-D data with a Neural Network \377";
+description "ConvNetJS: Interactively classify toy 2-D data with a Neural Network \377";
 
 uses
 	ConvNet,

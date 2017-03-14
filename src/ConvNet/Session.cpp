@@ -47,6 +47,7 @@ void Session::Clear() {
 	Reset();
 	ResetTraining();
 	train_iter_limit = 0;
+	step_num = 0;
 }
 
 void Session::ClearOwnedLayers() {
