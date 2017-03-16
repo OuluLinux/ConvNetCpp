@@ -9,6 +9,7 @@ Volume RandVolume(int n, int d, double mu, double std) {
 	////fillRand(m,-std,std); // kind of :P
 	//return m;
 	Panic("TODO");
+	return Volume();
 }
 
 int SampleWeighted(Vector<double>& p) {
@@ -844,6 +845,7 @@ Volume& DQNAgent::ForwardQ(DQNet& net, Volume& s, bool needs_backprop) {
 	return a2mat;
 	*/
 	Panic("TODO");
+	return Volume();
 }
 
 int DQNAgent::Act(const Vector<int>& slist) {

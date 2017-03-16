@@ -40,18 +40,6 @@ void GridWorldCtrl::LeftDown(Point p, dword keyflags) {
 			WhenGridUnfocus();
 		}
 	}
-	
-	/*
-	if(s == selected) {
-		selected = -1; // toggle off
-		$("#creward").html('(select a cell)');
-	} else {
-		selected = s;
-		$("#creward").html(reward[s].toFixed(2));
-		$("#rewardslider").slider('value', reward[s]);
-	}
-	DrawGrid(); // redraw
-	*/
 }
 
 void GridWorldCtrl::Paint(Draw& w) {
@@ -64,7 +52,6 @@ void GridWorldCtrl::Paint(Draw& w) {
 	
 	int gh = agent->height; // height in cells
 	int gw = agent->width; // width in cells
-	//int gs = agent->length; // total number of cells
 	
 	int max_size = min(sz.cx, sz.cy);
 	int xoff = sz.cx / 2 - max_size / 2;
@@ -149,6 +136,12 @@ void GridWorldCtrl::Paint(Draw& w) {
 					tipvec << Point(x1, y1) << Point(x1-tip2, y1-tip) << Point(x1-tip2, y1+tip);
 				}
 				else continue;
+				
+				#ifdef flagWIN32
+				// This is small but annoying difference in windows
+				xtrim = 0;
+				ytrim = 0;
+				#endif
 				
 				id.DrawLine(
 					x0+cs/2-xtrim,
