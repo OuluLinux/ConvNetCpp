@@ -79,9 +79,10 @@ public:
 
 	
 	Volume();
-	Volume(int, int);
+	Volume(int, int) {Panic("TODO");}
 	Volume(int width, int height, int depth, Volume& vol);
 	Volume(int width, int height, int depth, VolumeDataBase& weights);
+	Volume(int width, int height, int depth, const Vector<int>& weights);
 	Volume(const Volume& o) {owned_weights = false; weights = NULL; *this = o;}
 	Volume(int width, int height, int depth); // Volume will be filled with random numbers
 	Volume(int width, int height, int depth, double default_value);
@@ -120,6 +121,7 @@ public:
 	void SetData(VolumeDataBase& data);
 	void SwapData(Volume& vol);
 	
+	int GetPos(int x, int y, int d) const;
 	int GetWidth()  const {return width;}
 	int GetHeight() const {return height;}
 	int GetDepth()  const {return depth;}

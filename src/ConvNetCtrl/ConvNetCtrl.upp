@@ -24,5 +24,7 @@ file
 	ImageRegression.h,
 	ImageRegression.cpp,
 	ImagePrediction.h,
-	ImagePrediction.cpp;
+	ImagePrediction.cpp,
+	GridWorldCtrl.h,
+	GridWorldCtrl.cpp;
 

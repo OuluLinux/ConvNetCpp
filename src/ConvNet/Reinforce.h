@@ -31,8 +31,8 @@ public:
 	virtual void Init(int input_width, int input_height, int input_depth);
 	virtual String GetKey() const {return "base";}
 	
-	Volume& operator() (Volume& a);
-	Volume& operator() (Volume& a, Volume& b);
+	Volume& operator() (Volume& a) {return Forward(a);}
+	Volume& operator() (Volume& a, Volume& b) {return Forward(a,b);}
 	
 };
 

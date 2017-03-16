@@ -44,6 +44,7 @@ void ReinforceBase::Init(int input_width, int input_height, int input_depth) {
 
 
 
+
 ReinforceRowPluck::ReinforceRowPluck() {
 	ix = 0;
 }

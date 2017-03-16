@@ -33,5 +33,5 @@ Screenshot of [Automatic Prediction Demo](http://cs.stanford.edu/people/karpathy
 Screenshot of [Trainer demo on MNIST](http://cs.stanford.edu/people/karpathy/convnetjs/demo/trainers.html) translated to ConvNetC++. 
 ![Trainer demo on MNIST](https://github.com/sppp/ConvNetC-/raw/master/doc/benchmark.png)
 
-
-
+Screenshot of [GridWorld: Dynamic Programming Demo](http://cs.stanford.edu/people/karpathy/reinforcejs/gridworld_dp.html) translated to ConvNetC++.
+![GridWorld: Dynamic Programming Demo](https://github.com/sppp/ConvNetC-/raw/master/doc/gridworld.jpg)

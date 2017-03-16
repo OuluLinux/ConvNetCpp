@@ -48,6 +48,23 @@ Volume::Volume(int width, int height, int depth, VolumeDataBase& weights) {
 	weight_gradients.SetCount(length, 0.0);
 }
 
+Volume::Volume(int width, int height, int depth, const Vector<int>& weights) {
+	this->width = width;
+	this->height = height;
+	this->depth = depth;
+	length = width * height * depth;
+	
+	ASSERT(length == weights.GetCount());
+	
+	owned_weights = true;
+	this->weights = new VolumeData<double>();
+	for(int i = 0; i < length; i++) {
+		this->weights->Set(i, weights[i]);
+	}
+	
+	weight_gradients.SetCount(length, 0.0);
+}
+
 Volume::Volume(int width, int height, int depth, Volume& vol) {
 	this->width = width;
 	this->height = height;
@@ -166,18 +183,23 @@ Volume& Volume::Init(int width, int height, int depth, double default_value) {
 	return *this;
 }
 
+int Volume::GetPos(int x, int y, int d) const {
+	ASSERT(x >= 0 && y >= 0 && d >= 0 && x < width && y < height && d < depth);
+	return ((width * y) + x) * depth + d;
+}
+
 double Volume::Get(int x, int y, int d) const {
-	int ix = ((width * y) + x) * depth + d;
+	int ix = GetPos(x,y,d);
 	return weights->Get(ix);
 }
 
 void Volume::Set(int x, int y, int d, double v) {
-	int ix = ((width * y) + x) * depth + d;
+	int ix = GetPos(x,y,d);
 	weights->Set(ix, v);
 }
 
 void Volume::Add(int x, int y, int d, double v) {
-	int ix = ((width * y) + x) * depth + d;
+	int ix = GetPos(x,y,d);
 	weights->Set(ix, weights->Get(ix) + v);
 }
 
@@ -186,17 +208,17 @@ void Volume::Add(int i, double v) {
 }
 
 double Volume::GetGradient(int x, int y, int d) const {
-	int ix = ((width * y) + x) * depth + d;
+	int ix = GetPos(x,y,d);
 	return weight_gradients[ix];
 }
 
 void Volume::SetGradient(int x, int y, int d, double v) {
-	int ix = ((width * y) + x) * depth + d;
+	int ix = GetPos(x,y,d);
 	weight_gradients[ix] = v;
 }
 
 void Volume::AddGradient(int x, int y, int d, double v) {
-	int ix = ((width * y) + x) * depth + d;
+	int ix = GetPos(x,y,d);
 	weight_gradients[ix] += v;
 }
 
