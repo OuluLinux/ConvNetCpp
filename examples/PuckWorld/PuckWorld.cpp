@@ -36,10 +36,12 @@ void PuckWorldAgent::SampleNextState(int x, int y, int d, int action, int& next_
 	
 	// agent action influences puck velocity
 	double accel = 0.002;
+	bool gliding = false;
 	if		(action == ACT_LEFT)	pvx -= accel;
 	else if (action == ACT_RIGHT)	pvx += accel;
 	else if (action == ACT_UP)		pvy -= accel;
 	else if (action == ACT_DOWN)	pvy += accel;
+	else gliding = true;
 	
 	// handle boundary conditions and bounce
 	if (ppx < rad) {
@@ -61,15 +63,10 @@ void PuckWorldAgent::SampleNextState(int x, int y, int d, int action, int& next_
 	
 	t += 1;
 	
-	if ((t % 100) == 0) {
+	if ((t % 1000) == 0) {
 		tx = Randomf(); // reset the target location
 		ty = Randomf();
 	}
-	
-	// if(this.t % 73 === 0) {
-	//   this.tx2 = Math.random(); // reset the target location
-	//   this.ty2 = Math.random();
-	// }
 	
 	// compute distances
 	double dx, dy, d1, d2;
@@ -92,16 +89,17 @@ void PuckWorldAgent::SampleNextState(int x, int y, int d, int action, int& next_
 	double r = -d1; // want to go close to green
 	if (d2 < BADRAD) {
 		// but if we're too close to red that's bad
-		r += 2 * (d2 - BADRAD) / BADRAD;
+		double f = (BADRAD - d2) / BADRAD;
+		r -= 2 * f;
+		
+		// reset if too close
+		/*if (f > 0.9) {
+			tx2 = Randomf(); // reset the target location
+			ty2 = Randomf();
+		}*/
 	}
 	
-	//if(a === 4) r += 0.05; // give bonus for gliding with no force
-	
-	// evolve state in time
-	/*var ns = GetState();
-	var out = {'ns':ns, 'r':r};
-	return out;
-	}*/
+	if (gliding) r += 0.05; // give bonus for gliding with no force
 	
 	reward = r;
 }
@@ -205,6 +203,7 @@ PuckWorld::PuckWorld() {
 	goslow.SetLabel("Go Slow");
 	toggle.SetLabel("Toggle Iteration");
 	reset.SetLabel("Reset");
+	toggle.Set(true);
 	gofast	<<= THISBACK1(SetSpeed, 2);
 	gonorm	<<= THISBACK1(SetSpeed, 1);
 	goslow	<<= THISBACK1(SetSpeed, 0);
@@ -284,7 +283,7 @@ void PuckWorld::RefreshEpsilon() {
 void PuckWorld::SetSpeed(int i) {
 	switch (i) {
 		case 0: agent.SetIterationDelay(100);	break;
-		case 1: agent.SetIterationDelay(1);	break;
+		case 1: agent.SetIterationDelay(10);	break;
 		case 2: agent.SetIterationDelay(0);		break;
 	}
 }

@@ -87,7 +87,7 @@ int Volume::GetMaxColumn() const {
 	int pos = -1;
 	for(int i = 0; i < weights->GetCount(); i++) {
 		double d = weights->Get(i);
-		if (d > max) {
+		if (i == 0 || d > max) {
 			max = d;
 			pos = i;
 		}
@@ -119,8 +119,15 @@ Volume& Volume::operator=(const Volume& src) {
 		for(int i = 0; i < weights->GetCount(); i++)
 			weights->Set(i, src.weights->Get(i));
 	} else {
-		ASSERT(!src.owned_weights); // keep it simple;
-		weights = src.weights;
+		if (src.owned_weights) {
+			owned_weights = true;
+			this->weights = new VolumeData<double>(src.weights->GetCount());
+			weights->SetCount(src.weights->GetCount());
+			for(int i = 0; i < weights->GetCount(); i++)
+				weights->Set(i, src.weights->Get(i));
+		} else{
+			weights = src.weights;
+		}
 	}
 	weight_gradients.SetCount(src.weight_gradients.GetCount());
 	for(int i = 0; i < weight_gradients.GetCount(); i++)

@@ -942,6 +942,7 @@ Volume& DQNAgent::ForwardQ(DQNet& net, Volume& s) {
 */
 int DQNAgent::Act(int x, int y, int d) {
 	Panic("Not useful");
+	return 0;
 }
 
 int DQNAgent::Act(const Vector<double>& slist) {
@@ -983,11 +984,11 @@ void DQNAgent::Learn(double reward1) {
 		
 		// decide if we should keep this experience in the replay
 		if (t % experience_add_every == 0) {
-			ASSERT(exp.GetCount() == expi); // TODO: remove expi usage
-			exp.Add();
+			if (exp.GetCount() == expi)
+				exp.Add();
 			exp[expi].Set(state0, action0, reward0, state1, action1);
 			expi += 1;
-			if (expi > experience_size) { expi = 0; } // roll over when we run out
+			if (expi >= experience_size) { expi = 0; } // roll over when we run out
 		}
 		t += 1;
 		
