@@ -1,0 +1,17 @@
+description "This is a toy environment called Gridworld that is often used as a toy model in the Reinforcement Learning literature.\377";
+
+uses
+	CtrlLib,
+	ConvNetCtrl,
+	Docking;
+
+file
+	main.cpp,
+	TemporalDifference.h,
+	TemporalDifference.cpp,
+	TemporalDifference.rc,
+	TemporalDifference.iml;
+
+mainconfig
+	"" = "GUI MT";
+

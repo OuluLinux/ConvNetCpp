@@ -2,6 +2,13 @@
 
 namespace ConvNet {
 
+#define STOREVAR(json, field) map.GetAdd(#json) = this->field;
+#define LOADVAR(field, json) this->field = map.GetValue(map.Find(#json));
+#define LOADVARDEF(field, json, def) {Value tmp = map.GetValue(map.Find(#json)); if (tmp.IsNull()) this->field = def; else this->field = tmp;}
+#define LOADVARDEFTEMP(field, json, def) {Value tmp = map.GetValue(map.Find(#json)); if (tmp.IsNull()) field = def; else field = tmp;}
+
+
+
 // return Mat but filled with random numbers from gaussian
 Volume RandVolume(int n, int d, double mu, double std) {
 	//var m = new Mat(n, d);
@@ -74,6 +81,8 @@ Agent::Agent() {
 	start_state = 0;
 	stop_state = -1;
 	
+	iter_sleep = 0;
+	
 	running = false;
 	stopped = true;
 }
@@ -85,8 +94,6 @@ Agent::~Agent() {
 void Agent::Init(int width, int height, int depth) {
 	ASSERT(width > 0 && height > 0 && depth > 0);
 	ASSERT(stopped);
-	
-	iter_sleep = 0;
 	
 	int action_count =
 		(width  > 1 ? 2 : 1) *
@@ -113,6 +120,23 @@ void Agent::Init(int width, int height, int depth) {
 	disable.SetCount(length, false);
 	
 	SetStopState(width / 2, height / 2, depth / 2);
+}
+
+bool Agent::LoadJSON(const String& json) {
+	
+	Value js = ParseJSON(json);
+	if (js.IsNull()) {
+		LOG("JSON parse failed");
+		return false;
+	}
+	
+	ValueMap map = js;
+	Load(map);
+	return true;
+}
+
+void Agent::Load(const ValueMap& map) {
+	
 }
 
 void Agent::Reset() {
@@ -147,8 +171,8 @@ void Agent::Run() {
 }
 
 void Agent::ValueIteration() {
-	EvaluatePolicy();
-	UpdatePolicy();
+	// calling Learn() is probably enough, but at least here is room for improvements now
+	Learn();
 }
 
 int Agent::GetPos(int x, int y, int d) const {
@@ -164,7 +188,7 @@ void Agent::GetXYZ(int state, int& x, int& y, int& d) const {
 	y = state;
 }
 
-void Agent::AllowedActions(int x, int y, int d, Vector<int>& actions) {
+void Agent::AllowedActions(int x, int y, int d, Vector<int>& actions) const {
 	actions.SetCount(0);
 	if (IsDisabled(x,y,d)) return;
 	if (x > 0) { actions.Add(ACT_LEFT); }
@@ -264,22 +288,23 @@ void DPAgent::Reset() {
 	
 	// initialize uniform random policy
 	Vector<int> poss;
-	for (int d = 0; d < depth; d++) {
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				int state = GetPos(x,y,d);
-				
+	int state = 0;
+	
+	for (int y = 0; y < height; y++) {
+		for (int x = 0; x < width; x++) {
+			for (int d = 0; d < depth; d++) {
 				AllowedActions(x, y, d, poss);
 				double prob = 1.0 / poss.GetCount();
 				for (int i = 0; i < poss.GetCount(); i++) {
 					poldist[poss[i]][state] = prob;
 				}
+				state++;
 			}
 		}
 	}
 }
 
-double DPAgent::Act(int x, int y, int d) {
+int DPAgent::Act(int x, int y, int d) {
 	// behave according to the learned policy
 	int state = GetPos(x,y,d);
 	Vector<int> poss;
@@ -307,11 +332,11 @@ void DPAgent::EvaluatePolicy() {
 	value.SetCount(length);
 	
 	Vector<int> poss;
+	int state = 0;
 	
-	for (int d = 0; d < depth; d++) {
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				int state = GetPos(x,y,d);
+	for (int y = 0; y < height; y++) {
+		for (int x = 0; x < width; x++) {
+			for (int d = 0; d < depth; d++) {
 				
 				// integrate over actions in a stochastic policy
 				// note that we assume that policy probability mass over allowed actions sums to one
@@ -327,6 +352,7 @@ void DPAgent::EvaluatePolicy() {
 				}
 				
 				value[state] = v;
+				state++;
 			}
 		}
 	}
@@ -337,17 +363,19 @@ void DPAgent::UpdatePolicy() {
 	Vector<int> poss;
 	Vector<double> vs;
 	Vector<int> maxpos;
+	int state = 0;
 	
 	// update policy to be greedy w.r.t. learned Value function
-	for (int d = 0; d < depth; d++) {
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
+	
+	for (int y = 0; y < height; y++) {
+		for (int x = 0; x < width; x++) {
+			for (int d = 0; d < depth; d++) {
 				
 				AllowedActions(x, y, d, poss);
-				if (poss.IsEmpty()) continue;
-				
-				
-				int state = GetPos(x,y,d);
+				if (poss.IsEmpty()) {
+					state++;
+					continue;
+				}
 				
 				// compute value of taking each allowed action
 				int nmax = 0;
@@ -375,6 +403,8 @@ void DPAgent::UpdatePolicy() {
 					int a = poss[maxpos[i]];
 					poldist[a][state] = 1.0 / nmax;
 				}
+				
+				state++;
 			}
 		}
 	}
@@ -416,7 +446,24 @@ TDAgent::TDAgent() {
 	
 	planN = 0;
 	
-	Reset();
+	nflot = 100;
+	
+}
+
+void TDAgent::Load(const ValueMap& map) {
+	Agent::Load(map);
+	
+	String update_str;
+	LOADVARDEFTEMP(update_str, update, "");
+	update = update_str == "sarsa" ? UPDATE_SARSA : UPDATE_QLEARN;
+	
+	LOADVARDEF(gamma, gamma, 0.75);
+	LOADVARDEF(epsilon, epsilon, 0.1);
+	LOADVARDEF(alpha, alpha, 0.01);
+	LOADVARDEF(replacing_traces, replacing_traces, true);
+	LOADVARDEF(planN, planN, 0);
+	LOADVARDEF(smooth_policy_update, smooth_policy_update, false);
+	LOADVARDEF(beta, beta, 0.01);
 }
 
 void TDAgent::Reset(){
@@ -433,6 +480,7 @@ void TDAgent::Reset(){
 	pq.SetCount(na);
 	env_model_s.SetCount(na);
 	env_model_r.SetCount(na);
+	poldist.SetCount(na);
 	for(int i = 0; i < na; i++) {
 		
 		// This could be done differently by setting first target count and then looping values
@@ -444,6 +492,7 @@ void TDAgent::Reset(){
 		pq[i].SetCount(0);
 		env_model_s[i].SetCount(0);
 		env_model_r[i].SetCount(0);
+		poldist[i].SetCount(0);
 		
 		Q[i].SetCount(ns, q_init_val);
 		P[i].SetCount(ns, 0);
@@ -451,6 +500,7 @@ void TDAgent::Reset(){
 		pq[i].SetCount(ns, 0);
 		env_model_s[i].SetCount(ns, -1);// init to -1 so we can test if we saw the state before
 		env_model_r[i].SetCount(ns, 0);
+		poldist[i].SetCount(ns, 0);
 	}
 	
 	
@@ -461,14 +511,15 @@ void TDAgent::Reset(){
 	Vector<int> poss;
 	
 	// initialize uniform random policy
-	for (int d = 0; d < depth; d++) {
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				int state = GetPos(x,y,d);
+	int state = 0;
+	for (int y = 0; y < height; y++) {
+		for (int x = 0; x < width; x++) {
+			for (int d = 0; d < depth; d++) {
 				AllowedActions(x, y, d, poss);
 				for (int i = 0; i < poss.GetCount(); i++) {
 					poldist[poss[i]][state] = 1.0 / poss.GetCount();
 				}
+				state++;
 			}
 		}
 	}
@@ -481,6 +532,7 @@ void TDAgent::Reset(){
 	action0 = 0;
 	action1 = 0;
 	
+	nsteps_counter = 0;
 	explored = false;
 }
 
@@ -488,7 +540,7 @@ void TDAgent::ResetEpisode() {
 	// an episode finished
 }
 
-double TDAgent::Act(int x, int y, int d){
+int TDAgent::Act(int x, int y, int d) {
 	
 	// act according to epsilon greedy policy
 	Vector<int> poss;
@@ -501,7 +553,7 @@ double TDAgent::Act(int x, int y, int d){
 	
 	probs.SetCount(poss.GetCount());
 	for (int i = 0; i < poss.GetCount(); i++) {
-		probs.Add(poldist[poss[i]][state]);
+		probs[i] = poldist[poss[i]][state];
 	}
 	
 	// epsilon greedy policy
@@ -521,6 +573,42 @@ double TDAgent::Act(int x, int y, int d){
 	action1 = action;
 	
 	return action;
+}
+
+double TDAgent::GetValue(int x, int y, int d) const {
+	Vector<int> poss;
+	AllowedActions(x, y, d, poss);
+	if (poss.IsEmpty()) return 0.0;
+	int state = GetPos(x,y,d);
+	double r;
+	for(int i = 0; i < poss.GetCount(); i++) {
+		double q = Q[poss[i]][state];
+		if (i == 0 || q > r)
+			r = q;
+	}
+	return r;
+}
+
+void TDAgent::Learn() {
+	int x, y, d;
+	GetXYZ(current_state, x, y, d);
+	
+	int action = Act(x,y,d); // ask agent for an action
+	int next_state;
+	double reward;
+	bool reset_episode = false;
+    SampleNextState(x,y,d, action, next_state, reward, reset_episode); // run it through environment dynamics
+    Learn(reward); // allow opportunity for the agent to learn
+    current_state = next_state; // evolve environment to next state
+    nsteps_counter += 1;
+    if (reset_episode) {
+		ResetEpisode();
+		
+		// record the reward achieved
+		while (nsteps_history.GetCount() >= nflot) {nsteps_history.Remove(0);}
+		nsteps_history.Add(nsteps_counter);
+		nsteps_counter = 0;
+    }
 }
 
 void TDAgent::Learn(double reward1){
@@ -635,25 +723,27 @@ void TDAgent::LearnFromTuple(int state0, int action0, double reward0, int state1
 		state_update.SetCount(length);
 		
 		
-		for (int d = 0; d < depth; d++) {
-			for (int y = 0; y < height; y++) {
-				for (int x = 0; x < width; x++) {
+		int state = 0;
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				for (int d = 0; d < depth; d++) {
 					
 					AllowedActions(x, y, d, poss);
 					
 					for (int i = 0; i < poss.GetCount(); i++) {
-						int s = GetPos(x,y,d);
-						int a = poss[i];
-						double esa = e[a][s];
-						double update = alpha * esa * (target - Q[a][s]);
-						Q[a][s] += update;
-						UpdatePriority(s, a, update);
-						e[a][s] *= edecay;
+						int action = poss[i];
+						double esa = e[action][state];
+						double update = alpha * esa * (target - Q[action][state]);
+						Q[action][state] += update;
+						UpdatePriority(state, action, update);
+						e[action][state] *= edecay;
 						double u = fabs(update);
-						if (u > state_update[s]) {
-							state_update[s] = u;
+						if (u > state_update[state]) {
+							state_update[state] = u;
 						}
 					}
+					
+					state++;
 				}
 			}
 		}
@@ -845,7 +935,14 @@ Volume& DQNAgent::ForwardQ(DQNet& net, Volume& s, bool needs_backprop) {
 	return a2mat;
 	*/
 	Panic("TODO");
-	return Volume();
+	Volume v;
+	return v;
+}
+
+int DQNAgent::Act(int x, int y, int d) {
+	Vector<int> slist;
+	slist.Add(GetPos(x,y,d));
+	return Act(slist);
 }
 
 int DQNAgent::Act(const Vector<int>& slist) {
@@ -870,6 +967,10 @@ int DQNAgent::Act(const Vector<int>& slist) {
 	action1 = action;
 	
 	return action;
+}
+
+void DQNAgent::Learn() {
+	Panic("TODO");
 }
 
 void DQNAgent::Learn(double reward1) {

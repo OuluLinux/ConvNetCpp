@@ -82,10 +82,11 @@ void GridWorldCtrl::Paint(Draw& w) {
 			int r = 255, g = 255, b = 255;
 			int s = agent->GetPos(x, y, 0);
 			
-			double vv = agent->value[s];
+			double tv = agent->GetValue(x,y,0);
 			int ms = 100;
-			if (vv > 0)		{ g = 255; r = 255 - vv*ms; b = 255 - vv*ms; }
-			if (vv < 0)		{ g = 255 + vv*ms; r = 255; b = 255 + vv*ms; }
+			int diff = min(+255, max(-255, (int)(tv*ms)));
+			if (diff > 0)	{ g = 255; r = 255 - diff; b = 255 - diff; }
+			else			{ g = 255 + diff; r = 255; b = 255 + diff; }
 			
 			Color vcol(r, g, b);
 			Color rcol = vcol;
@@ -106,7 +107,6 @@ void GridWorldCtrl::Paint(Draw& w) {
 			}
 			
 			// write value
-			double tv = agent->value[s];
 			id.DrawText(x0 + 4, y0 + 4, FormatDoubleFix(tv, 2, FD_ZEROS), med_fnt);
 			
 			// update policy arrows

@@ -27,8 +27,12 @@ public:
 	
 	virtual void Reset();
 	virtual double Reward(int s, int a, int ns);
-	virtual void EvaluatePolicy() {}
-	virtual void UpdatePolicy() {}
+	virtual void EvaluatePolicy() {Panic("not implemented");}
+	virtual void UpdatePolicy() {Panic("not implemented");}
+	virtual void Learn() = 0;
+	virtual int Act(int x, int y, int d) = 0;
+	virtual double GetValue(int x, int y, int d) const {return value[GetPos(x, y, d)];}
+	virtual void Load(const ValueMap& map);
 	
 	void Start();
 	void Stop();
@@ -36,9 +40,10 @@ public:
 	void ValueIteration();
 	void Init(int width, int height, int depth);
 	void ResetValues();
-	
 	void SampleNextState(int x, int y, int d, int action, int& next_state, double& reward, bool& reset_episode);
-	void AllowedActions(int x, int y, int d, Vector<int>& actions);
+	void AllowedActions(int x, int y, int d, Vector<int>& actions) const;
+	int  Act(int state);
+	bool LoadJSON(const String& json);
 	
 	double GetReward(int s) const {return reward[s];}
 	int GetNumStates() {return length;}
@@ -84,11 +89,12 @@ protected:
 public:
 	DPAgent();
 	
-	virtual void Reset();
 	
 	void SetGamma(double d) {gamma = d;}
-	double Act(int x, int y, int d);
-	void Learn();
+	
+	virtual void Reset();
+	virtual int Act(int x, int y, int d);
+	virtual void Learn();
 	virtual void EvaluatePolicy();
 	virtual void UpdatePolicy();
 	
@@ -112,9 +118,10 @@ class TDAgent : public Agent {
 	Vector<Vector<double> > Q;	// state action value function
 	Vector<Vector<double> > P;	// policy distribution \pi(s,a)
 	Vector<Vector<double> > e;	// eligibility trace
-	Vector<Vector<double> >pq;
+	Vector<Vector<double> > pq;
 	Vector<Vector<double> > env_model_r;	// environment model (s,a) -> (s',r)
 	Vector<Vector<int> >env_model_s;	// environment model (s,a) -> (s',r)
+	Vector<int> nsteps_history;
 	double gamma;	// future reward discount factor
 	double epsilon;	// for epsilon-greedy policy
 	double alpha;	// value function learning rate
@@ -126,6 +133,9 @@ class TDAgent : public Agent {
 	int planN;		// number of planning steps per learning iteration (0 = no planning)
 	int state0, state1, action0, action1;
 	int ns, na;
+	int current_state;
+	int nsteps_counter;
+	int nflot;
 	bool smooth_policy_update;
 	bool replacing_traces;
 	bool explored;
@@ -135,9 +145,16 @@ public:
 	TDAgent();
 	
 	virtual void Reset();
+	virtual void Learn();
+	virtual int Act(int x, int y, int d);
+	virtual double GetValue(int x, int y, int d) const;
+	virtual void Load(const ValueMap& map);
+	
+	double GetEpsilon() const {return epsilon;}
+	
+	void SetEpsilon(double e) {epsilon = e;}
 	
 	void ResetEpisode();
-	double Act(int x, int y, int d);
 	void Learn(double reward1);
 	void UpdateModel(int state0, int action0, double reward0, int state1);
 	void Plan();
@@ -207,6 +224,10 @@ class DQNAgent : public Agent {
 public:
 
 	DQNAgent();
+	
+	virtual void Learn();
+	virtual int Act(int x, int y, int d);
+	
 	void Reset();
 	void toJSON();
 	void fromJSON(const ValueMap& j);

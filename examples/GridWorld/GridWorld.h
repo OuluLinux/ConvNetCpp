@@ -20,7 +20,6 @@ class GridWorld : public TopWindow {
 	
 	
 	DPAgent agent;
-	int sid;
 	bool running;
 	
 public:

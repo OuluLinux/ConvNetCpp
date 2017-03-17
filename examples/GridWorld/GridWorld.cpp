@@ -5,7 +5,7 @@
 #include <Draw/iml_source.h>
 
 GridWorld::GridWorld() {
-	Title("GridWorld");
+	Title("GridWorld: dynamic programming");
 	Icon(GridWorldImg::icon());
 	Sizeable().MaximizeBox().MinimizeBox();
 	
@@ -100,7 +100,6 @@ void GridWorld::Reset(bool init_reward) {
 	if (toggle.Get())
 		agent.Start();
 	
-	sid = -1;
 }
 
 void GridWorld::UpdatePolicy() {
