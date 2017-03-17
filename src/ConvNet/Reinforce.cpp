@@ -17,14 +17,14 @@ ReinforceBase::~ReinforceBase() {
 	
 }
 
-Volume& ReinforceBase::Forward(Volume& input, bool is_training) {
+Volume& ReinforceBase::Forward(Volume& input) {
 	this->input = &input;
 	input1 = NULL;
 	input2 = NULL;
 	return output;
 }
 
-Volume& ReinforceBase::Forward(Volume& input1, Volume& input2, bool is_training) {
+Volume& ReinforceBase::Forward(Volume& input1, Volume& input2) {
 	input = NULL;
 	this->input1 = &input1;
 	this->input2 = &input2;
@@ -53,8 +53,8 @@ ReinforceRowPluck::~ReinforceRowPluck() {
 	
 }
 
-Volume& ReinforceRowPluck::Forward(Volume& input, bool is_training) {
-	ReinforceBase::Forward(input, is_training);
+Volume& ReinforceRowPluck::Forward(Volume& input) {
+	ReinforceBase::Forward(input);
 	
 	// pluck a row of input with index ix and return it as col vector
 	ASSERT(ix >= 0 && ix < input.GetLength());
@@ -92,11 +92,12 @@ ReinforceTanh::~ReinforceTanh() {
 	
 }
 
-Volume& ReinforceTanh::Forward(Volume& input, bool is_training) {
-	ReinforceBase::Forward(input, is_training);
+Volume& ReinforceTanh::Forward(Volume& input) {
+	ReinforceBase::Forward(input);
 	
 	// tanh nonlinearity
-	output.Init(input);
+	//output.Init(input); // breaks example
+	output.Init(input.GetHeight(), input.GetWidth(), input.GetDepth(), 0.0);
 	int n = input.GetLength();
 	for (int i = 0; i < n; i++) {
 		output.Set(i, tanh(input.Get(i)));
@@ -131,8 +132,8 @@ ReinforceSigmoid::~ReinforceSigmoid() {
 	
 }
 
-Volume& ReinforceSigmoid::Forward(Volume& input, bool is_training) {
-	ReinforceBase::Forward(input, is_training);
+Volume& ReinforceSigmoid::Forward(Volume& input) {
+	ReinforceBase::Forward(input);
 	
 	// sigmoid nonlinearity
 	output.Init(input);
@@ -170,8 +171,8 @@ ReinforceRelu::~ReinforceRelu() {
 	
 }
 
-Volume& ReinforceRelu::Forward(Volume& input, bool is_training) {
-	ReinforceBase::Forward(input, is_training);
+Volume& ReinforceRelu::Forward(Volume& input) {
+	ReinforceBase::Forward(input);
 	
 	output.Init(input);
 	int n = input.GetLength();
@@ -206,8 +207,8 @@ ReinforceMul::~ReinforceMul() {
 	
 }
 
-Volume& ReinforceMul::Forward(Volume& input1, Volume& input2, bool is_training) {
-	ReinforceBase::Forward(input1, input2, is_training);
+Volume& ReinforceMul::Forward(Volume& input1, Volume& input2) {
+	ReinforceBase::Forward(input1, input2);
 	
 	// multiply matrices input1 * input2
 	ASSERT_(input1.GetWidth() == input2.GetHeight(), "matmul dimensions misaligned");
@@ -268,8 +269,8 @@ ReinforceAdd::~ReinforceAdd() {
 	
 }
 
-Volume& ReinforceAdd::Forward(Volume& input1, Volume& input2, bool is_training) {
-	ReinforceBase::Forward(input1, input2, is_training);
+Volume& ReinforceAdd::Forward(Volume& input1, Volume& input2) {
+	ReinforceBase::Forward(input1, input2);
 	
 	ASSERT(input1.GetLength() == input2.GetLength());
 	
@@ -305,8 +306,8 @@ ReinforceDot::~ReinforceDot() {
 	
 }
 
-Volume& ReinforceDot::Forward(Volume& input1, Volume& input2, bool is_training) {
-	ReinforceBase::Forward(input1, input2, is_training);
+Volume& ReinforceDot::Forward(Volume& input1, Volume& input2) {
+	ReinforceBase::Forward(input1, input2);
 	
 	// input1 and input2 are both column vectors
 	ASSERT(input1.GetLength() == input2.GetLength());
@@ -346,8 +347,8 @@ ReinforceEltMul::~ReinforceEltMul() {
 	
 }
 
-Volume& ReinforceEltMul::Forward(Volume& input1, Volume& input2, bool is_training) {
-	ReinforceBase::Forward(input1, input2, is_training);
+Volume& ReinforceEltMul::Forward(Volume& input1, Volume& input2) {
+	ReinforceBase::Forward(input1, input2);
 	
 	ASSERT(input1.GetLength() == input2.GetLength());
 	
@@ -374,6 +375,70 @@ void ReinforceEltMul::Init(int input_width, int input_height, int input_depth) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+Graph::Graph() {
+	
+}
+
+Graph::~Graph() {
+	Clear();
+}
+
+void Graph::Clear() {
+	while (layers.GetCount()) {
+		ReinforceBase* l = layers[0];
+		layers.Remove(0);
+		extra_args.Remove(0);
+		delete l;
+	}
+}
+
+Volume& Graph::Forward(Volume& input) {
+	Volume* v = &input;
+	for (int i = 0; i < layers.GetCount(); i++) {
+		ReinforceBase& b = *layers[i];
+		int args = b.GetArgCount();
+		if (args == 1) {
+			v = &b.Forward(*v);
+		}
+		else {
+			v = &b.Forward(*extra_args[i], *v);
+		}
+	}
+	return *v;
+}
+
+void Graph::Backward() {
+	for (int i = layers.GetCount()-1; i >= 0; i--) {
+		layers[i]->Backward();
+	}
+}
+
+void Graph::AddMul(Volume& multiplier) {
+	extra_args.Add(&multiplier);
+	layers.Add(new ReinforceMul());
+}
+
+void Graph::AddAdd(Volume& addition) {
+	extra_args.Add(&addition);
+	layers.Add(new ReinforceAdd());
+}
+
+void Graph::AddTanh() {
+	extra_args.Add(0);
+	layers.Add(new ReinforceTanh());
+}
 
 
 }

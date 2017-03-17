@@ -48,7 +48,7 @@ Volume::Volume(int width, int height, int depth, VolumeDataBase& weights) {
 	weight_gradients.SetCount(length, 0.0);
 }
 
-Volume::Volume(int width, int height, int depth, const Vector<int>& weights) {
+Volume::Volume(int width, int height, int depth, const Vector<double>& weights) {
 	this->width = width;
 	this->height = height;
 	this->depth = depth;
@@ -57,10 +57,7 @@ Volume::Volume(int width, int height, int depth, const Vector<int>& weights) {
 	ASSERT(length == weights.GetCount());
 	
 	owned_weights = true;
-	this->weights = new VolumeData<double>();
-	for(int i = 0; i < length; i++) {
-		this->weights->Set(i, weights[i]);
-	}
+	this->weights = new VolumeData<double>(weights);
 	
 	weight_gradients.SetCount(length, 0.0);
 }

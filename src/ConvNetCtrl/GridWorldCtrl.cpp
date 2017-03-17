@@ -7,14 +7,6 @@ GridWorldCtrl::GridWorldCtrl() {
 	selected = -1;
 }
 
-void GridWorldCtrl::Layout() {
-	
-}
-
-void GridWorldCtrl::MouseWheel(Point, int zdelta, dword) {
-	
-}
-
 void GridWorldCtrl::LeftDown(Point p, dword keyflags) {
 	
 	if (agent) {

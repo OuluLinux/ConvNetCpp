@@ -22,8 +22,6 @@ public:
 	
 	void SetAgent(Agent& agent) {this->agent = &agent;}
 	
-	virtual void Layout();
-	virtual void MouseWheel(Point, int zdelta, dword);
 	virtual void LeftDown(Point p, dword keyflags);
 	virtual void Paint(Draw& w);
 	

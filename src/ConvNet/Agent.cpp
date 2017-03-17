@@ -11,12 +11,15 @@ namespace ConvNet {
 
 // return Mat but filled with random numbers from gaussian
 Volume RandVolume(int n, int d, double mu, double std) {
-	//var m = new Mat(n, d);
-	//fillRandn(m,mu,std);
-	////fillRand(m,-std,std); // kind of :P
-	//return m;
-	Panic("TODO");
-	return Volume();
+	Volume m(d, n, 1, 0);
+	
+	std::default_random_engine generator;
+	std::normal_distribution<double> distribution(mu, std);
+	
+	for (int i = 0; i < m.GetLength(); i++)
+		m.Set(i, distribution(generator));
+	
+	return m;
 }
 
 int SampleWeighted(Vector<double>& p) {
@@ -33,11 +36,9 @@ int SampleWeighted(Vector<double>& p) {
 
 void UpdateMat(Volume& m, double alpha) {
 	// updates in place
-	//for (int i = 0, n = m.n * m.d; i < n; i++) {
-	Panic("chk");
 	for (int i = 0, n = m.GetLength(); i < n; i++) {
 		double d = m.GetGradient(i);
-		if (d != 0) {
+		if (d != 0.0) {
 			m.Add(i, -alpha * d);
 			m.SetGradient(i, 0);
 		}
@@ -54,7 +55,6 @@ void UpdateNet(DQNet& net, double alpha) {
 	UpdateMat(net.b1, alpha);
 	UpdateMat(net.W2, alpha);
 	UpdateMat(net.b2, alpha);
-	Panic("TODO");
 }
 
 
@@ -91,14 +91,16 @@ Agent::~Agent() {
 	Stop();
 }
 
-void Agent::Init(int width, int height, int depth) {
+void Agent::Init(int width, int height, int depth, int action_count) {
 	ASSERT(width > 0 && height > 0 && depth > 0);
 	ASSERT(stopped);
 	
-	int action_count =
-		(width  > 1 ? 2 : 1) *
-		(height > 1 ? 2 : 1) *
-		(depth  > 1 ? 2 : 1);
+	if (action_count <= 0) {
+		action_count =
+			(width  > 1 ? 2 : 1) *
+			(height > 1 ? 2 : 1) *
+			(depth  > 1 ? 2 : 1);
+	}
 	
 	// hardcoding one gridworld for now
 	this->width		= width;
@@ -140,7 +142,7 @@ void Agent::Load(const ValueMap& map) {
 }
 
 void Agent::Reset() {
-	Agent::Init(width, height, depth);
+	Agent::Init(width, height, depth, action_count);
 	
 }
 
@@ -876,7 +878,15 @@ DQNAgent::DQNAgent() {
 	
 	num_hidden_units = 100;
 	
-	Reset();
+	// Original:
+	//		var a1mat = G.Add(G.Mul(net.W1, s), net.b1);
+	//		var h1mat = G.Tanh(a1mat);
+	//		var a2mat = G.Add(G.Mul(net.W2, h1mat), net.b2);
+	G.AddMul(net.W1);
+	G.AddAdd(net.b1);
+	G.AddTanh();
+	G.AddMul(net.W2);
+	G.AddAdd(net.b2);
 }
 
 void DQNAgent::Reset() {
@@ -891,9 +901,9 @@ void DQNAgent::Reset() {
 	// on top of Mats, but for now sticking with this
 	
 	net.W1 = RandVolume(nh, ns, 0, 0.01);
-	net.b1.Init(nh, 1, 0, 0.01);
+	net.b1.Init(nh, 1, 1, 0);
 	net.W2 = RandVolume(na, nh, 0, 0.01);
-	net.b2.Init(na, 1, 0, 0.01);
+	net.b2.Init(na, 1, 1, 0);
 	
 	expi = 0; // where to insert
 	
@@ -924,28 +934,17 @@ void DQNAgent::fromJSON(const ValueMap& j) {
 	net = R.netFromJSON(j.net);*/
 	Panic("TODO");
 }
-
-Volume& DQNAgent::ForwardQ(DQNet& net, Volume& s, bool needs_backprop) {
-	//var G = new Graph(needs_backprop);
-	/*
-	var a1mat = G.Add(G.Mul(net.W1, s), net.b1);
-	var h1mat = G.Tanh(a1mat);
-	var a2mat = G.Add(G.Mul(net.W2, h1mat), net.b2);
-	lastG = G; // back this up. Kind of hacky isn't it
+/*
+Volume& DQNAgent::ForwardQ(DQNet& net, Volume& s) {
+	Volume& a2mat = G.Forward(s); // back this up. Kind of hacky isn't it
 	return a2mat;
-	*/
-	Panic("TODO");
-	Volume v;
-	return v;
 }
-
+*/
 int DQNAgent::Act(int x, int y, int d) {
-	Vector<int> slist;
-	slist.Add(GetPos(x,y,d));
-	return Act(slist);
+	Panic("Not useful");
 }
 
-int DQNAgent::Act(const Vector<int>& slist) {
+int DQNAgent::Act(const Vector<double>& slist) {
 	
 	// convert to a Mat column vector
 	Volume state(width, height, depth, slist);
@@ -956,7 +955,8 @@ int DQNAgent::Act(const Vector<int>& slist) {
 		action = Random(na);
 	} else {
 		// greedy wrt Q function
-		Volume& amat = ForwardQ(net, state, false);
+		//Volume& amat = ForwardQ(net, state);
+		Volume& amat = G.Forward(state);
 		action = amat.GetMaxColumn(); // returns index of argmax action
 	}
 	
@@ -983,6 +983,8 @@ void DQNAgent::Learn(double reward1) {
 		
 		// decide if we should keep this experience in the replay
 		if (t % experience_add_every == 0) {
+			ASSERT(exp.GetCount() == expi); // TODO: remove expi usage
+			exp.Add();
 			exp[expi].Set(state0, action0, reward0, state1, action1);
 			expi += 1;
 			if (expi > experience_size) { expi = 0; } // roll over when we run out
@@ -1004,11 +1006,11 @@ double DQNAgent::LearnFromTuple(Volume& s0, int a0, double reward0, Volume& s1, 
 	// want: Q(s,a) = r + gamma * max_a' Q(s',a')
 	
 	// compute the target Q value
-	Volume& tmat = ForwardQ(net, s1, false);
+	Volume& tmat = G.Forward(s1);// ForwardQ(net, s1);
 	double qmax = reward0 + gamma * tmat.Get(tmat.GetMaxColumn());
 	
 	// now predict
-	Volume& pred = ForwardQ(net, s0, true);
+	Volume& pred = G.Forward(s0);// ForwardQ(net, s0);
 	
 	double tderror = pred.Get(a0) - qmax;
 	double clamp = tderror_clamp;
@@ -1017,7 +1019,7 @@ double DQNAgent::LearnFromTuple(Volume& s0, int a0, double reward0, Volume& s1, 
 		if (tderror < -clamp) tderror = -clamp;
 	}
 	pred.SetGradient(a0, tderror);
-	lastG.Backward(); // compute gradients on net params
+	G.Backward(); // compute gradients on net params
 	
 	// update net
 	UpdateNet(net, alpha);

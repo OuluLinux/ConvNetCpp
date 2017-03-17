@@ -1,0 +1,19 @@
+description "ReinforceJS: A Deep Q Learning modification of PuckWorld\377";
+
+uses
+	CtrlLib,
+	ConvNetCtrl,
+	Docking;
+
+file
+	main.cpp,
+	PuckWorld.h,
+	PuckWorld.cpp,
+	PuckWorldCtrl.cpp,
+	PuckWorld.iml,
+	PuckWorld.rc;
+
+mainconfig
+	"" = "GUI MT",
+	"" = "GUI MT NOGTK";
+

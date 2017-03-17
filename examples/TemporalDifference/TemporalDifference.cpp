@@ -15,8 +15,7 @@ spec.smooth_policy_update = true; // non-standard, updates policy smoothly to fo
 spec.beta = 0.8; // learning rate for smooth policy update
 */
 
-TemporalDifference::TemporalDifference()
-{
+TemporalDifference::TemporalDifference() {
 	Title("GridWorld: temporal difference");
 	Icon(TemporalDifferenceImg::icon());
 	Sizeable().MaximizeBox().MinimizeBox();

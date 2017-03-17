@@ -33,14 +33,14 @@ public:
 	virtual int Act(int x, int y, int d) = 0;
 	virtual double GetValue(int x, int y, int d) const {return value[GetPos(x, y, d)];}
 	virtual void Load(const ValueMap& map);
+	virtual void SampleNextState(int x, int y, int d, int action, int& next_state, double& reward, bool& reset_episode);
 	
 	void Start();
 	void Stop();
 	void Run();
 	void ValueIteration();
-	void Init(int width, int height, int depth);
+	void Init(int width, int height, int depth, int action_count=0);
 	void ResetValues();
-	void SampleNextState(int x, int y, int d, int action, int& next_state, double& reward, bool& reset_episode);
 	void AllowedActions(int x, int y, int d, Vector<int>& actions) const;
 	int  Act(int state);
 	bool LoadJSON(const String& json);
@@ -204,7 +204,6 @@ class DQNAgent : public Agent {
 	
 	DQNet net;
 	Graph G;
-	Graph lastG;
 	Vector<DQExperience> exp; // experience
 	double gamma, epsilon, alpha, tderror_clamp;
 	int experience_add_every, experience_size;
@@ -228,11 +227,13 @@ public:
 	virtual void Learn();
 	virtual int Act(int x, int y, int d);
 	
+	void SetEpsilon(double e) {epsilon = e;}
+	
 	void Reset();
 	void toJSON();
 	void fromJSON(const ValueMap& j);
-	Volume& ForwardQ(DQNet& net, Volume& s, bool needs_backprop);
-	int Act(const Vector<int>& slist);
+	//Volume& ForwardQ(DQNet& net, Volume& s);
+	int Act(const Vector<double>& slist);
 	void Learn(double reward1);
 	double LearnFromTuple(Volume& s0, int a0, double reward0, Volume& s1, int a1);
 	
