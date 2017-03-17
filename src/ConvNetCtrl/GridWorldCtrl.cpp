@@ -112,13 +112,13 @@ void GridWorldCtrl::Paint(Draw& w) {
 			// update policy arrows
 			for (int a = 0; a < 4; a++) {
 				double prob = agent->poldist[a][s];
-				if (prob <= 0.0) continue;
+				if (prob <= 0.2) continue;
 				
 				double ss = cs/2 * prob * 0.9;
 				int nx, ny, x1,y1, xtrim = 1, ytrim = 1;
 				tipvec.SetCount(0);
 				if (a == ACT_LEFT)	{
-					xtrim = 0;
+					xtrim = -1;
 					nx=-ss;				ny=0;		x1 = x0+cs/2+nx;	y1 = y0+cs/2+ny;
 					tipvec << Point(x1, y1) << Point(x1+tip2, y1-tip) << Point(x1+tip2, y1+tip);
 				}
@@ -127,7 +127,7 @@ void GridWorldCtrl::Paint(Draw& w) {
 					tipvec << Point(x1, y1) << Point(x1+tip, y1+tip2) << Point(x1-tip, y1+tip2);
 				}
 				else if (a == ACT_UP)	{
-					ytrim = 0;
+					ytrim = -1;
 					nx=0;				ny=ss;		x1 = x0+cs/2+nx;	y1 = y0+cs/2+ny;
 					tipvec << Point(x1, y1) << Point(x1+tip, y1-tip2) << Point(x1-tip, y1-tip2);
 				}
