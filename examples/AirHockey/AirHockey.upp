@@ -1,0 +1,29 @@
+description "Reinforced AI player.\377";
+
+uses
+	CtrlLib,
+	plugin/box2d,
+	Painter;
+
+file
+	main.cpp,
+	AirHockey.h,
+	AirHockey.cpp,
+	AirHockey.iml,
+	AirHockey.rc,
+	AirHockeyGame.h,
+	AirHockeyGame.cpp,
+	Agent.h,
+	Agent.cpp,
+	Contact.h,
+	Contact.cpp,
+	Object.h,
+	Object.cpp,
+	World.h,
+	World.cpp,
+	WorldDebug.cpp,
+	WorldDraw.cpp;
+
+mainconfig
+	"" = "GUI MT";
+

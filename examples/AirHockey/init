@@ -1,0 +1,4 @@
+#ifndef _AirHockey_icpp_init_stub
+#define _AirHockey_icpp_init_stub
+#include "CtrlLib/init"
+#endif
