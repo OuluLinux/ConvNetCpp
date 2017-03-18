@@ -3,6 +3,7 @@
 
 WaterWorldAgent::WaterWorldAgent() {
 	nflot = 1000;
+	iter = 0;
 	
 	// positional information
 	p.x = 300;
@@ -68,9 +69,9 @@ void WaterWorldAgent::Backward() {
 	if (do_training)
 		DQNAgent::Learn(reward);
 	
-	if (reward != 0.0) {
-		smooth_reward += reward;
-		
+	smooth_reward += reward;
+	
+	if (iter % 50 == 0) {
 		while (smooth_reward_history.GetCount() >= nflot) {
 			smooth_reward_history.Remove(0);
 		}
@@ -78,7 +79,10 @@ void WaterWorldAgent::Backward() {
 		
 		world->reward.SetLimit(nflot);
 		world->reward.AddValue(smooth_reward);
+		
+		iter = 0;
 	}
+	iter++;
 }
 
 void WaterWorldAgent::Reset() {

@@ -118,7 +118,7 @@ public:
 	double smooth_reward;
 	double reward;
 	double rad, digestion_signal;
-	int nflot;
+	int nflot, iter;
 	int action;
 	bool do_training;
 	
@@ -182,6 +182,7 @@ public:
 	void RefreshEpsilon();
 	void LoadPretrained();
 	void RefreshStatus();
+	void PostRefreshStatus() {PostCallback(THISBACK(RefreshStatus));}
 	void Tick();
 	void Ticking();
 	void SetSpeed(int i);

@@ -49,7 +49,7 @@ WaterWorld::WaterWorld() {
 	lbl_eps.SetLabel("Exploration epsilon: ");
 	btnsplit.Horz();
 	btnsplit << reset << goveryfast << gofast << gonorm << goslow;
-	goveryfast.SetLabel("Go Very Fast");
+	goveryfast.SetLabel("Unlimited speed");
 	gofast.SetLabel("Go Fast");
 	gonorm.SetLabel("Go Normal");
 	goslow.SetLabel("Go Slow");
@@ -74,7 +74,6 @@ WaterWorld::~WaterWorld() {
 }
 
 void WaterWorld::Tick() {
-	// "Normal" is a little bit slower than fastest
 	if      (simspeed == 2) Sleep(1);
 	if      (simspeed == 1) Sleep(10);
 	else if (simspeed == 0) Sleep(100);
@@ -99,7 +98,6 @@ void WaterWorld::DockInit() {
 void WaterWorld::Refresher() {
 	world.Refresh();
 	RefreshStatus();
-	
 	if (running) PostCallback(THISBACK(Refresher));
 }
 
