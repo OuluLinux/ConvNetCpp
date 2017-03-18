@@ -96,8 +96,7 @@ Volume& ReinforceTanh::Forward(Volume& input) {
 	ReinforceBase::Forward(input);
 	
 	// tanh nonlinearity
-	//output.Init(input); // breaks example
-	output.Init(input.GetHeight(), input.GetWidth(), input.GetDepth(), 0.0);
+	output.Init(input.GetWidth(), input.GetHeight(), input.GetDepth(), 0.0);
 	int n = input.GetLength();
 	for (int i = 0; i < n; i++) {
 		output.Set(i, tanh(input.Get(i)));

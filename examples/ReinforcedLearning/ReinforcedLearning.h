@@ -88,7 +88,7 @@ struct Eye : Moveable<Eye> {
 
 
 // A single agent
-struct Agent {
+struct RLAgent {
 	Brain brain;
 	Pointf p;		// positional information
 	Pointf op;		// old position
@@ -102,7 +102,7 @@ struct Agent {
 	Vector<Pointf> actions;
 	Vector<Eye> eyes;
 	
-	Agent();
+	RLAgent();
 	void Forward();
 	void Backward();
 	
@@ -112,7 +112,7 @@ struct Agent {
 
 
 struct World : public Ctrl {
-	Array<Agent> agents;
+	Array<RLAgent> agents;
 	Vector<Item> items;
 	int W, H;
 	int clock;

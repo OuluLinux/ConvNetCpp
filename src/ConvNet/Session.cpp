@@ -418,7 +418,7 @@ bool Session::MakeLayers(const String& json) {
 	return true;
 }
 
-bool Session::LoadOriginalJSON(const String& json) {
+bool Session::LoadJSON(const String& json) {
 	ClearOwnedLayers();
 	
 	Enter();
@@ -462,7 +462,7 @@ bool Session::LoadOriginalJSON(const String& json) {
 	return true;
 }
 
-bool Session::StoreOriginalJSON(String& json) {
+bool Session::StoreJSON(String& json) {
 	Enter();
 	
 	Value new_layers;

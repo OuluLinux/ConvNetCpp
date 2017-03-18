@@ -1,4 +1,6 @@
 #include "PuckWorld.h"
+#include "pretrained.brc"
+#include <plugin/bz2/bz2.h>
 
 PuckWorldAgent::PuckWorldAgent() {
 	nflot = 1000;
@@ -63,7 +65,7 @@ void PuckWorldAgent::SampleNextState(int x, int y, int d, int action, int& next_
 	
 	t += 1;
 	
-	if ((t % 1000) == 0) {
+	if ((t % 100) == 0) {
 		tx = Randomf(); // reset the target location
 		ty = Randomf();
 	}
@@ -127,6 +129,10 @@ void PuckWorldAgent::Learn() {
 			smooth_reward_history.Remove(0);
 		}
 		smooth_reward_history.Add(smooth_reward);
+		
+		pworld->reward.SetLimit(nflot);
+		pworld->reward.AddValue(smooth_reward);
+		
 		flott = 0;
 	}
 }
@@ -161,6 +167,7 @@ PuckWorld::PuckWorld() {
 	Icon(PuckWorldImg::icon());
 	Sizeable().MaximizeBox().MinimizeBox();
 	
+	agent.pworld = this;
 	running = false;
 	
 	
@@ -183,15 +190,16 @@ PuckWorld::PuckWorld() {
 	reload_btn.SetLabel("Reload Agent");
 	reload_btn <<= THISBACK(Reload);
 	
-	
+	statusctrl.Add(status.HSizePos().VSizePos(0,30));
+	statusctrl.Add(load_pretrained.HSizePos().BottomPos(0,30));
+	load_pretrained.SetLabel("Load a Pretrained Agent");
+	load_pretrained <<= THISBACK(LoadPretrained);
 	
 	Add(btnsplit.HSizePos().TopPos(0,30));
-	Add(pworld.HSizePos().VSizePos(30,60));
-	Add(lbl_eps.LeftPos(4,200-4).BottomPos(30,30));
-	Add(eps.HSizePos(200,0).BottomPos(30,30));
+	Add(pworld.HSizePos().VSizePos(30,30));
+	Add(lbl_eps.LeftPos(4,200-4).BottomPos(0,30));
+	Add(eps.HSizePos(200,0).BottomPos(0,30));
 	pworld.SetAgent(agent);
-	//pworld.WhenGridFocus << THISBACK(GridFocus);
-	//pworld.WhenGridUnfocus << THISBACK(GridUnfocus);
 	eps <<= THISBACK(RefreshEpsilon);
 	eps.MinMax(0, +100);
 	eps.SetData(50);
@@ -214,6 +222,7 @@ PuckWorld::PuckWorld() {
 	
 	PostCallback(THISBACK2(Reset, true, true));
 	PostCallback(THISBACK(Reload));
+	RefreshEpsilon();
 	Start();
 }
 
@@ -223,10 +232,13 @@ PuckWorld::~PuckWorld() {
 
 void PuckWorld::DockInit() {
 	DockLeft(Dockable(agent_ctrl, "Edit Agent").SizeHint(Size(320, 240)));
+	DockLeft(Dockable(statusctrl, "Status").SizeHint(Size(320, 240)));
+	DockLeft(Dockable(reward, "Average reward graph").SizeHint(Size(320, 240)));
 }
 
 void PuckWorld::Refresher() {
 	pworld.Refresh();
+	RefreshStatus();
 	
 	if (running) PostCallback(THISBACK(Refresher));
 }
@@ -253,7 +265,6 @@ void PuckWorld::Reset(bool init_reward, bool start) {
 		
 		// Just reset values
 		agent.ResetValues();
-		
 	}
 	
 	if (start && toggle.Get())
@@ -265,19 +276,16 @@ void PuckWorld::Reload() {
 	Reset(false, false); // doesn't reset values
 	
 	String param_str = agent_edit.GetData();
-	agent.LoadJSON(param_str);
+	agent.LoadInitJSON(param_str);
 	
 	if (toggle.Get())
 		agent.Start();
-	
-	//GridFocus();
 }
 
 void PuckWorld::RefreshEpsilon() {
 	double d = (double)eps.GetData() / 100.0;
 	agent.SetEpsilon(d);
-	
-	//GridFocus();
+	lbl_eps.SetLabel("Exploration epsilon: " + FormatDoubleFix(d, 2));
 }
 
 void PuckWorld::SetSpeed(int i) {
@@ -296,4 +304,20 @@ void PuckWorld::ToggleIteration() {
 		agent.Start();
 }
 
+void PuckWorld::LoadPretrained() {
+	
+	// This is the pre-trained network from original ConvNetJS
+	MemReadStream pretrained_mem(pretrained, pretrained_length);
+	String json = BZ2Decompress(pretrained_mem);
+	
+	agent.Stop();
+	agent.LoadJSON(json);
+	agent.Start();
+}
 
+void PuckWorld::RefreshStatus() {
+	String s;
+	s << "Experience write pointer: " << agent.GetExperienceWritePointer() << "\n";
+	s << "Latest TD error: " << FormatDoubleFix(agent.GetTDError(), 3);
+	status.SetLabel(s);
+}

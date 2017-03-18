@@ -1,6 +1,6 @@
 #include "ReinforcedLearning.h"
 
-Agent::Agent() {
+RLAgent::RLAgent() {
 	p.x = 50;
 	p.y = 50;
 	op = p;
@@ -34,7 +34,7 @@ Agent::Agent() {
 	actionix = -1;
 }
 
-void Agent::Forward() {
+void RLAgent::Forward() {
 	// in forward pass the agent simply behaves in the environment
 	// create input to brain
 	int num_eyes = eyes.GetCount();
@@ -62,7 +62,7 @@ void Agent::Forward() {
 	
 }
 
-void Agent::Backward() {
+void RLAgent::Backward() {
 	// in backward pass agent learns.
 	// compute reward
 	double proximity_reward = 0.0;

@@ -38,3 +38,7 @@ Screenshot of [GridWorld: Dynamic Programming Demo](http://cs.stanford.edu/peopl
 
 Screenshot of [GridWorld: Temporal Difference Learning Demo](http://cs.stanford.edu/people/karpathy/reinforcejs/gridworld_td.html) translated to ConvNetC++.
 ![GridWorld: Temporal Difference Learning Demo](https://github.com/sppp/ConvNetC-/raw/master/doc/tempdiff.jpg)
+
+Screenshot of [PuckWorld: Deep Q Learning Demo](http://cs.stanford.edu/people/karpathy/reinforcejs/puckworld.html) translated to ConvNetC++.
+![PuckWorld: Deep Q Learning Demo](https://github.com/sppp/ConvNetC-/raw/master/doc/puckworld.jpg)
+

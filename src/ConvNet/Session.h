@@ -111,8 +111,8 @@ public:
 	virtual double GetRewardAverage() const {return reward_window.GetAverage();}
 	
 	bool MakeLayers(const String& json);
-	bool LoadOriginalJSON(const String& json);
-	bool StoreOriginalJSON(String& json);
+	bool LoadJSON(const String& json);
+	bool StoreJSON(String& json);
 	void SetMaxTrainIters(int count) {train_iter_limit = count;}
 	void SetPredictInterval(int i) {predict_interval = i;}
 	void SetTestPredict(bool b) {test_predict = b;}

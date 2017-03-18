@@ -98,7 +98,7 @@ void TemporalDifference::Reload() {
 	Reset(false, false); // doesn't reset values
 	
 	String param_str = agent_edit.GetData();
-	agent.LoadJSON(param_str);
+	agent.LoadInitJSON(param_str);
 	
 	if (toggle.Get())
 		agent.Start();

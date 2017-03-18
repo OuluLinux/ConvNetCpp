@@ -33,6 +33,7 @@ public:
 	virtual int Act(int x, int y, int d) = 0;
 	virtual double GetValue(int x, int y, int d) const {return value[GetPos(x, y, d)];}
 	virtual void Load(const ValueMap& map);
+	virtual void LoadInit(const ValueMap& map);
 	virtual void SampleNextState(int x, int y, int d, int action, int& next_state, double& reward, bool& reset_episode);
 	
 	void Start();
@@ -44,6 +45,8 @@ public:
 	void AllowedActions(int x, int y, int d, Vector<int>& actions) const;
 	int  Act(int state);
 	bool LoadJSON(const String& json);
+	bool LoadInitJSON(const String& json);
+	bool StoreJSON(String& json);
 	
 	double GetReward(int s) const {return reward[s];}
 	int GetNumStates() {return length;}
@@ -148,7 +151,7 @@ public:
 	virtual void Learn();
 	virtual int Act(int x, int y, int d);
 	virtual double GetValue(int x, int y, int d) const;
-	virtual void Load(const ValueMap& map);
+	virtual void LoadInit(const ValueMap& map);
 	
 	double GetEpsilon() const {return epsilon;}
 	
@@ -182,6 +185,9 @@ struct DQNet {
 	Volume b1;
 	Volume W2;
 	Volume b2;
+	
+	void Load(const ValueMap& map);
+	
 };
 
 
@@ -206,6 +212,7 @@ class DQNAgent : public Agent {
 	Graph G;
 	Vector<DQExperience> exp; // experience
 	double gamma, epsilon, alpha, tderror_clamp;
+	double tderror;
 	int experience_add_every, experience_size;
 	int learning_steps_per_iteration;
 	int num_hidden_units;
@@ -214,7 +221,6 @@ class DQNAgent : public Agent {
 	int ns;
 	int na;
 	int t;
-	int tderror;
 	
 	Volume state0, state1;
 	int action0, action1;
@@ -226,13 +232,15 @@ public:
 	
 	virtual void Learn();
 	virtual int Act(int x, int y, int d);
+	virtual void Load(const ValueMap& map);
+	virtual void LoadInit(const ValueMap& map);
+	
+	int GetExperienceWritePointer() const {return expi;}
+	double GetTDError() const {return tderror;}
 	
 	void SetEpsilon(double e) {epsilon = e;}
 	
 	void Reset();
-	void toJSON();
-	void fromJSON(const ValueMap& j);
-	//Volume& ForwardQ(DQNet& net, Volume& s);
 	int Act(const Vector<double>& slist);
 	void Learn(double reward1);
 	double LearnFromTuple(Volume& s0, int a0, double reward0, Volume& s1, int a1);

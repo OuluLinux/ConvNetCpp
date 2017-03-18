@@ -20,7 +20,7 @@ World::World() {
 	}
 	
 	// Add agent
-	Agent& agent = agents.Add();
+	RLAgent& agent = agents.Add();
 	
 }
 
@@ -74,7 +74,7 @@ void World::Tick() {
 	// process eyes
 	
 	for (int i = 0, n = agents.GetCount(); i < n; i++) {
-		Agent& a = agents[i];
+		RLAgent& a = agents[i];
 		for(int ei = 0, ne = a.eyes.GetCount(); ei < ne; ei++) {
 			Eye& e = a.eyes[ei];
 			
@@ -102,7 +102,7 @@ void World::Tick() {
 	
 	// apply outputs of agents on evironment
 	for (int i = 0, n = agents.GetCount(); i < n; i++) {
-		Agent& a = agents[i];
+		RLAgent& a = agents[i];
 		a.op = a.p; // back up old position
 		a.oangle = a.angle; // and angle
 		
@@ -151,7 +151,7 @@ void World::Tick() {
 		
 		// see if some agent gets lunch
 		for (int j = 0, m = agents.GetCount(); j < m; j++) {
-			Agent& a = agents[j];
+			RLAgent& a = agents[j];
 			double d = Distance(a.p, it.p);
 			if (d < it.rad + a.rad) {
 				
@@ -215,7 +215,7 @@ void World::Paint(Draw& d) {
 	Color apple_clr(255,150,150);
 	Color poison_clr(150,255,150);
 	for(int i = 0; i < agents.GetCount(); i++) {
-		Agent& a = agents[i];
+		RLAgent& a = agents[i];
 		
 		// color agent based on reward it is experiencing at the moment
 		int r = min(255, max(0, (int)(a.brain.GetLatestReward() * 200.0)));

@@ -17,6 +17,7 @@ TrainingGraph::TrainingGraph() {
 	average_size = 20;
 	interval = 200;
 	last_steps = 0;
+	limit = 0;
 }
 
 void TrainingGraph::SetSession(Session& ses) {
@@ -46,8 +47,6 @@ void TrainingGraph::Clear() {
 void TrainingGraph::AddValue() {
 	if (!ses) return;
 	
-	int id = plotter.data[0].GetCount();
-	
 	double av;
 	
 	if (mode == MODE_REWARD) {
@@ -60,7 +59,13 @@ void TrainingGraph::AddValue() {
 		av = xa + xw;
 	}
 	
-	plotter.data[0].AddXY(id, av);
+	AddValue(av);
+}
+
+void TrainingGraph::AddValue(double value) {
+	int id = plotter.data[0].GetCount();
+	
+	plotter.data[0].AddXY(id, value);
 	int count = id + 1;
 	if (count < 2) return;
 	
@@ -75,6 +80,12 @@ void TrainingGraph::AddValue() {
 	double avav = sum / av_count;
 	plotter.data[1].AddXY(id, avav);
 	
+	if (limit > 0) {
+		while (plotter.data[0].GetCount() > limit) {
+			plotter.data[0].Remove(0);
+			plotter.data[1].Remove(0);
+		}
+	}
 	
 	double min = +DBL_MAX;
 	double max = -DBL_MAX;

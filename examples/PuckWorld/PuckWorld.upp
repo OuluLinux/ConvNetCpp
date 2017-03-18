@@ -3,7 +3,8 @@ description "ReinforceJS: A Deep Q Learning modification of PuckWorld\377";
 uses
 	CtrlLib,
 	ConvNetCtrl,
-	Docking;
+	Docking,
+	plugin/bz2;
 
 file
 	main.cpp,
@@ -11,7 +12,9 @@ file
 	PuckWorld.cpp,
 	PuckWorldCtrl.cpp,
 	PuckWorld.iml,
-	PuckWorld.rc;
+	PuckWorld.rc,
+	pretrained.brc,
+	pretrained.json;
 
 mainconfig
 	"" = "GUI MT",

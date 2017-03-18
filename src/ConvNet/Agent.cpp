@@ -124,6 +124,19 @@ void Agent::Init(int width, int height, int depth, int action_count) {
 	SetStopState(width / 2, height / 2, depth / 2);
 }
 
+bool Agent::LoadInitJSON(const String& json) {
+	
+	Value js = ParseJSON(json);
+	if (js.IsNull()) {
+		LOG("JSON parse failed");
+		return false;
+	}
+	
+	ValueMap map = js;
+	LoadInit(map);
+	return true;
+}
+
 bool Agent::LoadJSON(const String& json) {
 	
 	Value js = ParseJSON(json);
@@ -137,7 +150,16 @@ bool Agent::LoadJSON(const String& json) {
 	return true;
 }
 
+bool Agent::StoreJSON(String& json) {
+	
+	return false;
+}
+
 void Agent::Load(const ValueMap& map) {
+	
+}
+
+void Agent::LoadInit(const ValueMap& map) {
 	
 }
 
@@ -452,8 +474,8 @@ TDAgent::TDAgent() {
 	
 }
 
-void TDAgent::Load(const ValueMap& map) {
-	Agent::Load(map);
+void TDAgent::LoadInit(const ValueMap& map) {
+	Agent::LoadInit(map);
 	
 	String update_str;
 	LOADVARDEFTEMP(update_str, update, "");
@@ -901,9 +923,9 @@ void DQNAgent::Reset() {
 	// on top of Mats, but for now sticking with this
 	
 	net.W1 = RandVolume(nh, ns, 0, 0.01);
-	net.b1.Init(nh, 1, 1, 0);
+	net.b1.Init(1, nh, 1, 0);
 	net.W2 = RandVolume(na, nh, 0, 0.01);
-	net.b2.Init(na, 1, 1, 0);
+	net.b2.Init(1, na, 1, 0);
 	
 	expi = 0; // where to insert
 	
@@ -916,30 +938,32 @@ void DQNAgent::Reset() {
 	tderror = 0; // for visualization only...
 }
 
-void DQNAgent::toJSON() {
-	// save function
-	/*var j = {};
-	j.nh = nh;
-	j.ns = ns;
-	j.na = na;
-	j.net = R.netToJSON(net);*/
-	Panic("TODO");
+void DQNAgent::LoadInit(const ValueMap& map) {
+	LOADVARDEF(gamma, gamma, 0.75); // future reward discount factor
+	LOADVARDEF(epsilon, epsilon, 0.1); // for epsilon-greedy policy
+	LOADVARDEF(alpha, alpha, 0.01); // value function learning rate
+	LOADVARDEF(experience_add_every, experience_add_every, 25); // number of time steps before we add another experience to replay memory
+	LOADVARDEF(experience_size, experience_size, 5000); // size of experience replay
+	LOADVARDEF(learning_steps_per_iteration, learning_steps_per_iteration, 10);
+	LOADVARDEF(tderror_clamp, tderror_clamp, 1.0);
+	LOADVARDEF(num_hidden_units, num_hidden_units, 100);
 }
 
-void DQNAgent::fromJSON(const ValueMap& j) {
-	// load function
-	/*nh = j.nh;
-	ns = j.ns;
-	na = j.na;
-	net = R.netFromJSON(j.net);*/
-	Panic("TODO");
+void DQNAgent::Load(const ValueMap& map) {
+	LOADVAR(nh, nh);
+	LOADVAR(ns, ns);
+	LOADVAR(na, na);
+	ValueMap net = map.GetValue(map.Find("net"));
+	this->net.Load(net);
 }
-/*
-Volume& DQNAgent::ForwardQ(DQNet& net, Volume& s) {
-	Volume& a2mat = G.Forward(s); // back this up. Kind of hacky isn't it
-	return a2mat;
+
+void DQNet::Load(const ValueMap& map) {
+	W1.Load(map.GetValue(map.Find("W1")));
+	b1.Load(map.GetValue(map.Find("b1")));
+	W2.Load(map.GetValue(map.Find("W2")));
+	b2.Load(map.GetValue(map.Find("b2")));
 }
-*/
+
 int DQNAgent::Act(int x, int y, int d) {
 	Panic("Not useful");
 	return 0;
@@ -1026,5 +1050,21 @@ double DQNAgent::LearnFromTuple(Volume& s0, int a0, double reward0, Volume& s1, 
 	UpdateNet(net, alpha);
 	return tderror;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 }

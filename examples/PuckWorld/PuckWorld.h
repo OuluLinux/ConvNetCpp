@@ -11,6 +11,7 @@ using namespace ConvNet;
 #define IMAGEFILE <PuckWorld/PuckWorld.iml>
 #include <Draw/iml_header.h>
 
+class PuckWorld;
 
 class PuckWorldAgent : public DQNAgent {
 	
@@ -37,6 +38,7 @@ public:
 	void Reset();
 	void GetState(Vector<double>& slist);
 	
+	PuckWorld* pworld;
 };
 
 struct PuckWorldCtrl : public Ctrl {
@@ -58,9 +60,11 @@ public:
 	
 };
 
-
-
 class PuckWorld : public DockWindow {
+	
+protected:
+	friend class PuckWorldAgent;
+	
 	PuckWorldAgent agent;
 	PuckWorldCtrl pworld;
 	Label lbl_eps;
@@ -68,6 +72,12 @@ class PuckWorld : public DockWindow {
 	Splitter btnsplit;
 	Button gofast, gonorm, goslow, reset;
 	ButtonOption toggle;
+	
+	ParentCtrl statusctrl;
+	Label status;
+	Button load_pretrained;
+	
+	TrainingGraph reward;
 	
 	Button reload_btn;
 	ParentCtrl agent_ctrl;
@@ -90,6 +100,8 @@ public:
 	void Refresher();
 	void RefreshEpsilon();
 	void ToggleIteration();
+	void LoadPretrained();
+	void RefreshStatus();
 	
 	void SetSpeed(int i);
 	

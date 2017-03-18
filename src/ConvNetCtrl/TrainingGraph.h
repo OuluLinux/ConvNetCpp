@@ -19,6 +19,7 @@ protected:
 	int average_size;
 	int last_steps;
 	int interval;
+	int limit;
 	int mode;
 	
 	enum {MODE_LOSS, MODE_REWARD};
@@ -32,9 +33,11 @@ public:
 	void SetModeReward() {mode = MODE_REWARD; plotter.data[0].SetTitle("Reward");}
 	void SetAverage(int size) {average_size = size;}
 	void SetInterval(int period) {interval = period;}
+	void SetLimit(int size) {limit = size;}
 	
 	void StepInterval(int num_steps);
 	void RefreshData();
+	void AddValue(double value);
 	void AddValue();
 	void Clear();
 };
