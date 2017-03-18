@@ -1,0 +1,23 @@
+description "ReinforceJS: Deep Q Learning demo with a more realistic and larger setup\377";
+
+uses
+	CtrlLib,
+	plugin/bz2,
+	ConvNetCtrl,
+	Docking;
+
+file
+	main.cpp,
+	WaterWorld.h,
+	WaterWorld.cpp,
+	WaterWorldAgent.cpp,
+	World.cpp,
+	WaterWorld.iml,
+	WaterWorld.rc,
+	pretrained.brc,
+	pretrained.json;
+
+mainconfig
+	"" = "GUI MT",
+	"" = "GUI MT NOGTK";
+

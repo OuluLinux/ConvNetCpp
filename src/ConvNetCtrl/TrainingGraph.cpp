@@ -63,13 +63,15 @@ void TrainingGraph::AddValue() {
 }
 
 void TrainingGraph::AddValue(double value) {
-	int id = plotter.data[0].GetCount();
+	int c = plotter.data[0].GetCount();
+	int id = c;
+	if (id) id = plotter.data[0][id-1].x+1;
 	
 	plotter.data[0].AddXY(id, value);
 	int count = id + 1;
 	if (count < 2) return;
 	
-	int pos = id;
+	int pos = c-1;
 	double sum = 0;
 	int av_count = 0;
 	for(int i = 0; i < average_size && pos >= 0; i++) {
@@ -89,7 +91,8 @@ void TrainingGraph::AddValue(double value) {
 	
 	double min = +DBL_MAX;
 	double max = -DBL_MAX;
-	for(int i = 0; i < count; i++) {
+	c = plotter.data[0].GetCount();
+	for(int i = 0; i < c; i++) {
 		double d = plotter.data[0][i].y;
 		if (d > max) max = d;
 		if (d < min) min = d;
@@ -97,7 +100,7 @@ void TrainingGraph::AddValue(double value) {
 	double diff = max - min;
 	if (diff <= 0) return;
 	double center = min + diff / 2;
-	plotter.SetLimits(0, id, min, max);
+	plotter.SetLimits(plotter.data[0][0].x, id, min, max);
 	plotter.SetModify();
 	
 	PostCallback(THISBACK(RefreshData));

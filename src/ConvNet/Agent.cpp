@@ -32,6 +32,7 @@ int SampleWeighted(Vector<double>& p) {
 			return i;
 	}
 	Panic("Invalid input vector");
+	return 0;
 }
 
 void UpdateMat(Volume& m, double alpha) {
