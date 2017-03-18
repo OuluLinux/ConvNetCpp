@@ -158,7 +158,9 @@ void WaterWorld::LoadPretrained() {
 	String json = BZ2Decompress(pretrained_mem);
 	
 	agent.do_training = false;
+	ticking_lock.Enter();
 	agent.LoadJSON(json);
+	ticking_lock.Leave();
 }
 
 void WaterWorld::RefreshStatus() {
