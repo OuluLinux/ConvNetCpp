@@ -63,8 +63,6 @@ void WaterWorldAgent::Forward() {
 void WaterWorldAgent::Backward() {
 	reward = digestion_signal;
 	
-	reward += 0.001 * sqrt(v.y * v.y + v.x * v.x); // Reward speed. Also create experience (not in original)
-	
 	// pass to brain for learning
 	if (do_training)
 		DQNAgent::Learn(reward);

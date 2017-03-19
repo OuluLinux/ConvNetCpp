@@ -8,7 +8,7 @@ AirHockey::AirHockey()
 {
 	Icon(AirHockeyImg::icon());
 	Sizeable().MaximizeBox().MinimizeBox().Zoomable();
-	Title("AirHockey");
+	Title("UNFINISHED (!!!) AirHockey");
 	
 	int h = 512;
 	int w = h * 3 / 5;

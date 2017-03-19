@@ -33,7 +33,6 @@ struct CellMemory {
 
 class LSTM {
 	
-	ReinforceRowPluck	rowpluck;
 	ReinforceTanh		tanh;
 	ReinforceSigmoid	sigmoid;
 	ReinforceRelu		relu;

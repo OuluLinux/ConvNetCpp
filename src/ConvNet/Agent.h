@@ -221,6 +221,7 @@ class DQNAgent : public Agent {
 	int ns;
 	int na;
 	int t;
+	bool has_reward;
 	
 	Volume state0, state1;
 	int action0, action1;
@@ -234,13 +235,14 @@ public:
 	virtual int Act(int x, int y, int d);
 	virtual void Load(const ValueMap& map);
 	virtual void LoadInit(const ValueMap& map);
+	virtual void Reset();
 	
 	int GetExperienceWritePointer() const {return expi;}
 	double GetTDError() const {return tderror;}
+	Graph& GetGraph() {return G;}
 	
 	void SetEpsilon(double e) {epsilon = e;}
 	
-	void Reset();
 	int Act(const Vector<double>& slist);
 	void Learn(double reward1);
 	double LearnFromTuple(Volume& s0, int a0, double reward0, Volume& s1, int a1);

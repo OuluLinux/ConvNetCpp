@@ -22,14 +22,13 @@ protected:
 	
 public:
 	
-	Volume *input, *input1, *input2;
+	Volume *input1, *input2;
 	Volume output;
 	
 	virtual ~ReinforceBase();
 	virtual Volume& Forward(Volume& input);
 	virtual Volume& Forward(Volume& input1, Volume& input2);
 	virtual void Backward() = 0;
-	virtual void Init(int input_width, int input_height, int input_depth);
 	virtual String GetKey() const {return "base";}
 	virtual int GetArgCount() const = 0;
 	
@@ -42,15 +41,12 @@ class ReinforceRowPluck : public ReinforceBase {
 	int ix;
 	
 public:
-	ReinforceRowPluck();
+	ReinforceRowPluck(int row);
 	~ReinforceRowPluck();
 	virtual Volume& Forward(Volume& input);
 	virtual void Backward();
-	virtual void Init(int input_width, int input_height, int input_depth);
 	virtual String GetKey() const {return "RowPluck";}
 	virtual int GetArgCount() const {return 1;}
-	
-	void SetRow(int i) {ix = i;}
 	
 };
 
@@ -61,7 +57,6 @@ public:
 	~ReinforceTanh();
 	virtual Volume& Forward(Volume& input);
 	virtual void Backward();
-	virtual void Init(int input_width, int input_height, int input_depth);
 	virtual String GetKey() const {return "Tanh";}
 	virtual int GetArgCount() const {return 1;}
 	
@@ -74,7 +69,6 @@ public:
 	~ReinforceSigmoid();
 	virtual Volume& Forward(Volume& input);
 	virtual void Backward();
-	virtual void Init(int input_width, int input_height, int input_depth);
 	virtual String GetKey() const {return "Sigmoid";}
 	virtual int GetArgCount() const {return 1;}
 	
@@ -87,7 +81,6 @@ public:
 	~ReinforceRelu();
 	virtual Volume& Forward(Volume& input);
 	virtual void Backward();
-	virtual void Init(int input_width, int input_height, int input_depth);
 	virtual String GetKey() const {return "Relu";}
 	virtual int GetArgCount() const {return 1;}
 	
@@ -100,7 +93,6 @@ public:
 	~ReinforceMul();
 	virtual Volume& Forward(Volume& input1, Volume& input2);
 	virtual void Backward();
-	virtual void Init(int input_width, int input_height, int input_depth);
 	virtual String GetKey() const {return "Mul";}
 	virtual int GetArgCount() const {return 2;}
 	
@@ -113,7 +105,6 @@ public:
 	~ReinforceAdd();
 	virtual Volume& Forward(Volume& input1, Volume& input2);
 	virtual void Backward();
-	virtual void Init(int input_width, int input_height, int input_depth);
 	virtual String GetKey() const {return "Add";}
 	virtual int GetArgCount() const {return 2;}
 	
@@ -126,7 +117,6 @@ public:
 	~ReinforceDot();
 	virtual Volume& Forward(Volume& input1, Volume& input2);
 	virtual void Backward();
-	virtual void Init(int input_width, int input_height, int input_depth);
 	virtual String GetKey() const {return "Dot";}
 	virtual int GetArgCount() const {return 2;}
 	
@@ -139,7 +129,6 @@ public:
 	~ReinforceEltMul();
 	virtual Volume& Forward(Volume& input1, Volume& input2);
 	virtual void Backward();
-	virtual void Init(int input_width, int input_height, int input_depth);
 	virtual String GetKey() const {return "EltMul";}
 	virtual int GetArgCount() const {return 2;}
 	
@@ -159,9 +148,17 @@ public:
 	Volume& Forward(Volume& input);
 	void Backward();
 	
+	void AddRowPluck(int row);
+	void AddTanh();
+	void AddSigmoid();
+	void AddRelu();
 	void AddMul(Volume& multiplier);
 	void AddAdd(Volume& addition);
-	void AddTanh();
+	void AddDot(Volume& v);
+	void AddEltMul(Volume& v);
+	
+	ReinforceBase& GetLayer(int i) {return *layers[i];}
+	int GetCount() const {return layers.GetCount();}
 	
 };
 

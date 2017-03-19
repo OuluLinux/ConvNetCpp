@@ -214,7 +214,7 @@ void ClassifyImages::OpenFile() {
 	ses.StopTraining();
 	
 	ticking_lock.Enter();
-	bool res = ses.LoadOriginalJSON(json);
+	bool res = ses.LoadJSON(json);
 	
 	ticking_lock.Leave();
 	
@@ -233,7 +233,7 @@ void ClassifyImages::SaveFile() {
 	
 	// Save json
 	String json;
-	if (!ses.StoreOriginalJSON(json)) {
+	if (!ses.StoreJSON(json)) {
 		PromptOK("Error: Getting JSON failed");
 		return;
 	}

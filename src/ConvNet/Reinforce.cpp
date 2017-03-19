@@ -8,7 +8,6 @@ double sig(double x) {
 }
 
 ReinforceBase::ReinforceBase() {
-	input = NULL;
 	input1 = NULL;
 	input2 = NULL;
 }
@@ -18,14 +17,12 @@ ReinforceBase::~ReinforceBase() {
 }
 
 Volume& ReinforceBase::Forward(Volume& input) {
-	this->input = &input;
-	input1 = NULL;
+	input1 = &input;
 	input2 = NULL;
 	return output;
 }
 
 Volume& ReinforceBase::Forward(Volume& input1, Volume& input2) {
-	input = NULL;
 	this->input1 = &input1;
 	this->input2 = &input2;
 	return output;
@@ -35,9 +32,6 @@ void ReinforceBase::Backward() {
 	
 }
 
-void ReinforceBase::Init(int input_width, int input_height, int input_depth) {
-	
-}
 
 
 
@@ -45,8 +39,8 @@ void ReinforceBase::Init(int input_width, int input_height, int input_depth) {
 
 
 
-ReinforceRowPluck::ReinforceRowPluck() {
-	ix = 0;
+ReinforceRowPluck::ReinforceRowPluck(int row) {
+	ix = row;
 }
 
 ReinforceRowPluck::~ReinforceRowPluck() {
@@ -60,7 +54,7 @@ Volume& ReinforceRowPluck::Forward(Volume& input) {
 	ASSERT(ix >= 0 && ix < input.GetLength());
 	int w = input.GetWidth();
 	
-	output.Init(1, w, 1);
+	output.Init(1, w, 1, 0);
 	for (int i = 0, h = w; i < h; i++) {
 		output.Set(i, 0, 0, input.Get(ix, i, 0)); // copy over the data
 	}
@@ -68,16 +62,13 @@ Volume& ReinforceRowPluck::Forward(Volume& input) {
 }
 
 void ReinforceRowPluck::Backward() {
-	int w = input->GetWidth();
+	int w = input1->GetWidth();
 	
 	for (int i = 0, h = w; i < h; i++) {
-		input->AddGradient(i, ix, 0, output.GetGradient(i, 0, 0));
+		input1->AddGradient(i, ix, 0, output.GetGradient(i, 0, 0));
 	}
 }
 
-void ReinforceRowPluck::Init(int input_width, int input_height, int input_depth) {
-	
-}
 
 
 
@@ -106,17 +97,15 @@ Volume& ReinforceTanh::Forward(Volume& input) {
 }
 
 void ReinforceTanh::Backward() {
-	int n = input->GetLength();
+	int n = input1->GetLength();
 	for (int i = 0; i < n; i++) {
 		// grad for z = Tanh(x) is (1 - z^2)
 		double mwi = output.Get(i);
-		input->AddGradient(i, (1.0 - mwi * mwi) * output.GetGradient(i));
+		double d = (1.0 - mwi * mwi) * output.GetGradient(i);
+		input1->AddGradient(i, d);
 	}
 }
 
-void ReinforceTanh::Init(int input_width, int input_height, int input_depth) {
-	
-}
 
 
 
@@ -145,17 +134,14 @@ Volume& ReinforceSigmoid::Forward(Volume& input) {
 }
 
 void ReinforceSigmoid::Backward() {
-	int n = input->GetLength();
+	int n = input1->GetLength();
 	for (int i = 0; i < n; i++) {
 		// grad for z = Tanh(x) is (1 - z^2)
 		double mwi = output.Get(i);
-		input->AddGradient(i, mwi * (1.0 - mwi) * output.GetGradient(i));
+		input1->AddGradient(i, mwi * (1.0 - mwi) * output.GetGradient(i));
 	}
 }
 
-void ReinforceSigmoid::Init(int input_width, int input_height, int input_depth) {
-	
-}
 
 
 
@@ -183,15 +169,12 @@ Volume& ReinforceRelu::Forward(Volume& input) {
 }
 
 void ReinforceRelu::Backward() {
-	int n = input->GetLength();
+	int n = input1->GetLength();
 	for (int i = 0; i < n; i++) {
-		input->AddGradient(i, input->Get(i) > 0 ? output.GetGradient(i) : 0.0);
+		input1->AddGradient(i, input1->Get(i) > 0 ? output.GetGradient(i) : 0.0);
 	}
 }
 
-void ReinforceRelu::Init(int input_width, int input_height, int input_depth) {
-	
-}
 
 
 
@@ -251,9 +234,6 @@ void ReinforceMul::Backward() {
 	}
 }
 
-void ReinforceMul::Init(int input_width, int input_height, int input_depth) {
-	
-}
 
 
 
@@ -288,9 +268,6 @@ void ReinforceAdd::Backward() {
 	}
 }
 
-void ReinforceAdd::Init(int input_width, int input_height, int input_depth) {
-	
-}
 
 
 
@@ -311,7 +288,7 @@ Volume& ReinforceDot::Forward(Volume& input1, Volume& input2) {
 	// input1 and input2 are both column vectors
 	ASSERT(input1.GetLength() == input2.GetLength());
 	
-	output.Init(1, 1, 1);
+	output.Init(1, 1, 1, 0);
 	
 	double dot = 0.0;
 	for (int i = 0; i < input1.GetLength(); i++) {
@@ -323,15 +300,12 @@ Volume& ReinforceDot::Forward(Volume& input1, Volume& input2) {
 }
 
 void ReinforceDot::Backward() {
-	for (int i = 0; i < input->GetLength(); i++) {
+	for (int i = 0; i < input1->GetLength(); i++) {
 		input1->AddGradient(i, input2->Get(i) * output.GetGradient(0));
 		input2->AddGradient(i, input1->Get(i) * output.GetGradient(0));
 	}
 }
 
-void ReinforceDot::Init(int input_width, int input_height, int input_depth) {
-	
-}
 
 
 
@@ -367,9 +341,6 @@ void ReinforceEltMul::Backward() {
 	}
 }
 
-void ReinforceEltMul::Init(int input_width, int input_height, int input_depth) {
-	
-}
 
 
 
@@ -424,6 +395,27 @@ void Graph::Backward() {
 	}
 }
 
+
+void Graph::AddRowPluck(int row) {
+	extra_args.Add(0);
+	layers.Add(new ReinforceRowPluck(row));
+}
+
+void Graph::AddTanh() {
+	extra_args.Add(0);
+	layers.Add(new ReinforceTanh());
+}
+
+void Graph::AddSigmoid() {
+	extra_args.Add(0);
+	layers.Add(new ReinforceSigmoid());
+}
+
+void Graph::AddRelu() {
+	extra_args.Add(0);
+	layers.Add(new ReinforceRelu());
+}
+
 void Graph::AddMul(Volume& multiplier) {
 	extra_args.Add(&multiplier);
 	layers.Add(new ReinforceMul());
@@ -434,10 +426,14 @@ void Graph::AddAdd(Volume& addition) {
 	layers.Add(new ReinforceAdd());
 }
 
-void Graph::AddTanh() {
-	extra_args.Add(0);
-	layers.Add(new ReinforceTanh());
+void Graph::AddDot(Volume& v) {
+	extra_args.Add(&v);
+	layers.Add(new ReinforceDot());
 }
 
+void Graph::AddEltMul(Volume& v) {
+	extra_args.Add(&v);
+	layers.Add(new ReinforceEltMul());
+}
 
 }

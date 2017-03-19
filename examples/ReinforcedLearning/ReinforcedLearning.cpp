@@ -226,7 +226,7 @@ void ReinforcedLearning::LoadPreTrained() {
 	RefreshTrainingStatus();
 	
 	// Load json
-	world.agents[0].brain.LoadOriginalJSON(json);
+	world.agents[0].brain.LoadJSON(json);
 	ticking_lock.Leave();
 	
 	// Go slower
@@ -254,7 +254,7 @@ void ReinforcedLearning::OpenFile() {
 		return;
 	}
 	ticking_lock.Enter();
-	bool res = world.agents[0].brain.LoadOriginalJSON(json);
+	bool res = world.agents[0].brain.LoadJSON(json);
 	if (!res) {
 		ticking_running = false;
 	}
@@ -277,7 +277,7 @@ void ReinforcedLearning::SaveFile() {
 	
 	// Save json
 	String json;
-	if (!world.agents[0].brain.StoreOriginalJSON(json)) {
+	if (!world.agents[0].brain.StoreJSON(json)) {
 		PromptOK("Error: Getting JSON failed");
 		return;
 	}

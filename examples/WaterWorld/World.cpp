@@ -101,6 +101,12 @@ void World::Tick() {
 		agents[i].Forward();
 	}
 	
+	// Reset digestion signal
+	for (int j = 0; j < agents.GetCount(); j++)
+		agents[j].digestion_signal = 0;
+	
+	int border = min(W, H) * 0.1;
+	
 	// apply outputs of agents on evironment
 	for (int i = 0, n = agents.GetCount(); i < n; i++) {
 		WaterWorldAgent& a = agents[i];
@@ -126,17 +132,14 @@ void World::Tick() {
 		a.p.x += a.v.x; a.p.y += a.v.y;
 		
 		// handle boundary conditions.. bounce agent
-		if (a.p.x < 1)		{ a.p.x = 1;	a.v.x*=-1;	a.v.y=0;}
-		if (a.p.x > W-1)	{ a.p.x = W-1;	a.v.x*=-1;	a.v.y=0;}
-		if (a.p.y < 1)		{ a.p.y = 1;	a.v.x=0;	a.v.y*=-1;}
-		if (a.p.y > H-1)	{ a.p.y = H-1;	a.v.x=0;	a.v.y*=-1;}
+		if (a.p.x < 1)		{ a.p.x = 1;	a.v.x=0;	a.v.y=0;}
+		if (a.p.x > W-1)	{ a.p.x = W-1;	a.v.x=0;	a.v.y=0;}
+		if (a.p.y < 1)		{ a.p.y = 1;	a.v.x=0;	a.v.y=0;}
+		if (a.p.y > H-1)	{ a.p.y = H-1;	a.v.x=0;	a.v.y=0;}
 	}
 	
 	// tick all items
 	bool update_items = false;
-	
-	for (int j = 0; j < agents.GetCount(); j++)
-		agents[j].digestion_signal = 0; // important - reset this!
 	
 	for (int i = 0, n = items.GetCount(); i < n; i++) {
 		Item& it = items[i];

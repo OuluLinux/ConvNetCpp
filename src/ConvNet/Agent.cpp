@@ -15,6 +15,7 @@ Volume RandVolume(int n, int d, double mu, double std) {
 	
 	std::default_random_engine generator;
 	std::normal_distribution<double> distribution(mu, std);
+	generator.seed(Random(INT_MAX));
 	
 	for (int i = 0; i < m.GetLength(); i++)
 		m.Set(i, distribution(generator));
@@ -37,7 +38,7 @@ int SampleWeighted(Vector<double>& p) {
 
 void UpdateMat(Volume& m, double alpha) {
 	// updates in place
-	for (int i = 0, n = m.GetLength(); i < n; i++) {
+	for (int i = 0; i < m.GetLength(); i++) {
 		double d = m.GetGradient(i);
 		if (d != 0.0) {
 			m.Add(i, -alpha * d);
@@ -910,6 +911,8 @@ DQNAgent::DQNAgent() {
 	G.AddTanh();
 	G.AddMul(net.W2);
 	G.AddAdd(net.b2);
+	
+	has_reward = false;
 }
 
 void DQNAgent::Reset() {
@@ -925,8 +928,10 @@ void DQNAgent::Reset() {
 	
 	net.W1 = RandVolume(nh, ns, 0, 0.01);
 	net.b1.Init(1, nh, 1, 0);
+	//net.b1 = RandVolume(nh, 1, 0, 0.01);
 	net.W2 = RandVolume(na, nh, 0, 0.01);
 	net.b2.Init(1, na, 1, 0);
+	//net.b2 = RandVolume(na, 1, 0, 0.01);
 	
 	expi = 0; // where to insert
 	
@@ -935,6 +940,7 @@ void DQNAgent::Reset() {
 	reward0 = 0;
 	action0 = 0;
 	action1 = 0;
+	has_reward = false;
 	
 	tderror = 0; // for visualization only...
 }
@@ -1002,7 +1008,7 @@ void DQNAgent::Learn() {
 void DQNAgent::Learn(double reward1) {
 	
 	// perform an update on Q function
-	if (!(reward0 == 0.0) && alpha > 0) {
+	if (has_reward && alpha > 0) {
 		
 		// learn from this tuple to get a sense of how "surprising" it is to the agent
 		tderror = LearnFromTuple(state0, action0, reward0, state1, action1); // a measure of surprise
@@ -1025,6 +1031,7 @@ void DQNAgent::Learn(double reward1) {
 		}
 	}
 	reward0 = reward1; // store for next update
+	has_reward = true;
 }
 
 double DQNAgent::LearnFromTuple(Volume& s0, int a0, double reward0, Volume& s1, int a1) {
@@ -1032,17 +1039,19 @@ double DQNAgent::LearnFromTuple(Volume& s0, int a0, double reward0, Volume& s1, 
 	// want: Q(s,a) = r + gamma * max_a' Q(s',a')
 	
 	// compute the target Q value
-	Volume& tmat = G.Forward(s1);// ForwardQ(net, s1);
+	Volume& tmat = G.Forward(s1);
 	double qmax = reward0 + gamma * tmat.Get(tmat.GetMaxColumn());
 	
 	// now predict
-	Volume& pred = G.Forward(s0);// ForwardQ(net, s0);
+	Volume& pred = G.Forward(s0);
 	
 	double tderror = pred.Get(a0) - qmax;
 	double clamp = tderror_clamp;
 	if (fabs(tderror) > clamp) {  // huber loss to robustify
-		if (tderror > clamp) tderror = clamp;
-		if (tderror < -clamp) tderror = -clamp;
+		if (tderror > clamp)
+			tderror = +clamp;
+		else
+			tderror = -clamp;
 	}
 	pred.SetGradient(a0, tderror);
 	G.Backward(); // compute gradients on net params

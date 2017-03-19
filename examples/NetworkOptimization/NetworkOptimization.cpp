@@ -155,7 +155,7 @@ void NetworkOptimization::RefreshBestNetwork() {
 			mnet.GetEvaluatedCandidate(0) :
 			mnet.GetSessions()[0];
 		String net;
-		best_cand.StoreOriginalJSON(net);
+		best_cand.StoreJSON(net);
 		best_net.SetData(net);
 	}
 	

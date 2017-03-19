@@ -149,6 +149,7 @@ class WaterWorld : public DockWindow {
 protected:
 	friend class WaterWorldAgent;
 	
+	HeatmapView network_view;
 	World world;
 	Label lbl_eps;
 	SliderCtrl eps;

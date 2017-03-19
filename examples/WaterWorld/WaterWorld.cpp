@@ -45,7 +45,7 @@ WaterWorld::WaterWorld() {
 	Add(eps.HSizePos(200,0).BottomPos(0,30));
 	eps <<= THISBACK(RefreshEpsilon);
 	eps.MinMax(0, +100);
-	eps.SetData(50);
+	eps.SetData(20);
 	lbl_eps.SetLabel("Exploration epsilon: ");
 	btnsplit.Horz();
 	btnsplit << reset << goveryfast << gofast << gonorm << goslow;
@@ -59,6 +59,8 @@ WaterWorld::WaterWorld() {
 	gonorm	<<= THISBACK1(SetSpeed, 1);
 	goslow	<<= THISBACK1(SetSpeed, 0);
 	reset	<<= THISBACK2(Reset, true, true);
+	
+	network_view.SetGraph(world.agents[0].GetGraph());
 	
 	SetSpeed(1);
 	
@@ -93,11 +95,13 @@ void WaterWorld::DockInit() {
 	DockLeft(Dockable(agent_ctrl, "Edit Agent").SizeHint(Size(320, 240)));
 	DockLeft(Dockable(statusctrl, "Status").SizeHint(Size(320, 240)));
 	DockLeft(Dockable(reward, "Reward graph").SizeHint(Size(320, 240)));
+	DockBottom(Dockable(network_view, "Network View").SizeHint(Size(640, 120)));
 }
 
 void WaterWorld::Refresher() {
 	world.Refresh();
 	RefreshStatus();
+	network_view.Refresh();
 	if (running) PostCallback(THISBACK(Refresher));
 }
 
@@ -114,6 +118,8 @@ void WaterWorld::Start() {
 
 void WaterWorld::Reset(bool init_reward, bool start) {
 	WaterWorldAgent& agent = world.agents[0];
+	
+	agent.do_training = true;
 	
 	if (init_reward) {
 		int states = 152; // count of eyes
