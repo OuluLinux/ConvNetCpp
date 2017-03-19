@@ -223,8 +223,8 @@ void World::Paint(Draw& d) {
 		
 		// draw agents body
 		double radius = a.rad;
-		double radius_2 = radius / 2.0;
-		id.DrawEllipse(a.op.x - radius_2, a.op.y - radius_2, radius, radius, fill_clr, 1, Black());
+		double radius2 = radius * 2.0;
+		id.DrawEllipse(a.op.x - radius, a.op.y - radius, radius2, radius2, fill_clr, 1, Black());
 		
 		// draw agents sight
 		for(int j = 0; j < a.eyes.GetCount(); j++) {
@@ -254,8 +254,8 @@ void World::Paint(Draw& d) {
 		else if (it.type == 2) fill_clr = Color(150, 255, 150);
 		else                   fill_clr = Color(150, 150, 255);
 		double radius = it.rad;
-		double radius_2 = radius / 2.0;
-		id.DrawEllipse(it.p.x - radius_2, it.p.y - radius_2, radius, radius, fill_clr, 1, Black());
+		double radius2 = radius * 2.0;
+		id.DrawEllipse(it.p.x - radius2, it.p.y - radius2, radius2, radius2, fill_clr, 1, Black());
 	}
 	
 	d.DrawImage(0, 0, id);

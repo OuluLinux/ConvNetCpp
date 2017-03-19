@@ -66,7 +66,7 @@ struct Item : Moveable<Item> {
 		v.x = Randomf() * 5 - 2.5;
 		v.y = Randomf() * 5 - 2.5;
 		this->type = type;
-		rad = 20; // default radius
+		rad = 10; // default radius
 		age = 0;
 		cleanup_ = false;
 	}

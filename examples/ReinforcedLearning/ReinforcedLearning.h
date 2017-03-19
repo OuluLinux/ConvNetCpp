@@ -60,7 +60,7 @@ struct Item : Moveable<Item> {
 		p.x = x;
 		p.y = y;
 		this->type = type;
-		rad = 20; // default radius
+		rad = 10; // default radius
 		age = 0;
 		cleanup_ = false;
 	}

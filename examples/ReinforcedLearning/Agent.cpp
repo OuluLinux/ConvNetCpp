@@ -14,7 +14,7 @@ RLAgent::RLAgent() {
 	actions.Add(Pointf(0,	0.5));
 	
 	// properties
-	rad = 20;
+	rad = 10;
 	for (int k = 0; k < 9; k++) {
 		eyes.Add().Init((k-3)*0.25);
 	}

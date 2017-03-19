@@ -86,7 +86,7 @@ void WaterWorldAgent::Backward() {
 void WaterWorldAgent::Reset() {
 	DQNAgent::Reset();
 	
-	rad = 20;
+	rad = 10;
 	action = 0;
 	
 	smooth_reward = 0.0;
