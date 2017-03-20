@@ -8,7 +8,7 @@ namespace ConvNet {
 using namespace Upp;
 using namespace ConvNet;
 
-struct GridWorldCtrl : public Ctrl {
+class GridWorldCtrl : public Ctrl {
 	SpinLock		lock;
 	Agent*			agent;
 	int selected;

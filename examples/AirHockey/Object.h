@@ -92,6 +92,9 @@ public:
 	
 	virtual void Create();
 	
+	int GetCount() const {return vertices.GetCount();}
+	Pointf operator[](int i){b2Vec2& b = vertices[i]; return Pointf(b.x, b.y);}
+	
 };
 
 

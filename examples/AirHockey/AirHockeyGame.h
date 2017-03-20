@@ -1,43 +1,12 @@
 #ifndef _GameLib_AirHockey_h_
 #define _GameLib_AirHockey_h_
 
-
+#include "Player.h"
 
 namespace GameCtrl {
-namespace AirHockey {
 
 
 
-class Puck : public Circle {
-	
-public:
-	virtual void Paint(WorldDraw& wdraw, Draw& draw);
-	
-};
-
-class Player : public Agent, public Circle {
-	
-protected:
-	Pointf prev_target;
-	double prev_distance;
-	String name;
-	Puck* puck;
-	int id;
-	
-	void ResetPreviousMove() {prev_distance = DBL_MAX;}
-	void MoveTo(const Pointf& target, double speed, double force);
-	void SeekPuck(double speed, double force);
-	
-public:
-	Player(int id);
-	
-	void Process();
-	virtual void Paint(WorldDraw& wdraw, Draw& draw);
-	
-	void SetName(String s) {name = s;}
-	void SetPuck(Puck& puck) {this->puck = &puck;}
-	
-};
 
 struct Goal : public Polygon {
 	int id;
@@ -55,9 +24,12 @@ struct Map : public Polygon {
 };
 
 class Table2 : public World, public ContactListener {
+	
+public:
 	Map area_a;
 	Polygon area_b, map_l, map_tl, map_tr, map_r, map_bl, map_br;
-	Player pl_a, pl_b;
+	//Player pl_a, pl_b;
+	Array<Player> agents;
 	Array<Puck> puck;
 	Goal goal_a, goal_b;
 	int score[2];
@@ -69,6 +41,7 @@ public:
 	Table2();
 	
 	void Init();
+	void ResetGame();
 	void Reset();
 	void PlayerScore(int i);
 	void ResetPuck();
@@ -78,6 +51,11 @@ public:
 	int GetScoreB() {return score[1];}
 	int GetScoreLimit() {return score_limit;}
 	
+	InterceptResult StuffCollide(int skip_agent, Pointf p1, Pointf p2, bool check_walls, bool check_items);
+	int GetPolygonCount() const {return 8;}
+	Polygon& GetPolygon(int i);
+	
+	virtual void Tick();
 	virtual void ContactBegin(Contact contact);
 	virtual void ContactEnd(Contact contact);
 	
@@ -87,7 +65,6 @@ public:
 	
 };
 
-}
 }
 
 #endif

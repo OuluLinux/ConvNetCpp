@@ -3,7 +3,10 @@ description "<Unfinished> Reinforced AI player.\377";
 uses
 	CtrlLib,
 	plugin/box2d,
-	Painter;
+	Painter,
+	ConvNetCtrl,
+	Docking,
+	plugin/bz2;
 
 file
 	main.cpp,
@@ -13,8 +16,8 @@ file
 	AirHockey.rc,
 	AirHockeyGame.h,
 	AirHockeyGame.cpp,
-	Agent.h,
-	Agent.cpp,
+	Player.h,
+	Player.cpp,
 	Contact.h,
 	Contact.cpp,
 	Object.h,
@@ -22,7 +25,9 @@ file
 	World.h,
 	World.cpp,
 	WorldDebug.cpp,
-	WorldDraw.cpp;
+	WorldDraw.cpp,
+	pretrained.brc,
+	pretrained.json;
 
 mainconfig
 	"" = "GUI MT";

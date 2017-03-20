@@ -558,6 +558,7 @@ void TDAgent::Reset(){
 	action0 = 0;
 	action1 = 0;
 	
+	current_state = 0;
 	nsteps_counter = 0;
 	explored = false;
 }

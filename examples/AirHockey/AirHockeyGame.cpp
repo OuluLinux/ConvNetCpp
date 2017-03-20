@@ -1,8 +1,6 @@
 #include "AirHockey.h"
 
 namespace GameCtrl {
-namespace AirHockey {
-
 // Collision filter masks (bitwise)
 //  - player A and area B collides, but not player A and area A
 const int game_objects = 1;
@@ -157,157 +155,57 @@ void Puck::Paint(WorldDraw& wdraw, Draw& draw) {
 }
 
 
-Player::Player(int id) : id(id) {
-	puck = NULL;
-}
-
-void Player::Paint(WorldDraw& wdraw, Draw& draw) {
-	Color fill_color = Blue();
-	Color border_color = Black();
-	PaintCircle(wdraw, draw, fill_color, border_color);
-}
-
-void Player::Process() {
-	Puck& puck = *this->puck;
-	
-	Pointf puck_pos = puck.GetPosition();
-	Pointf puck_speed = puck.GetSpeed();
-	Pointf pos = GetPosition();
-	
-	double puck_y = puck_pos.y;
-	double puck_cy = puck_speed.y;
-	double y = id == 0 ? +16 : -16;
-	int r;
-	
-	r = 2;
-	Rectf goal_area(-r, y-r, r, y+r);
-	
-	r = 6;
-	Rectf puck_area(-r + puck_pos.x, -r + puck_pos.y, r + puck_pos.x, r + puck_pos.y);
-	
-	bool puck_at_own_area = id == 0 ? puck_y > 0 : puck_y < 0;
-	bool puck_moving = puck_speed.x != 0.0 || puck_speed.y != 0.0;
-	bool puck_incoming = id == 0 ? puck_cy > 0 : puck_cy < 0;
-	bool near_goal = goal_area.Contains(pos);
-	bool near_puck = puck_area.Contains(pos);
-	
-	double force = 5000;
-	
-	// Starting
-	if (!puck_at_own_area && !puck_moving) {
-		if (pos.x == 0)
-			MoveTo(Pointf(4, y), 50, force);
-		else
-			SeekPuck(50, force);
-	}
-	// Responding
-	else {
-		
-		// If puck is coming, then estimate target point and move there, or attack.
-		if (puck_incoming) {
-			double y_diff = y - puck_y;
-			double y_time = y_diff / puck_speed.y;
-			double x_diff = y_time * puck_speed.x;
-			double est_x = puck_pos.x + x_diff;
-			est_x += -3 + Random(7);
-			int w = 16;
-			
-			r = 1;
-			if (est_x > +w-r) est_x = +w - r;
-			if (est_x < -w+r) est_x = -w + r;
-			
-			// If puck is close enough, then attack
-			r = 8;
-			if ((id == 0 && puck_y >= y - r) || (id == 1 && puck_y <= y + r)) {
-				SeekPuck(50, force);
-			}
-			
-			// If puck is moving slowly and is in own area, then attack
-			else if (y_time >= 2 && puck_at_own_area ) {
-				SeekPuck(50, force);
-			}
-			
-			// Go to estimated target position
-			else {
-				Pointf target(est_x, y);
-				MoveTo(target, 50, force);
-			}
-		}
-		
-		// If puck is stuck, then add some correcting impulse to the puck
-		else if (fabs(puck_pos.x) > 12 && fabs(puck_speed.x) <= 0.1 && fabs(puck_speed.y) <= 0.1 && (id == 0 && puck_y >= y) || (id == 1 && puck_y <= y)) {
-			puck.SetSpeed(0, id == 0 ? -10 : +10);
-		}
-		
-		// Just hit puck if it is at own area and moving slow
-		else if (puck_at_own_area && fabs(puck_cy) < 50 && fabs(puck_pos.x) < 12) {
-			SeekPuck(50, force);
-		}
-		
-		// Go closer to goal
-		else {
-			MoveTo(Pointf(0, y), 50, force);
-		}
-	}
-	
-}
-
-void Player::MoveTo(const Pointf& target, double speed, double force_scalar) {
-	Pointf this_pos = GetPosition();
-	
-	double distance = Length(target - this_pos);
-	ASSERT(!IsFin(distance) || distance >= 0.0);
-	if (IsFin(distance) && prev_target == target && prev_distance < distance) {
-		SetSpeed(0,0);
-		return;
-	}
-	prev_distance = distance;
-	prev_target = target;
-	
-	Pointf pos_diff = target - this_pos;
-	Pointf target_unit = pos_diff / Length(pos_diff); // unit vector of target speed
-	Pointf target_speed = target_unit * speed;
-	Pointf this_speed = GetSpeed();
-	Pointf speed_diff = target_speed - this_speed;
-	double speed_diff_len = Length(speed_diff);
-	if (speed_diff_len < 1) {
-		SetSpeed(target_speed);
-	}
-	else {
-		Pointf force = speed_diff / speed_diff_len * force_scalar;
-		ApplyForceToCenter(force);
-	}
-}
-
-void Player::SeekPuck(double speed, double force) {
-	ResetPreviousMove();
-	MoveTo(puck->GetPosition(), speed, force);
-}
 
 
 
 
 
 
-Table2::Table2() : pl_a(0), pl_b(1) {
+
+
+
+
+
+
+
+
+
+
+
+
+Table2::Table2() {
+	agents.Add().SetId(0);
+	agents.Add().SetId(1);
 	score_limit = 3;
 	score[0] = 0;
 	score[1] = 0;
 	area_a.table = this;
 }
 
-void Table2::Reset() {
+void Table2::ResetGame() {
 	score[0] = 0;
 	score[1] = 0;
 	player_a_starts = true;
 	ResetPuck();
 }
 
+void Table2::Reset() {
+	ResetGame();
+	
+	int states = 152; // count of eyes
+	int action_count = 4+1; // directions and idle
+	for(int i = 0; i < agents.GetCount(); i++) {
+		Player& agent = agents[i];
+		agent.Init(1, states, 1, action_count);
+		agent.Reset();
+	}
+}
+
 void Table2::PlayerScore(int i) {
 	player_a_starts = i == 0;
 	score[i]++;
 	if (score[i] >= score_limit) {
-		Reset();
+		ResetGame();
 		area_a.PlayerWon(i);
 		WhenFinish(i);
 	}
@@ -319,6 +217,10 @@ void Table2::PlayerScore(int i) {
 }
 
 void Table2::Init() {
+	Reset();
+	
+	Player& pl_a = agents[0];
+	Player& pl_b = agents[1];
 	
 	// Key points of the map
 	int w = 16, gw = 9, h = 16+8;
@@ -453,6 +355,21 @@ void Table2::Init() {
 	
 }
 
+Polygon& Table2::GetPolygon(int i) {
+	ASSERT(i >= 0 && i < 8);
+	switch (i) {
+		case 0: return map_l;
+		case 1: return map_tl;
+		case 2: return map_tr;
+		case 3: return map_r;
+		case 4: return map_bl;
+		case 5: return map_br;
+		case 6: return goal_a;
+		case 7: return goal_b;
+		default: area_b; // NEVER;
+	}
+}
+
 void Table2::ContactBegin(Contact contact) {
 	Goal* goal = contact.Get<Goal>();
 	if (goal) {
@@ -474,8 +391,8 @@ void Table2::ResetPuck() {
 		puck.Remove(0);
 	}
 	Puck& puck = this->puck.Add();
-	pl_a.SetPuck(puck);
-	pl_b.SetPuck(puck);
+	agents[0].SetPuck(puck);
+	agents[1].SetPuck(puck);
 	Add(puck);
 	puck.SetRadius(2);
 	puck.SetPosition(0, player_a_starts ? 6 : -6);
@@ -489,11 +406,122 @@ void Table2::ResetPuck() {
 void Table2::ProcessAI() {
 	
 	// Process AI player moves
-	pl_a.Process();
-	pl_b.Process();
+	agents[0].Process();
+	agents[1].Process();
 	
 }
 
+InterceptResult Table2::StuffCollide(int skip_agent, Pointf p1, Pointf p2, bool check_walls, bool check_items) {
+	InterceptResult minres(false);
+	
+	// collide with walls
+	if (check_walls) {
+		for(int i = 0; i < GetPolygonCount(); i++) {
+			Polygon& poly = GetPolygon(i);
+			for(int j = 0; j < poly.GetCount(); j++) {
+				Pointf w1 = j == 0 ? poly[poly.GetCount()-1] : poly[j-1];
+				Pointf w2 = poly[j];
+				
+				InterceptResult res = IsLineIntersect(p1, p2, w1, w2);
+				if (res) {
+					res.type = 0; // 0 is wall
+					if (!minres) {
+						minres = res;
+					}
+					// check if its closer
+					else if (res.ua < minres.ua) {
+						// if yes replace it
+						minres = res;
+					}
+				}
+			}
+		}
+	}
+	
+	// collide with other players and puck
+	if (check_items) {
+		
+		// check players
+		for(int i = 0; i < agents.GetCount(); i++) {
+			if (i == skip_agent) continue;
+			Player& p = agents[i];
+			Pointf pos = p.GetPosition();
+			double rad = p.GetRadius();
+			InterceptResult res = IsLinePointIntersect(p1, p2, pos, rad);
+			if (res) {
+				Pointf velocity = p.GetSpeed();
+				res.type = 1; // 1 is other player
+				res.vx = velocity.x;
+				res.vy = velocity.y;
+				if (!minres) {
+					minres = res;
+				}
+				else if(res.ua < minres.ua) {
+					minres = res;
+				}
+			}
+		}
+		
+		// check puck
+		for(int i = 0; i < puck.GetCount(); i++) {
+			Puck& p = puck[i];
+			Pointf pos = p.GetPosition();
+			double rad = p.GetRadius();
+			InterceptResult res = IsLinePointIntersect(p1, p2, pos, rad);
+			if (res) {
+				Pointf velocity = p.GetSpeed();
+				res.type = 2; // 2 is puck
+				res.vx = velocity.x;
+				res.vy = velocity.y;
+				if (!minres) {
+					minres = res;
+				}
+				else if(res.ua < minres.ua) {
+					minres = res;
+				}
+			}
+		}
+		
+		
+	}
+	
+	return minres;
+}
+
+void Table2::Tick() {
+	World::Tick();
+	
+	
+	for (int i = 0, n = agents.GetCount(); i < n; i++) {
+		Player& a = agents[i];
+		Pointf ap = a.GetPosition();
+		
+		for(int ei = 0, ne = a.eyes.GetCount(); ei < ne; ei++) {
+			Eye& e = a.eyes[ei];
+			
+			// we have a line from p to p->eyep
+			double angle = e.angle;
+			Pointf eyep(
+				ap.x + e.max_range * sin(angle),
+				ap.y + e.max_range * cos(angle));
+			InterceptResult res = StuffCollide(i, ap, eyep, true, true);
+			if (res) {
+				// eye collided with wall
+				e.sensed_proximity = Distance(res.up, ap);
+				e.sensed_type = res.type;
+				e.vx = res.vx;
+				e.vy = res.vy;
+			} else {
+				e.sensed_proximity = e.max_range;
+				e.sensed_type = -1;
+				e.vx = 0;
+				e.vy = 0;
+			}
+		}
+	}
+	
+	
+}
 
 }
-}
+

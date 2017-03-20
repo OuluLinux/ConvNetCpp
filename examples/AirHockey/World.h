@@ -129,6 +129,7 @@ public:
 	virtual void LeftUp(Point p0, dword keyflags);
 	virtual void MouseMove(Point p, dword keyflags);
 	virtual void MouseWheel(Point p, int zdelta, dword keyflags);
+	virtual void Tick();
 	
 	void Render() {Refresh();}
 	

@@ -3,7 +3,7 @@
 
 namespace ConvNet {
 
-enum {ACT_LEFT, ACT_UP, ACT_RIGHT, ACT_DOWN, ACT_IN, ACT_OUT};
+enum {ACT_LEFT, ACT_UP, ACT_RIGHT, ACT_DOWN, ACT_IN, ACT_OUT, ACT_IDLE};
 
 class Agent {
 	

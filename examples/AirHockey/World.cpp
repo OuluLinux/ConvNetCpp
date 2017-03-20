@@ -18,13 +18,17 @@ World::World() : world(b2Vec2(0.0, -10.0), false), world_draw(this) {
 	ts.Reset();
 }
 
-void World::Paint(Draw& w) {
-	float hz = 60;
+void World::Tick() {
+	
 	int velocityIterations = 8;
 	int positionIterations = 10;
-
 	float32 timeStep = ts.Elapsed() / 1000.0;
 	ts.Reset();
+	world.Step(timeStep, velocityIterations, positionIterations);
+	
+}
+
+void World::Paint(Draw& w) {
 	
 	int flags = b2DebugDraw::e_shapeBit | b2DebugDraw::e_jointBit;
 	if(dbg_showBoxes)
@@ -34,7 +38,8 @@ void World::Paint(Draw& w) {
 	
 	world.SetWarmStarting(1);
 	world.SetContinuousPhysics(1);
-	world.Step(timeStep, velocityIterations, positionIterations);
+	
+	Tick();
 
 	Point p1, p2;
 	if(mouseJoint)
@@ -149,6 +154,79 @@ void World::Remove(Object& obj) {
 
 void World::SetContactListener(ContactListener& cl) {
 	world.SetContactListener(&cl);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// line intersection helper function: does line segment (l1a,l1b) intersect segment (l2a,l2b) ?
+InterceptResult IsLineIntersect(Pointf l1a, Pointf l1b, Pointf l2a, Pointf l2b) {
+	double denom = (l2b.y - l2a.y) * (l1b.x - l1a.x) - (l2b.x - l2a.x) * (l1b.y - l1a.y);
+	if (denom == 0.0)
+		return InterceptResult(false); // parallel lines
+	double ua = ((l2b.x-l2a.x)*(l1a.y-l2a.y)-(l2b.y-l2a.y)*(l1a.x-l2a.x))/denom;
+	double ub = ((l1b.x-l1a.x)*(l1a.y-l2a.y)-(l1b.y-l1a.y)*(l1a.x-l2a.x))/denom;
+	if (ua > 0.0 && ua<1.0 && ub > 0.0 && ub < 1.0) {
+		Pointf up(l1a.x+ua*(l1b.x-l1a.x), l1a.y+ua*(l1b.y-l1a.y));
+		InterceptResult res;
+		res.ua = ua;
+		res.ub = ub;
+		res.up = up;
+		res.is_intercepting = true;
+		return res;
+	}
+	return InterceptResult(false);
+}
+
+InterceptResult IsLinePointIntersect(Pointf a, Pointf b, Pointf p, int rad) {
+	Pointf v(b.y-a.y,-(b.x-a.x)); // perpendicular vector
+	double d = fabs((b.x-a.x)*(a.y-p.y)-(a.x-p.x)*(b.y-a.y));
+	d = d / Length(v);
+	if (d > rad)
+		return false;
+	
+	Normalize(v);
+	Scale(v, d);
+	Pointf up = p + v;
+	double ua;
+	if (fabs(b.x-a.x) > fabs(b.y-a.y)) {
+		ua = (up.x - a.x) / (b.x - a.x);
+	}
+	else {
+		ua = (up.y - a.y) / (b.y - a.y);
+	}
+	if (ua > 0.0 && ua < 1.0) {
+		InterceptResult ir;
+		ir.up = up;
+		ir.ua = ua;
+		ir.up = up;
+		ir.is_intercepting = true;
+		return ir;
+	}
+	return false;
 }
 
 }
