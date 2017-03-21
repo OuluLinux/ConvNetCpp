@@ -5,9 +5,6 @@
 
 namespace GameCtrl {
 
-
-
-
 struct Goal : public Polygon {
 	int id;
 };
@@ -28,13 +25,13 @@ class Table2 : public World, public ContactListener {
 public:
 	Map area_a;
 	Polygon area_b, map_l, map_tl, map_tr, map_r, map_bl, map_br;
-	//Player pl_a, pl_b;
 	Array<Player> agents;
 	Array<Puck> puck;
 	Goal goal_a, goal_b;
 	int score[2];
 	int score_limit;
 	bool player_a_starts;
+	bool debug_paint;
 	
 public:
 	typedef Table2 CLASSNAME;
@@ -45,7 +42,6 @@ public:
 	void Reset();
 	void PlayerScore(int i);
 	void ResetPuck();
-	void ProcessAI();
 	void SetScoreLimit(int i) {score_limit = i;}
 	int GetScoreA() {return score[0];}
 	int GetScoreB() {return score[1];}
@@ -60,9 +56,6 @@ public:
 	virtual void ContactEnd(Contact contact);
 	
 	Callback1<int> WhenScore, WhenFinish;
-	
-	
-	
 };
 
 }

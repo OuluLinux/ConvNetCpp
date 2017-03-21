@@ -32,13 +32,11 @@ protected:
 	
 public:
 	ContactListener();
-	
-	
+		
 	virtual void ContactBegin(Contact contact) {}
 	virtual void ContactEnd(Contact contact) {}
 	
 };
-
 
 }
 

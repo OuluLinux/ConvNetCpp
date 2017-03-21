@@ -180,6 +180,7 @@ Table2::Table2() {
 	score[0] = 0;
 	score[1] = 0;
 	area_a.table = this;
+	debug_paint = false;
 }
 
 void Table2::ResetGame() {
@@ -202,8 +203,12 @@ void Table2::Reset() {
 }
 
 void Table2::PlayerScore(int i) {
+	lock.Enter();
+	
 	player_a_starts = i == 0;
 	score[i]++;
+	agents[0].game_score += i == 0 ? +1.0 : -1.0;
+	agents[1].game_score += i == 0 ? -1.0 : +1.0;
 	if (score[i] >= score_limit) {
 		ResetGame();
 		area_a.PlayerWon(i);
@@ -214,6 +219,8 @@ void Table2::PlayerScore(int i) {
 		area_a.PlayerScore(i);
 		WhenScore(i);
 	}
+	
+	lock.Leave();
 }
 
 void Table2::Init() {
@@ -290,7 +297,7 @@ void Table2::Init() {
 	pl_a.SetRadius(3);
 	pl_a.SetPosition(0, 16);
 	pl_a.SetTypeDynamic();
-	pl_a.SetRestitution(0.9);
+	pl_a.SetRestitution(0.0);
 	pl_a.SetFriction(0.5);
 	pl_a.Create();
 	pl_a.SetName("Dick");
@@ -303,7 +310,7 @@ void Table2::Init() {
 	pl_b.SetRadius(3);
 	pl_b.SetPosition(0, -16);
 	pl_b.SetTypeDynamic();
-	pl_b.SetRestitution(0.9);
+	pl_b.SetRestitution(0.0);
 	pl_b.SetFriction(0.5);
 	pl_b.Create();
 	pl_b.SetName("Mary");
@@ -333,10 +340,6 @@ void Table2::Init() {
 	
 	// Set contact listener
 	SetContactListener(*this);
-	
-	
-	// Set periodcal callback for AI processing
-	SetTimeCallback(-1, THISBACK(ProcessAI));
 	
 	
 	// Assert some collisions
@@ -375,10 +378,18 @@ void Table2::ContactBegin(Contact contact) {
 	if (goal) {
 		Puck* puck = contact.Get<Puck>();
 		if (puck) {
-			PostCallback(THISBACK1(PlayerScore, goal->id));
+			PostCallback(THISBACK1(PlayerScore, !goal->id));
 		}
+		return;
 	}
-	
+	Player* player = contact.Get<Player>();
+	if (player) {
+		Puck* puck = contact.Get<Puck>();
+		if (puck) {
+			player->game_score += 0.2; // reward pushing puck
+		}
+		return;
+	}
 }
 
 void Table2::ContactEnd(Contact contact) {
@@ -403,14 +414,6 @@ void Table2::ResetPuck() {
 	puck.Create();
 }
 
-void Table2::ProcessAI() {
-	
-	// Process AI player moves
-	agents[0].Process();
-	agents[1].Process();
-	
-}
-
 InterceptResult Table2::StuffCollide(int skip_agent, Pointf p1, Pointf p2, bool check_walls, bool check_items) {
 	InterceptResult minres(false);
 	
@@ -423,6 +426,8 @@ InterceptResult Table2::StuffCollide(int skip_agent, Pointf p1, Pointf p2, bool 
 				Pointf w2 = poly[j];
 				
 				InterceptResult res = IsLineIntersect(p1, p2, w1, w2);
+				res.vx = 0;
+				res.vy = 0;
 				if (res) {
 					res.type = 0; // 0 is wall
 					if (!minres) {
@@ -491,10 +496,15 @@ InterceptResult Table2::StuffCollide(int skip_agent, Pointf p1, Pointf p2, bool 
 void Table2::Tick() {
 	World::Tick();
 	
-	
 	for (int i = 0, n = agents.GetCount(); i < n; i++) {
 		Player& a = agents[i];
 		Pointf ap = a.GetPosition();
+		
+		// Process DQN learning
+		a.Backward();
+		
+		// Process AI player moves
+		a.Process();
 		
 		for(int ei = 0, ne = a.eyes.GetCount(); ei < ne; ei++) {
 			Eye& e = a.eyes[ei];

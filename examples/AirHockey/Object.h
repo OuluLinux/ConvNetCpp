@@ -71,8 +71,6 @@ public:
 	double GetRadius() const {return shape.m_radius;}
 	
 	Circle& SetRadius(double d) {shape.m_radius = d; return *this;}
-	
-	
 };
 
 

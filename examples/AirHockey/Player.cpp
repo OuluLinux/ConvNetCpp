@@ -3,7 +3,6 @@
 namespace GameCtrl {
 using namespace Upp;
 
-
 Player::Player() {
 	nflot = 1000;
 	iter = 0;
@@ -13,7 +12,6 @@ Player::Player() {
 	actions.Add(ACT_RIGHT);
 	actions.Add(ACT_UP);
 	actions.Add(ACT_DOWN);
-	actions.Add(ACT_IDLE);
 	
 	// properties
 	for (int k = 0; k < 30; k++) {
@@ -28,39 +26,43 @@ Player::Player() {
 	
 	id = -1;
 	puck = NULL;
+	paint_eyes = true;
 }
 
 void Player::Paint(WorldDraw& wdraw, Draw& draw) {
 	Color fill_color = Blue();
 	Color border_color = Black();
 	
-	// draw agents sight
-	Color apple_clr(255,150,150);
-	Color poison_clr(150,255,150);
-	
-	double aspect = wdraw.GetAspect();
-	double radius = GetRadius();
-	Pointf center = GetPosition();
-	int r = int(aspect * radius * 2.0);
-	Point p = wdraw.ToScreen(center.x , center.y);
-	
-	for(int j = 0; j < eyes.GetCount(); j++) {
-		Eye& e = eyes[j];
-		double sr = e.sensed_proximity;
-		Color line_clr;
-		if(e.sensed_type == -1 || e.sensed_type == 0)
-			line_clr = Black(); // wall or nothing
-		else if (e.sensed_type == 1)
-			line_clr = apple_clr; // players
-		else if(e.sensed_type == 2)
-			line_clr = poison_clr; // puck
-		double angle = e.angle;
-		Pointf b(
-			center.x + sr * sin(angle),
-			center.y + sr * cos(angle));
-		Point p2 = wdraw.ToScreen(b.x, b.y);
+	if (paint_eyes) {
 		
-		draw.DrawLine(p, p2, 1, line_clr);
+		// draw agents sight
+		Color player_clr(150,150,255);
+		Color puck_clr(255,150,150);
+		
+		double aspect = wdraw.GetAspect();
+		double radius = GetRadius();
+		Pointf center = GetPosition();
+		int r = int(aspect * radius * 2.0);
+		Point p = wdraw.ToScreen(center.x , center.y);
+		
+		for(int j = 0; j < eyes.GetCount(); j++) {
+			Eye& e = eyes[j];
+			double sr = e.sensed_proximity;
+			Color line_clr;
+			if(e.sensed_type == -1 || e.sensed_type == 0)
+				line_clr = Black(); // wall or nothing
+			else if (e.sensed_type == 1)
+				line_clr = player_clr; // players
+			else if(e.sensed_type == 2)
+				line_clr = puck_clr; // puck
+			double angle = e.angle;
+			Pointf b(
+				center.x + sr * sin(angle),
+				center.y + sr * cos(angle));
+			Point p2 = wdraw.ToScreen(b.x, b.y);
+			
+			draw.DrawLine(p, p2, 1, line_clr);
+		}
 	}
 	
 	PaintCircle(wdraw, draw, fill_color, border_color);
@@ -89,9 +91,6 @@ void Player::Process() {
 	else if (action == ACT_DOWN) {
 		force.y -= force_value;
 	}
-	else if (action == ACT_IDLE) {
-		// nothing
-	}
 	
 	ApplyForceToCenter(force);
 	
@@ -114,7 +113,8 @@ void Player::Forward() {
 		if(e.sensed_type != -1) {
 			// sensed_type is 0 for wall, 1 for food and 2 for poison.
 			// lets do a 1-of-k encoding into the input array
-			input_array[i*5 + e.sensed_type] = e.sensed_proximity/e.max_range; // normalize to [0,1]
+			double d = e.sensed_proximity/e.max_range;
+			input_array[i*5 + e.sensed_type] = d; // normalize to [0,1]
 		}
 	}
 	
@@ -126,7 +126,9 @@ void Player::Forward() {
     action = actions[Act(input_array)];
 }
 
-void Player::Backward(double reward) {
+void Player::Backward() {
+	double reward = game_score;
+	game_score = 0;
 	
 	// pass to brain for learning
 	if (do_training)
@@ -140,8 +142,7 @@ void Player::Backward(double reward) {
 		}
 		smooth_reward_history.Add(smooth_reward);
 		
-		world->reward[id].SetLimit(nflot);
-		world->reward[id].AddValue(smooth_reward);
+		world->AddReward(id, smooth_reward);
 		
 		iter = 0;
 	}
@@ -155,6 +156,7 @@ void Player::Reset() {
 	
 	smooth_reward = 0.0;
 	reward = 0;
+	game_score = 0;
 }
 
 }

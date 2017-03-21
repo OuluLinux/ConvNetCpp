@@ -45,3 +45,6 @@ Screenshot of [PuckWorld: Deep Q Learning Demo](http://cs.stanford.edu/people/ka
 Screenshot of [WaterWorld: Deep Q Learning Demo](http://cs.stanford.edu/people/karpathy/reinforcejs/waterworld.html) translated to ConvNetC++.
 ![WaterWorld: Deep Q Learning Demo](https://github.com/sppp/ConvNetC-/raw/master/doc/waterworld.jpg)
 
+Screenshot of AirHockey: Deep Q Learning Demo. This uses WaterWorld logic. It is not perfect yet.
+![AirHockey: Deep Q Learning Demo](https://github.com/sppp/ConvNetC-/raw/master/doc/airhockey.jpg)
+

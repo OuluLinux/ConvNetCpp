@@ -33,6 +33,7 @@ public:
 	virtual int Act(int x, int y, int d) = 0;
 	virtual double GetValue(int x, int y, int d) const {return value[GetPos(x, y, d)];}
 	virtual void Load(const ValueMap& map);
+	virtual void Store(ValueMap& map);
 	virtual void LoadInit(const ValueMap& map);
 	virtual void SampleNextState(int x, int y, int d, int action, int& next_state, double& reward, bool& reset_episode);
 	
@@ -187,6 +188,7 @@ struct DQNet {
 	Volume b2;
 	
 	void Load(const ValueMap& map);
+	void Store(ValueMap& map);
 	
 };
 
@@ -234,6 +236,7 @@ public:
 	virtual void Learn();
 	virtual int Act(int x, int y, int d);
 	virtual void Load(const ValueMap& map);
+	virtual void Store(ValueMap& map);
 	virtual void LoadInit(const ValueMap& map);
 	virtual void Reset();
 	

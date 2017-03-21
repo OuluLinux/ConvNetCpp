@@ -153,11 +153,19 @@ bool Agent::LoadJSON(const String& json) {
 }
 
 bool Agent::StoreJSON(String& json) {
+	ValueMap map;
+	Store(map);
 	
-	return false;
+	json = AsJSON(map, true);
+	
+	return true;
 }
 
 void Agent::Load(const ValueMap& map) {
+	
+}
+
+void Agent::Store(ValueMap& map) {
 	
 }
 
@@ -972,6 +980,33 @@ void DQNet::Load(const ValueMap& map) {
 	b2.Load(map.GetValue(map.Find("b2")));
 }
 
+void DQNet::Store(ValueMap& map) {
+	ValueMap W1;
+	this->W1.Store(W1);
+	map.GetAdd("W1") = W1;
+	
+	ValueMap b1;
+	this->b1.Store(b1);
+	map.GetAdd("b1") = b1;
+	
+	ValueMap W2;
+	this->W2.Store(W2);
+	map.GetAdd("W2") = W2;
+	
+	ValueMap b2;
+	this->b2.Store(b2);
+	map.GetAdd("b2") = b2;
+}
+
+void DQNAgent::Store(ValueMap& map) {
+	STOREVAR(nh, nh);
+	STOREVAR(ns, ns);
+	STOREVAR(na, na);
+	ValueMap net;
+	this->net.Store(net);
+	map.GetAdd("net") = net;
+}
+
 int DQNAgent::Act(int x, int y, int d) {
 	Panic("Not useful");
 	return 0;
@@ -1009,7 +1044,7 @@ void DQNAgent::Learn() {
 void DQNAgent::Learn(double reward1) {
 	
 	// perform an update on Q function
-	if (has_reward && alpha > 0) {
+	if (has_reward && alpha > 0 && state0.GetLength() > 0) {
 		
 		// learn from this tuple to get a sense of how "surprising" it is to the agent
 		tderror = LearnFromTuple(state0, action0, reward0, state1, action1); // a measure of surprise
@@ -1018,6 +1053,8 @@ void DQNAgent::Learn(double reward1) {
 		if (t % experience_add_every == 0) {
 			if (exp.GetCount() == expi)
 				exp.Add();
+			ASSERT(state1.GetLength() > 0);
+			ASSERT(action0 >= 0 && action0 < 5);
 			exp[expi].Set(state0, action0, reward0, state1, action1);
 			expi += 1;
 			if (expi >= experience_size) { expi = 0; } // roll over when we run out
@@ -1036,7 +1073,8 @@ void DQNAgent::Learn(double reward1) {
 }
 
 double DQNAgent::LearnFromTuple(Volume& s0, int a0, double reward0, Volume& s1, int a1) {
-	
+	ASSERT(s0.GetLength() > 0);
+	ASSERT(s1.GetLength() > 0);
 	// want: Q(s,a) = r + gamma * max_a' Q(s',a')
 	
 	// compute the target Q value

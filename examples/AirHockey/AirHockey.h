@@ -13,7 +13,6 @@ using namespace ConvNet;
 #define IMAGEFILE <AirHockey/AirHockey.iml>
 #include <Draw/iml_header.h>
 
-
 #include "World.h"
 #include "Player.h"
 #include "Object.h"
@@ -33,7 +32,8 @@ protected:
 	Label lbl_eps;
 	SliderCtrl eps;
 	Splitter btnsplit;
-	Button goveryfast, gofast, gonorm, goslow, reset;
+	Button goveryfast, gofast, gonorm, reset;
+	ButtonOption show_dbg;
 	ParentCtrl statusctrl;
 	Label status;
 	Button load_pretrained;
@@ -41,12 +41,9 @@ protected:
 	Button reload_btn;
 	ParentCtrl agent_ctrl;
 	DocEdit agent_edit;
+	SpinLock ticking_lock;
 	String t;
 	int simspeed;
-	
-	SpinLock ticking_lock;
-	
-	
 	
 public:
 	typedef AirHockeyDQN CLASSNAME;
@@ -61,8 +58,10 @@ public:
 	void RefreshEpsilon();
 	void LoadPretrained();
 	void RefreshStatus();
+	void SetDrawEyes();
 	void PostRefreshStatus() {PostCallback(THISBACK(RefreshStatus));}
 	void SetSpeed(int i);
+	void AddReward(int id, double reward);
 	
 };
 

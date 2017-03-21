@@ -109,12 +109,15 @@ protected:
 	b2Vec2 gravity;
 	b2BodyDef bodyDef;
 	
+	TimeStop ts;
 	WorldDebug debugDraw;
 	WorldDraw world_draw;
 	int draw_mode;
+	int tick_interval;
+	bool sim_speed;
 	bool dbg_showBoxes;
-	TimeStop ts;
 	bool draw_debug;
+	bool running, stopped;
 	
 	VectorMap<unsigned, Object*> obj_list;
 	
@@ -123,6 +126,10 @@ protected:
 public:
 	typedef World CLASSNAME;
 	World();
+	~World();
+	
+	void Start();
+	void Stop();
 	
 	virtual void Paint(Draw& w);
 	virtual void LeftDown(Point p0, dword keyflags);
@@ -130,9 +137,10 @@ public:
 	virtual void MouseMove(Point p, dword keyflags);
 	virtual void MouseWheel(Point p, int zdelta, dword keyflags);
 	virtual void Tick();
+	void Ticking();
 	
 	void Render() {Refresh();}
-	
+	void SetSpeed(bool simulate_speed, int interval=100);
 	void Add(Object& obj);
 	void Remove(Object& obj);
 	void SetGravityVert() {gravity.Set(0.0f, -10.0f); world.SetGravity(gravity);}
@@ -141,11 +149,11 @@ public:
 	void SetContactListener(ContactListener& cl);
 	void DebugDraw(bool b=true) {draw_debug = b;}
 	
-	//void PostCallback(Callback cb) {cb_lock.Enter(); cbs.Add(cb); cb_lock.Leave();}
-	
 	
 	// Box2D backend functions
 	b2World& B2_GetWorld() {return world;}
+	
+	SpinLock lock;
 	
 };
 

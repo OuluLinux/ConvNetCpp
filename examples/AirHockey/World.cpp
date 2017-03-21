@@ -8,24 +8,60 @@ World::World() : world(b2Vec2(0.0, -10.0), false), world_draw(this) {
 	dbg_showBoxes = false;
 	mouseJoint = NULL;
 	draw_debug = false;
+	running = false;
+	stopped = true;
 	
-	SetTimeCallback(-1, THISBACK(Render));
 	SetGravityZero();
 	
 	world.SetDebugDraw(&debugDraw);
 	groundBody = world.CreateBody(&bodyDef);
 	
-	ts.Reset();
+	sim_speed = 0;
+	tick_interval = 10; // ms to sleep between ticks in realtime
+	
+}
+
+World::~World() {
+	Stop();
+}
+
+void World::Start() {
+	Stop();
+	running = true;
+	stopped = false;
+	Thread::Start(THISBACK(Ticking));
+}
+
+void World::Stop() {
+	running = false;
+	while (!stopped) Sleep(100);
 }
 
 void World::Tick() {
 	
 	int velocityIterations = 8;
 	int positionIterations = 10;
-	float32 timeStep = ts.Elapsed() / 1000.0;
-	ts.Reset();
-	world.Step(timeStep, velocityIterations, positionIterations);
+
+	// Real time
+	if (sim_speed == false) {
+		int elapsed = ts.Elapsed();
+		ts.Reset();
+		world.Step(elapsed / 1000.0, velocityIterations, positionIterations);
+	}
+	else {
+		world.Step(tick_interval / 1000.0, velocityIterations, positionIterations);
+	}
+}
+
+void World::Ticking() {
 	
+	while (running) {
+		lock.Enter();
+		Tick();
+		lock.Leave();
+	}
+	
+	stopped = true;
 }
 
 void World::Paint(Draw& w) {
@@ -39,8 +75,6 @@ void World::Paint(Draw& w) {
 	world.SetWarmStarting(1);
 	world.SetContinuousPhysics(1);
 	
-	Tick();
-
 	Point p1, p2;
 	if(mouseJoint)
 	{
@@ -49,7 +83,7 @@ void World::Paint(Draw& w) {
 	}
 
 	Size sz = GetSize();
-					
+	
 	if(draw_mode > 0)
 	{
 		ImageBuffer ib(sz);
@@ -59,10 +93,16 @@ void World::Paint(Draw& w) {
 		bp.Clear(bg);
 		if (draw_debug) {
 			debugDraw.Init(bp, sz);
+			
+			lock.Enter();
 			world.DrawDebugData();
+			lock.Leave();
 		} else {
 			world_draw.Init(bp, sz);
+			
+			lock.Enter();
 			world_draw.DrawData();
+			lock.Leave();
 		}
 		
 		if (mouseJoint) {
@@ -77,10 +117,16 @@ void World::Paint(Draw& w) {
 		w.DrawRect(sz, White);
 		if (draw_debug) {
 			debugDraw.Init(w, sz);
+			
+			lock.Enter();
 			world.DrawDebugData();
+			lock.Leave();
 		} else {
 			world_draw.Init(w, sz);
+			
+			lock.Enter();
 			world_draw.DrawData();
+			lock.Leave();
 		}
 		
 		if (mouseJoint) {
@@ -88,6 +134,8 @@ void World::Paint(Draw& w) {
 			w.DrawEllipse(p2.x - 3, p2.y - 3, 6, 6, Green, PEN_SOLID, Black);
 		}
 	}
+	
+	
 }
 
 void World::LeftDown(Point p0, dword keyflags) {
@@ -156,6 +204,10 @@ void World::SetContactListener(ContactListener& cl) {
 	world.SetContactListener(&cl);
 }
 
+void World::SetSpeed(bool simulate_speed, int interval) {
+	this->sim_speed = simulate_speed;
+	this->tick_interval = interval;
+}
 
 
 

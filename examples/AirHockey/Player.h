@@ -8,7 +8,6 @@ namespace GameCtrl {
 using namespace Upp;
 using namespace ConvNet;
 
-
 struct InterceptResult {
 	Pointf up;
 	double ua, ub;
@@ -81,7 +80,6 @@ protected:
 	Puck* puck;
 	int id;
 	
-	
 public:
 	Player();
 	
@@ -91,32 +89,25 @@ public:
 	void SetName(String s) {name = s;}
 	void SetPuck(Puck& puck) {this->puck = &puck;}
 	
-	
-	
 	// Agent
 	void Forward();
-	void Backward(double reward);
+	void Backward();
 	void Reset();
-	
 	void SetId(int i) {id = i;}
 	
 	AirHockeyDQN* world;
-	
 	Vector<Eye> eyes;
 	Vector<double> smooth_reward_history;
 	Vector<int> actions;
-	//Pointf p;		// positional information
-	//Pointf v;		// velocity
-	//Pointf op;		// old position
 	double smooth_reward;
 	double reward;
-	//double rad, digestion_signal;
+	double game_score;
 	int nflot, iter;
 	int action;
 	bool do_training;
+	bool paint_eyes;
 	
 };
-
 
 }
 
