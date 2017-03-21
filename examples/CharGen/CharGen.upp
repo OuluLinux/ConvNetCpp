@@ -1,0 +1,20 @@
+description "RecurrentJS: Deep Recurrent Nets character generation demo\377";
+
+uses
+	CtrlLib,
+	ConvNetCtrl,
+	Docking,
+	plugin/bz2;
+
+file
+	main.cpp,
+	CharGen.h,
+	CharGen.cpp,
+	CharGen.rc,
+	CharGen.iml,
+	CharGen.brc,
+	input.txt;
+
+mainconfig
+	"" = "GUI MT";
+
