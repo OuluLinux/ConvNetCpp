@@ -103,15 +103,15 @@ void Map::Paint(WorldDraw& wdraw, Draw& draw) {
 		String s;
 		if (last_won != -1) {
 			if (last_won == 0)
-				s << "Player A won!";
+				s << "Upper won!";
 			else
-				s << "Player B won!";
+				s << "Lower won!";
 		}
 		if (last_score != -1) {
 			if (last_score == 0)
-				s << "Player A scored!";
+				s << "Upper scored!";
 			else
-				s << "Player B scored!";
+				s << "Lower scored!";
 		}
 		Font fnt = SansSerifZ(8);
 		Size text_sz = GetTextSize(s, fnt);
@@ -387,6 +387,11 @@ void Table2::ContactBegin(Contact contact) {
 		Puck* puck = contact.Get<Puck>();
 		if (puck) {
 			player->game_score += 0.2; // reward pushing puck
+			if (player == &agents[0]) {
+				agents[1].game_score -= 0.2; // punish for letting other hit
+			} else {
+				agents[0].game_score -= 0.2;
+			}
 		}
 		return;
 	}

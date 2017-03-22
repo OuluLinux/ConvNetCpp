@@ -95,6 +95,20 @@ int Volume::GetMaxColumn() const {
 	return pos;
 }
 
+int Volume::GetSampledColumn() const {
+	// sample argmax from w, assuming w are
+	// probabilities that sum to one
+	double r = Randomf();
+	double x = 0.0;
+	for(int i = 0; i < weights->GetCount(); i++) {
+		x += weights->Get(i);
+		if (x > r) {
+			return i;
+		}
+	}
+	return weights->GetCount() - 1; // pretty sure we should never get here?
+}
+
 void Volume::SetData(VolumeDataBase& data) {
 	if (owned_weights && weights)
 		delete weights;

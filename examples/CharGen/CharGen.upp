@@ -3,7 +3,6 @@ description "RecurrentJS: Deep Recurrent Nets character generation demo\377";
 uses
 	CtrlLib,
 	ConvNetCtrl,
-	Docking,
 	plugin/bz2;
 
 file
@@ -13,6 +12,7 @@ file
 	CharGen.rc,
 	CharGen.iml,
 	CharGen.brc,
+	CharGen.lay,
 	input.txt;
 
 mainconfig

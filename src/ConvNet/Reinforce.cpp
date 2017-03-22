@@ -39,8 +39,8 @@ void ReinforceBase::Backward() {
 
 
 
-ReinforceRowPluck::ReinforceRowPluck(int row) {
-	ix = row;
+ReinforceRowPluck::ReinforceRowPluck() {
+	ix = 0;
 }
 
 ReinforceRowPluck::~ReinforceRowPluck() {
@@ -398,7 +398,9 @@ void Graph::Backward() {
 
 void Graph::AddRowPluck(int row) {
 	extra_args.Add(0);
-	layers.Add(new ReinforceRowPluck(row));
+	ReinforceRowPluck* rp = new ReinforceRowPluck();
+	rp->SetRow(row);
+	layers.Add(rp);
 }
 
 void Graph::AddTanh() {

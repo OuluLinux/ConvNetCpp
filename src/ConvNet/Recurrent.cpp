@@ -8,7 +8,7 @@ LSTM::LSTM() {
 }
 
 
-ModelVector LSTM::InitLSTM(int input_size, Vector<int>& hidden_sizes, int output_size) {
+ModelVector LSTM::Init(int input_size, Vector<int>& hidden_sizes, int output_size) {
 	// hidden size should be a list
 	
 	ModelVector vec;
@@ -45,7 +45,7 @@ ModelVector LSTM::InitLSTM(int input_size, Vector<int>& hidden_sizes, int output
 	return vec;
 }
 
-CellMemory LSTM::ForwardLSTM(const Graph& G, ModelVector& vec, const Vector<int>& hidden_sizes, Volume& x/*, prev*/) {
+CellMemory LSTM::Forward(const Graph& G, ModelVector& vec, const Vector<int>& hidden_sizes, Volume& x, CellMemory* prev) {
 	// forward prop for a single tick of LSTM
 	// G is graph to append ops to
 	// model contains LSTM parameters
@@ -133,6 +133,87 @@ CellMemory LSTM::ForwardLSTM(const Graph& G, ModelVector& vec, const Vector<int>
 
 
 
+RNN::RNN() {
+	
+}
+
+ModelVector RNN::Init(int input_size, Vector<int>& hidden_sizes, int output_size) {
+	ModelVector model;
+	
+	// hidden size should be a list
+	int hidden_size;
+	
+	// loop over depths
+	for (int d = 0; d < hidden_sizes.GetCount(); d++) {
+		int prev_size = d == 0 ? input_size : hidden_sizes[d - 1];
+		hidden_size = hidden_sizes[d];
+		LSTMModel& m = model.model[d];
+		m.Wxh = RandVolume(hidden_size, prev_size , 0, 0.08);
+		m.Whh = RandVolume(hidden_size, hidden_size, 0, 0.08);
+		m.bhh.Init(hidden_size, 1, 1);
+	}
+	// decoder params
+	model.Whd = RandVolume(output_size, hidden_size, 0, 0.08);
+	model.bd.Init(output_size, 1, 1);
+	
+	return model;
+}
+
+CellMemory RNN::Forward(const Graph& G, ModelVector& model, const Vector<int>& hidden_sizes, Volume& x, CellMemory* prev) {
+	CellMemory cm;
+	
+	// forward prop for a single tick of RNN
+	// G is graph to append ops to
+	// model contains RNN parameters
+	// x is 1D column vector with observation
+	// prev is a struct containing hidden activations from last step
+	
+	Vector<Volume> hidden_prevs_;
+	Vector<Volume>* hidden_prevs;
+	
+	if (prev == NULL) {
+		hidden_prevs = &hidden_prevs_;
+		hidden_prevs_.Clear();
+		for (int d = 0; d < hidden_sizes.GetCount(); d++) {
+			hidden_prevs_.Add().Init(hidden_sizes[d], 1, 1);
+		}
+	} else {
+		hidden_prevs = &prev->h;
+	}
+	
+	Vector<Volume>& hidden = cm.h;
+	
+	for (int d = 0; d < hidden_sizes.GetCount(); d++) {
+		LSTMModel& m = model.model[d];
+		
+		Volume& input_vector = d == 0 ? x : hidden[d-1];
+		Volume& hidden_prev = (*hidden_prevs)[d];
+		
+		Volume& h0 = mul(m.Wxh, input_vector);
+		Volume& h1 = mul(m.Whh, hidden_prev);
+		Volume& hidden_d = relu(add2(add1(h0, h1), m.bhh));
+		
+		hidden.Add(hidden_d);
+	}
+	
+	// one decoder to outputs at end
+	cm.o = add1(mul(model.Whd, hidden[hidden.GetCount() - 1]), model.bd);
+	
+	// return cell memory, hidden representation and output
+	return cm;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 Solver::Solver() {
@@ -180,4 +261,32 @@ SolverStat Solver::Step(Vector<Volume>& model, int step_size, int regc, int clip
 	solver_stats.ratio_clipped = num_clipped * 1.0 / num_tot;
 	return solver_stats;
 }
+
+
+Volume Softmax(const Volume& m) {
+	Volume out(m); // probability volume
+	double maxval = -DBL_MAX;
+	
+	for (int i = 0; i < m.GetLength(); i++) {
+		if (m.Get(i) > maxval)
+			maxval = m.Get(i);
+	}
+	
+	double s = 0.0;
+	
+	for (int i = 0; i < m.GetLength(); i++) {
+		out.Set(i, exp(m.Get(i) - maxval));
+		s += out.Get(i);
+	}
+	
+	for (int i = 0; i < m.GetLength(); i++) {
+		out.Set(i, out.Get(i) / s);
+	}
+	
+	// no backward pass here needed
+	// since we will use the computed probabilities outside
+	// to set gradients directly on m
+	return out;
+}
+
 }

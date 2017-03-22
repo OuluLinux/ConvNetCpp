@@ -47,10 +47,10 @@ file
 	SgdTrainer.cpp,
 	WindowgradTrainer.cpp,
 	"Recurrent NN" readonly separator,
+	Recurrent.h,
+	Recurrent.cpp,
 	Agent.h,
 	Agent.cpp,
 	Reinforce.h,
-	Reinforce.cpp,
-	LSTM.h,
-	LSTM.cpp;
+	Reinforce.cpp;
 

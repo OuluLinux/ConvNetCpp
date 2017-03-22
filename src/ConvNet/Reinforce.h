@@ -41,12 +41,13 @@ class ReinforceRowPluck : public ReinforceBase {
 	int ix;
 	
 public:
-	ReinforceRowPluck(int row);
+	ReinforceRowPluck();
 	~ReinforceRowPluck();
 	virtual Volume& Forward(Volume& input);
 	virtual void Backward();
 	virtual String GetKey() const {return "RowPluck";}
 	virtual int GetArgCount() const {return 1;}
+	void SetRow(int i) {ix = i;}
 	
 };
 

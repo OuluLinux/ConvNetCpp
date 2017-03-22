@@ -171,15 +171,17 @@ void AirHockeyDQN::LoadPretrained() {
 	Player& agent2 = world.agents[1];
 	
 	// This is the pre-trained network from original ConvNetJS
-	MemReadStream pretrained_mem(pretrained, pretrained_length);
-	String json = BZ2Decompress(pretrained_mem);
+	MemReadStream pretrained_mem1(pretrained1, pretrained1_length);
+	MemReadStream pretrained_mem2(pretrained2, pretrained2_length);
+	String json1 = BZ2Decompress(pretrained_mem1);
+	String json2 = BZ2Decompress(pretrained_mem2);
 	
 	agent1.do_training = false;
 	agent2.do_training = false;
 	
 	world.lock.Enter();
-	agent1.LoadJSON(json);
-	agent2.LoadJSON(json);
+	agent1.LoadJSON(json1);
+	agent2.LoadJSON(json2);
 	world.lock.Leave();
 }
 

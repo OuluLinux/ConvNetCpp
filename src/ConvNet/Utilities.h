@@ -127,6 +127,7 @@ public:
 	int GetDepth()  const {return depth;}
 	int GetLength() const {return length;}
 	int GetMaxColumn() const;
+	int GetSampledColumn() const;
 	
 };
 

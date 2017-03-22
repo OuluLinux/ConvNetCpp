@@ -54,8 +54,8 @@ struct Eye : Moveable<Eye> {
 	
 	void Init(double angle) {
 		this->angle = angle;
-		max_range = 120;
-		sensed_proximity = 120;
+		max_range = 60;
+		sensed_proximity = 60;
 		sensed_type = -1;
 		vx = 0;
 		vy = 0;

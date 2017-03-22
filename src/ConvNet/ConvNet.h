@@ -75,6 +75,6 @@
 #include "MagicNet.h"
 #include "Reinforce.h"
 #include "Agent.h"
-#include "LSTM.h"
+#include "Recurrent.h"
 
 #endif

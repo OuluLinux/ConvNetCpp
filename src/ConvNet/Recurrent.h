@@ -1,5 +1,5 @@
-#ifndef _ConvNet_LSTM_h_
-#define _ConvNet_LSTM_h_
+#ifndef _ConvNet_Recurrent_h_
+#define _ConvNet_Recurrent_h_
 
 namespace ConvNet {
 
@@ -7,17 +7,26 @@ namespace ConvNet {
 
 struct LSTMModel : Moveable<LSTMModel> {
 	
+	// LSTM
 	Volume Wix, Wih, bi, Wfx, Wfh, bf, Wox, Woh, bo, Wcx, Wch, bc;
+	
+	// RNN
+	Volume Wxh, Whh, bhh;
 	
 	LSTMModel() {
 		
+	}
+	
+	LSTMModel& operator=(const LSTMModel& m) {
+		Panic("TODO");
+		return *this;
 	}
 	
 };
 
 struct ModelVector : Moveable<ModelVector> {
 	Vector<LSTMModel> model;
-	Volume Whd, bd;
+	Volume Whd, bd, Wil;
 	
 };
 
@@ -43,11 +52,22 @@ class LSTM {
 	
 public:
 	LSTM();
-	ModelVector InitLSTM(int input_size, Vector<int>& hidden_sizes, int output_size);
-	CellMemory ForwardLSTM(const Graph& G, ModelVector& vec, const Vector<int>& hidden_sizes, Volume& x/*, prev*/);
+	ModelVector Init(int input_size, Vector<int>& hidden_sizes, int output_size);
+	CellMemory Forward(const Graph& G, ModelVector& vec, const Vector<int>& hidden_sizes, Volume& x, CellMemory* prev=NULL);
 };
 
-
+class RNN {
+	
+	ReinforceMul		mul;
+	ReinforceAdd		add1, add2;
+	ReinforceRelu		relu;
+	
+public:
+	RNN();
+	ModelVector Init(int input_size, Vector<int>& hidden_sizes, int output_size);
+	CellMemory Forward(const Graph& G, ModelVector& vec, const Vector<int>& hidden_sizes, Volume& x, CellMemory* prev=NULL);
+	
+};
 
 
 
@@ -69,6 +89,9 @@ public:
 	Solver();
 	SolverStat Step(Vector<Volume>& model, int step_size, int regc, int clipval);
 };
+
+
+Volume Softmax(const Volume& m);
 
 }
 

@@ -1,1 +1,1 @@
-BINARY(input, "input.txt" BZ2)
+BINARY(input_txt, "input.txt" BZ2)

@@ -27,7 +27,8 @@ file
 	WorldDebug.cpp,
 	WorldDraw.cpp,
 	pretrained.brc,
-	pretrained.json;
+	pretrained1.json,
+	pretrained2.json;
 
 mainconfig
 	"" = "GUI MT";
