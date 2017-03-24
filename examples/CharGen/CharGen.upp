@@ -13,8 +13,10 @@ file
 	CharGen.iml,
 	CharGen.brc,
 	CharGen.lay,
-	input.txt;
+	input.txt,
+	pretrained.json;
 
 mainconfig
-	"" = "GUI MT";
+	"" = "GUI MT",
+	"" = "GUI MT USEMALLOC NOGTK";
 

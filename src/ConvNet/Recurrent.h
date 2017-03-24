@@ -207,6 +207,8 @@ public:
 	RecurrentBase& GetLayer(int i) {return *layers[i];}
 	int GetCount() const {return layers.GetCount();}
 	
+	RecurrentBase& Top() {return *layers.Top();}
+	
 };
 
 

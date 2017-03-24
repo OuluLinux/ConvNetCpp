@@ -18,7 +18,6 @@ protected:
 	
 	// Vector
 	Array<Array<GraphTree> > graphs;
-	Array<GraphTree> output_graphs;
 	
 	// ModelVector
 	Vector<LSTMModel> lstm_model;
@@ -31,8 +30,8 @@ protected:
 	double smooth_eps;
 	
 	// Session vars
-	Vector<Volume> hidden_prevs1, hidden_prevs2;
-	Vector<Volume> cell_prevs1, cell_prevs2;
+	Vector<Vector<Volume> > hidden_prevs;
+	Vector<Vector<Volume> > cell_prevs;
 	Vector<int> hidden_sizes;
 	Array<int> index_sequence; // Array instead of vector to allow resizing
 	Volume* input;
@@ -42,7 +41,6 @@ protected:
 	double clipval;
 	double ratio_clipped;
 	int mode;
-	int step_size;
 	int input_size;
 	int output_size;
 	int letter_size;
@@ -56,6 +54,7 @@ protected:
 	void InitLSTM(int i, int j, GraphTree& g);
 	void Backward(int seq_end_cursor);
 	void SolverStep();
+	void ResetPrevs();
 	int GetVolumeCount();
 	Volume& GetVolume(int i);
 public:

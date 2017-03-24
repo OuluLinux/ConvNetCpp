@@ -50,7 +50,7 @@ CharGen::CharGen() {
 	temp <<= THISBACK(SetSampleTemperature);
 	save <<= THISBACK(Save);
 	load <<= THISBACK(Load);
-	pretrained <<= THISBACK(LoadPretrained);
+	load_pretrained <<= THISBACK(LoadPretrained);
 	pause <<= THISBACK(Pause);
 	
 	CtrlLayout(*this);
@@ -66,6 +66,7 @@ CharGen::CharGen() {
 	output_size = -1;
 	
 	PostCallback(THISBACK(Reload));
+	//PostCallback(THISBACK(LoadPretrained));
 	PostCallback(THISBACK(Start));
 }
 
@@ -104,7 +105,7 @@ void CharGen::Reload() {
 	tick_iter = 0;
 	
 	// process the input, filter out blanks
-	Vector<WString> data_sents_raw = Split((WString)input.GetData(), L"\n");
+	Vector<WString> data_sents_raw = Split((WString)input.GetData(), String("\n").ToWString());
 	data_sents.Clear();
 	for (int i=0; i < data_sents_raw.GetCount(); i++) {
 		WString sent = TrimBoth(data_sents_raw[i].ToString()).ToWString();
@@ -145,7 +146,44 @@ void CharGen::Load() {
 }
 
 void CharGen::LoadPretrained() {
+	Stop();
 	
+	MemReadStream pretrained_mem(pretrained, pretrained_length);
+	String pretrained_str = BZ2Decompress(pretrained_mem);
+	
+	ses.LoadJSON(pretrained_str);
+	ses.SetInputSize(input_size);
+	ses.SetOutputSize(output_size);
+	ses.Init();
+	ses.LoadJSON(pretrained_str);
+	
+	letterToIndex.Clear();
+	indexToLetter.Clear();
+	vocab.Clear();
+	
+	ValueMap map = ParseJSON(pretrained_str);
+	
+	ValueMap l2i = map.GetAdd("letterToIndex");
+	for(int i = 0; i < l2i.GetCount(); i++) {
+		String k = l2i.GetKey(i);
+		int v = l2i.GetValue(i);
+		letterToIndex.Add(k.ToWString()[0], v);
+	}
+	
+	ValueMap i2l = map.GetAdd("indexToLetter");
+	int count = i2l.GetCount();
+	for(int i = 0; i < count; i++) {
+		String k = i2l.GetKey(i);
+		String v = i2l.GetValue(i);
+		indexToLetter.Add(StrInt(k), v.ToWString()[0]);
+	}
+	
+	ValueMap v = map.GetAdd("vocab");
+	for(int i = 0; i < v.GetCount(); i++) {
+		vocab.Add(String(v[i]).ToWString());
+	}
+	
+	Start();
 }
 
 void CharGen::Pause() {
@@ -201,7 +239,7 @@ WString CharGen::PredictSentence(bool samplei, double temperature) {
 	WString s;
 	for(int i = 0; i < sequence.GetCount(); i++) {
 		int chr = indexToLetter.Get(sequence[i]);
-		s.Cat(s);
+		s.Cat(chr);
 	}
 	return s;
 }
@@ -225,8 +263,9 @@ void CharGen::Tick() {
 	
 	
 	sequence.SetCount(sent.GetCount());
-	for(int i = 0; i < sent.GetCount(); i++)
+	for(int i = 0; i < sent.GetCount(); i++) {
 		sequence[i] = letterToIndex.Get(sent[i]);
+	}
 	
 	ses.Learn(sequence);
 	
@@ -251,13 +290,13 @@ void CharGen::Tick() {
 	if (tick_iter % 10 == 0) {
 		// draw argmax prediction
 		WString pred = PredictSentence(false);
-		LOG("Predicted: " << pred.ToString());
+		LOG("Predicted: " << pred);
 		
 		GuiLock __;
 		argmaxpred.SetData(pred);
 		
 		// keep track of perplexity
-		lbl_epoch.SetLabel("epoch: " + FormatDoubleFix(tick_iter/epoch_size, 2));
+		lbl_epoch.SetLabel("epoch: " + FormatDoubleFix((double)tick_iter/epoch_size, 2));
 		lbl_perp.SetLabel("perplexity: " + FormatDoubleFix(ppl, 2));
 		lbl_time.SetLabel("forw/bwd time per example: " + FormatDoubleFix(tick_time, 1) + "ms");
 		

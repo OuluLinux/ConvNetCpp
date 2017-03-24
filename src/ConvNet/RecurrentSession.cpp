@@ -4,7 +4,6 @@ namespace ConvNet {
 
 RecurrentSession::RecurrentSession() {
 	mode = MODE_RNN;
-	step_size = -1;
 	learning_rate = 0.01;
 	clipval = 5.0;
 	regc = 0.000001;
@@ -19,7 +18,8 @@ RecurrentSession::RecurrentSession() {
 	
 	index_sequence.SetCount(max_graphs, 0);
 	graphs.SetCount(max_graphs);
-	output_graphs.SetCount(max_graphs);
+	hidden_prevs.SetCount(max_graphs+1);
+	cell_prevs.SetCount(max_graphs+1);
 }
 
 RecurrentSession::~RecurrentSession() {
@@ -92,10 +92,19 @@ void RecurrentSession::Init() {
 	int hidden_count = hidden_sizes.GetCount();
 	ASSERT_(hidden_count > 0, "Hidden sizes must be set");
 	
-	hidden_prevs1.SetCount(hidden_count);
-	hidden_prevs2.SetCount(hidden_count);
-	cell_prevs1.SetCount(hidden_count);
-	cell_prevs2.SetCount(hidden_count);
+	for (int i = 0; i < hidden_prevs.GetCount(); i++) {
+		Vector<Volume>& hidden_prevs = this->hidden_prevs[i];
+		hidden_prevs.SetCount(hidden_count);
+		for (int d = 0; d < hidden_count; d++) {
+			hidden_prevs[d].Init(1, hidden_sizes[d], 1, 0);
+		}
+		
+		Vector<Volume>& cell_prevs = this->cell_prevs[i];
+		cell_prevs.SetCount(hidden_count);
+		for (int d = 0; d < hidden_count; d++) {
+			cell_prevs[d].Init(1, hidden_sizes[d], 1, 0);
+		}
+	}
 	
 	for (int i = 0; i < graphs.GetCount(); i++) {
 		Array<GraphTree>& hidden_graphs = graphs[i];
@@ -108,19 +117,7 @@ void RecurrentSession::Init() {
 		}
 	}
 	
-	hidden_prevs1.SetCount(hidden_count);
-	hidden_prevs2.SetCount(hidden_count);
-	for (int d = 0; d < hidden_count; d++) {
-		hidden_prevs1[d].Init(1, hidden_sizes[d], 1, 0);
-		hidden_prevs2[d].Init(1, hidden_sizes[d], 1, 0);
-	}
 	
-	cell_prevs1.SetCount(hidden_count);
-	cell_prevs2.SetCount(hidden_count);
-	for (int d = 0; d < hidden_count; d++) {
-		cell_prevs1[d].Init(1, hidden_sizes[d], 1, 0);
-		cell_prevs2[d].Init(1, hidden_sizes[d], 1, 0);
-	}
 }
 
 void RecurrentSession::InitRNN() {
@@ -147,16 +144,14 @@ void RecurrentSession::InitRNN(int i, int j, GraphTree& g) {
 	
 	g.Clear();
 	
-	// Graph uses hidden_prevs[j-1] so two hidden previous vectors are needed.
-	// Otherwise the result could be written over hidden_prevs[j] immediately.
-	Vector<Volume>& hidden_prevs = (i % 2) == 0 ? hidden_prevs1 : hidden_prevs2;
-	Vector<Volume>& hidden_nexts = (i % 2) == 1 ? hidden_prevs1 : hidden_prevs2;
+	Vector<Volume>& hidden_prevs = this->hidden_prevs[i];
+	Vector<Volume>& hidden_nexts = this->hidden_prevs[i+1];
 	
 	if (j == 0) {
 		input = &g.AddRowPluck(&index_sequence[i], Wil);
 	}
 	
-	Volume& input_vector = j == 0 ? *input : hidden_prevs[j-1];
+	Volume& input_vector = j == 0 ? *input : hidden_nexts[j-1];
 	Volume& hidden_prev = hidden_prevs[j];
 	
 	Volume& h0 = g.AddMul(m.Wxh, input_vector);
@@ -167,9 +162,9 @@ void RecurrentSession::InitRNN(int i, int j, GraphTree& g) {
 	
 	// one decoder to outputs at end
 	if (j == hidden_prevs.GetCount() - 1) {
-		GraphTree& og = output_graphs[i];
-		og.Clear();
-		og.AddAdd(og.AddMul(Whd, hidden_d), bd);
+		GraphTree& og = g;// = output_graphs[i];
+		//og.Clear();
+		og.AddAdd(og.AddMul(Whd, hidden_nexts[j]), bd);
 	}
 }
 
@@ -215,16 +210,16 @@ void RecurrentSession::InitLSTM(int i, int j, GraphTree& g) {
 	
 	// Graph uses hidden_prevs[j-1] so two hidden previous vectors are needed.
 	// Otherwise the result could be written over hidden_prevs[j] immediately.
-	Vector<Volume>& hidden_prevs = (i % 2) == 0 ? hidden_prevs1 : hidden_prevs2;
-	Vector<Volume>& hidden_nexts = (i % 2) == 1 ? hidden_prevs1 : hidden_prevs2;
-	Vector<Volume>& cell_prevs = (i % 2) == 0 ? cell_prevs1 : cell_prevs2;
-	Vector<Volume>& cell_nexts = (i % 2) == 1 ? cell_prevs1 : cell_prevs2;
+	Vector<Volume>& hidden_prevs = this->hidden_prevs[i];
+	Vector<Volume>& hidden_nexts = this->hidden_prevs[i+1];
+	Vector<Volume>& cell_prevs = this->cell_prevs[i];
+	Vector<Volume>& cell_nexts = this->cell_prevs[i+1];
 	
 	if (j == 0) {
 		input = &g.AddRowPluck(&index_sequence[i], Wil);
 	}
 	
-	Volume& input_vector = j == 0 ? *input : hidden_prevs[j-1];
+	Volume& input_vector = j == 0 ? *input : hidden_nexts[j-1];
 	Volume& hidden_prev = hidden_prevs[j];
 	Volume& cell_prev = cell_prevs[j];
 	
@@ -262,9 +257,9 @@ void RecurrentSession::InitLSTM(int i, int j, GraphTree& g) {
 	
 	// one decoder to outputs at end
 	if (j == hidden_prevs.GetCount() - 1) {
-		GraphTree& og = output_graphs[i];
-		og.Clear();
-		og.AddAdd(og.AddMul(Whd, hidden_d), bd);
+		GraphTree& og = g;//output_graphs[i];
+		//og.Clear();
+		og.AddAdd(og.AddMul(Whd, hidden_nexts[j]), bd);
 	}
 }
 
@@ -282,6 +277,8 @@ void RecurrentSession::Learn(const Vector<int>& input_sequence) {
 	for(int i = n+1; i < index_sequence.GetCount(); i++)
 		index_sequence[i] = -1; // for debugging
 	
+	ResetPrevs();
+	
 	for(int i = 0; i <= n; i++) {
 		// start and end tokens are zeros
 		//int ix_source = index_sequence[i]; // first step: start with START token
@@ -292,22 +289,20 @@ void RecurrentSession::Learn(const Vector<int>& input_sequence) {
 			list[j].Forward();
 		}
 		
-		GraphTree& output_graph = output_graphs[i];
-		Volume& logprobs = output_graph.Forward();
+		//GraphTree& output_graph = output_graphs[i];
+		//Volume& logprobs = output_graph.Forward();
+		Volume& logprobs = list.Top().Top().output;
 		
 		Volume probs = Softmax(logprobs); // compute the softmax probabilities
 		
-		// Check that softmax sum is 1.0
-		#ifdef flagDEBUG
-		double sum = 0.0;
-		for(int j = 0; j < probs.GetLength(); j++)
-			sum += probs.Get(j);
-		double err = fabs(sum - 1.0);
-		ASSERT(err < 1e-5);
-		#endif
-		
 		log2ppl += -log2(probs.Get(ix_target)); // accumulate base 2 log prob and do smoothing
 		cost += -log(probs.Get(ix_target));
+		
+		// write gradients into log probabilities
+		int count = logprobs.GetLength();
+		for(int j = 0; j < count; j++)
+			logprobs.SetGradient(j, probs.Get(j));
+		logprobs.AddGradient(ix_target, -1.0);
 	}
 	
 	ppl = pow(2, log2ppl / (n - 1));
@@ -363,11 +358,27 @@ void RecurrentSession::SolverStep() {
 			num_tot++;
 			
 			// update (and regularize)
-			m.Add(i, - step_size * mdwi / sqrt(s.Get(i) + smooth_eps) - regc * m.Get(i));
+			m.Add(i, - learning_rate * mdwi / sqrt(s.Get(i) + smooth_eps) - regc * m.Get(i));
 			m.SetGradient(i, 0); // reset gradients for next iteration
 		}
 	}
 	ratio_clipped = num_clipped * 1.0 / num_tot;
+}
+
+void RecurrentSession::ResetPrevs() {
+	int hidden_count = hidden_sizes.GetCount();
+	
+	Vector<Volume>& hidden_prevs = this->hidden_prevs[0];
+	hidden_prevs.SetCount(hidden_count);
+	for (int d = 0; d < hidden_count; d++) {
+		hidden_prevs[d].Init(1, hidden_sizes[d], 1, 0);
+	}
+	
+	Vector<Volume>& cell_prevs = this->cell_prevs[0];
+	cell_prevs.SetCount(hidden_count);
+	for (int d = 0; d < hidden_count; d++) {
+		cell_prevs[d].Init(1, hidden_sizes[d], 1, 0);
+	}
 }
 
 void RecurrentSession::Predict(Vector<int>& output_sequence, bool samplei, double temperature) {
@@ -376,6 +387,8 @@ void RecurrentSession::Predict(Vector<int>& output_sequence, bool samplei, doubl
 	index_sequence[0] = 0;
 	for(int i = 1; i < index_sequence.GetCount(); i++)
 		index_sequence[i] = -1; // for debugging
+	
+	ResetPrevs();
 	
 	for (int i = 0; ; i++) {
 		// RNN tick
@@ -391,8 +404,10 @@ void RecurrentSession::Predict(Vector<int>& output_sequence, bool samplei, doubl
 		}
 		
 		// sample predicted letter
-		GraphTree& output_graph = output_graphs[i];
-		Volume logprobs = output_graph.Forward(); // not reference because of editing
+		//GraphTree& output_graph = output_graphs[i];
+		//Volume logprobs = output_graph.Forward(); // not reference because of editing
+		Volume& logprobs = list.Top().Top().output;
+		
 		
 		if (temperature != 1.0 && samplei) {
 			// scale log probabilities by temperature and renormalize
@@ -406,14 +421,6 @@ void RecurrentSession::Predict(Vector<int>& output_sequence, bool samplei, doubl
 		
 		Volume probs = Softmax(logprobs);
 		
-		// Check that softmax sum is 1.0
-		#ifdef flagDEBUG
-		double sum = 0.0;
-		for(int j = 0; j < probs.GetLength(); j++)
-			sum += probs.Get(j);
-		double err = fabs(sum - 1.0);
-		ASSERT(err < 1e-5);
-		#endif
 		
 		int ix = 0;
 		if (samplei) {
@@ -449,6 +456,47 @@ void RecurrentSession::LoadJSON(const String& json) {
 	LOAD(regc);
 	LOAD(learning_rate);
 	LOAD(clipval);
+	
+	if (js.Find("model") != -1) {
+		ValueMap model = js.GetAdd("model");
+		
+		#define LOADVOL(x) {ValueMap map = model.GetAdd(#x); this->x.Load(map);}
+		LOADVOL(Wil);
+		LOADVOL(Whd);
+		LOADVOL(bd);
+		#undef LOADVOL
+		
+		if      (mode == MODE_LSTM) {lstm_model.SetCount(hidden_sizes.GetCount());}
+		else if (mode == MODE_RNN)  {rnn_model.SetCount(hidden_sizes.GetCount());}
+		else Panic("Invalid mode");
+		
+		for(int i = 0; i < hidden_sizes.GetCount(); i++) {
+			if (mode == MODE_LSTM) {
+				#define LOADMODVOL(x) {ValueMap map = model.GetAdd(#x + IntStr(i)); lstm_model[i].x.Load(map);}
+				LOADMODVOL(Wix);
+				LOADMODVOL(Wih);
+				LOADMODVOL(bi);
+				LOADMODVOL(Wfx);
+				LOADMODVOL(Wfh);
+				LOADMODVOL(bf);
+				LOADMODVOL(Wox);
+				LOADMODVOL(Woh);
+				LOADMODVOL(bo);
+				LOADMODVOL(Wcx);
+				LOADMODVOL(Wch);
+				LOADMODVOL(bc);
+				#undef LOADMODVOL
+			}
+			else {
+				#define LOADMODVOL(x) {ValueMap map = model.GetAdd(#x + IntStr(i)); rnn_model[i].x.Load(map);}
+				LOADMODVOL(Wxh);
+				LOADMODVOL(Whh);
+				LOADMODVOL(bhh);
+				#undef LOADMODVOL
+			}
+		}
+	}
+	#undef LOAD
 }
 
 }

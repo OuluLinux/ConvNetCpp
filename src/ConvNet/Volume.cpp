@@ -219,16 +219,19 @@ double Volume::Get(int x, int y, int d) const {
 }
 
 void Volume::Set(int x, int y, int d, double v) {
+	ASSERT(owned_weights);
 	int ix = GetPos(x,y,d);
 	weights->Set(ix, v);
 }
 
 void Volume::Add(int x, int y, int d, double v) {
+	ASSERT(owned_weights);
 	int ix = GetPos(x,y,d);
 	weights->Set(ix, weights->Get(ix) + v);
 }
 
 void Volume::Add(int i, double v) {
+	ASSERT(owned_weights);
 	weights->Set(i, weights->Get(i) + v);
 }
 
@@ -253,6 +256,7 @@ void Volume::ZeroGradients() {
 }
 
 void Volume::AddFrom(const Volume& volume) {
+	ASSERT(owned_weights);
 	for (int i = 0; i < weights->GetCount(); i++) {
 		weights->Set(i, weights->Get(i) + volume.Get(i));
 	}
@@ -265,6 +269,7 @@ void Volume::AddGradientFrom(const Volume& volume) {
 }
 
 void Volume::AddFromScaled(const Volume& volume, double a) {
+	ASSERT(owned_weights);
 	for (int i = 0; i < weights->GetCount(); i++) {
 		weights->Set(i, weights->Get(i) + a * volume.Get(i));
 	}
@@ -323,6 +328,8 @@ void Volume::Store(ValueMap& map) const {
 }
 
 void Volume::Load(const ValueMap& map) {
+	ASSERT(owned_weights);
+	
 	LOADVAR(width, sx);
 	LOADVAR(height, sy);
 	LOADVAR(depth, depth);
@@ -353,6 +360,7 @@ void Volume::Load(const ValueMap& map) {
 }
 
 void Volume::Augment(int crop, int dx, int dy, bool fliplr) {
+	ASSERT(owned_weights);
 	
 	// note assumes square outputs of size crop x crop
 	if (dx == -1) dx = Random(width - crop);

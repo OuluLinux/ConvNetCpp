@@ -483,7 +483,7 @@ Volume& GraphTree::AddCopy(Volume& src, Volume& dst) {
 
 
 Volume Softmax(const Volume& m) {
-	Volume out(m); // probability volume
+	Volume out(m.GetWidth(), m.GetHeight(), m.GetDepth(), 0.0); // probability volume
 	double maxval = -DBL_MAX;
 	
 	for (int i = 0; i < m.GetLength(); i++) {
