@@ -2,11 +2,7 @@
 #include "CharGen.brc"
 #include <plugin/bz2/bz2.h>
 
-#define M_LOG2E 1.44269504088896340736 //log2(e)
 
-inline long double log2(const long double x){
-    return  log(x) * M_LOG2E;
-}
 
 /*
 
@@ -35,8 +31,7 @@ CharGen::CharGen() {
 	
 	model_str = "{\n"
 			"\t\"generator\":\"lstm\",\n"
-			"\t\"hidden_width\":20,\n"
-			"\t\"hidden_height\":20,\n"
+			"\t\"hidden_sizes\":[20,20],\n"
 			"\t\"letter_size\":5,\n"
 			"\t\"regc\":0.000001,\n"
 			"\t\"learning_rate\":0.01,\n"
@@ -46,9 +41,9 @@ CharGen::CharGen() {
 	input.SetData(input_str);
 	model_edit.SetData(model_str);
 	
-	learning_rate.MinMax(1,1000);
-	learning_rate.SetData(1000);
-	learning_rate <<= THISBACK(SetLearningRate);
+	learning_rate_slider.MinMax(1,1000);
+	learning_rate_slider.SetData(1000);
+	learning_rate_slider <<= THISBACK(SetLearningRate);
 	
 	temp.MinMax(10, 900);
 	temp.SetData(100);
@@ -64,9 +59,6 @@ CharGen::CharGen() {
 	SetRect(0,0,sz.cx,sz.cy);
 	
 	tick_iter = 0;
-	max_chars_gen = 100;
-	regc = 0.000001;
-	clipval = 5.0;
 	sample_softmax_temperature = 1.0;
 	
 	epoch_size = -1;
@@ -85,7 +77,7 @@ void CharGen::Start() {
 	Stop();
 	running = true;
 	stopped = false;
-	Thread::Start(THISBACK(Tick));
+	Thread::Start(THISBACK(Ticking));
 }
 
 void CharGen::Stop() {
@@ -107,20 +99,12 @@ void CharGen::Reset(bool init_reward, bool start) {
 void CharGen::Reload() {
 	// note: reinit writes global vars
 	
-	// eval options to set some globals
-	//eval($("#newnet").val());
+	perp.Clear();
 	
-	//reinit_learning_rate_slider();
-	SetLearningRate();
-	/*
-	solver = new R.Solver(); // reinit solver
-	pplGraph = new Rvis.Graph();
-	
-	ppl_list.SetCount(0);
 	tick_iter = 0;
 	
 	// process the input, filter out blanks
-	Vector<WString> data_sents_raw = Split((WString)input.GetData(), "\n");
+	Vector<WString> data_sents_raw = Split((WString)input.GetData(), L"\n");
 	data_sents.Clear();
 	for (int i=0; i < data_sents_raw.GetCount(); i++) {
 		WString sent = TrimBoth(data_sents_raw[i].ToString()).ToWString();
@@ -130,7 +114,14 @@ void CharGen::Reload() {
 	}
 	
 	InitVocab(data_sents, 1); // takes count threshold for characters
-	model = InitModel();*/
+	
+	// eval options to set some globals
+	ses.LoadJSON(model_edit.GetData());
+	ses.SetInputSize(input_size);
+	ses.SetOutputSize(output_size);
+	ses.Init();
+	
+	learning_rate_slider.SetData(ses.GetLearningRate() / 0.00001);
 }
 
 void CharGen::Refresher() {
@@ -203,116 +194,16 @@ void CharGen::InitVocab(Vector<WString>& sents, int count_threshold) {
 	input_stats.SetLabel(Format("found %d distinct characters: %s", vocab.GetCount(), Join(vocab, WString(""))));
 }
 
-void CharGen::UtilAddToModel(LSTMModel& modelto, LSTMModel& modelfrom) {
-	/*for (int k = 0; k < modelfrom) {
-		// copy over the pointer but change the key to use the append
-		modelto[k] = modelfrom[k];
-	}*/
-	modelto = modelfrom;
-}
-
-ModelVector CharGen::InitModel() {
-	// letter embedding vectors
-	ModelVector model;
-	model.Wil = RandVolume(input_size, letter_size, 0, 0.08);
+WString CharGen::PredictSentence(bool samplei, double temperature) {
+	Vector<int> sequence;
+	ses.Predict(sequence, samplei, temperature);
 	
-	if (generator == "rnn") {
-		rnn.Init(letter_size, hidden_sizes, output_size);
-		//UtilAddToModel(model, rnn);
-	} else {
-		lstm.Init(letter_size, hidden_sizes, output_size);
-		//UtilAddToModel(model, lstm);
-	}
-	Panic("TODO");
-	
-	return model;
-}
-
-CellMemory CharGen::ForwardIndex(Graph& G, ModelVector& model, int ix, CellMemory& prev) {
-	rowPluck.SetRow(ix);
-	Volume& x = rowPluck(model.Wil);
-	// forward prop the sequence learner
-	if (generator == "rnn") {
-		return rnn.Forward(G, model, hidden_sizes, x, &prev);
-	} else {
-		return lstm.Forward(G, model, hidden_sizes, x, &prev);
-	}
-}
-
-WString CharGen::PredictSentence(ModelVector& model, bool samplei, double temperature) {
-	Graph G;
 	WString s;
-	CellMemory prev;
-	while (true) {
-		
-		// RNN tick
-		int ix = s.IsEmpty() ? 0 : letterToIndex[s[s.GetCount()-1]];
-		CellMemory lh = ForwardIndex(G, model, ix, prev);
-		prev = lh;
-		
-		// sample predicted letter
-		logprobs = lh.o;
-		if (temperature != 1.0 && samplei) {
-			// scale log probabilities by temperature and renormalize
-			// if temperature is high, logprobs will go towards zero
-			// and the softmax outputs will be more diffuse. if temperature is
-			// very low, the softmax outputs will be more peaky
-			for (int q = 0; q < logprobs.GetLength(); q++) {
-				logprobs.Set(q, logprobs.Get(q) / temperature);
-			}
-		}
-		
-		Volume& probs = Softmax(logprobs);
-		ix = 0;
-		if (samplei) {
-			ix = probs.GetSampledColumn();
-		} else {
-			ix = probs.GetMaxColumn();
-		}
-		
-		if (ix == 0) break; // END token predicted, break out
-		if (s.GetCount() > max_chars_gen) break; // something is wrong
-		
-		int letter = indexToLetter[ix];
-		s.Cat(letter);
+	for(int i = 0; i < sequence.GetCount(); i++) {
+		int chr = indexToLetter.Get(sequence[i]);
+		s.Cat(s);
 	}
 	return s;
-}
-
-Cost CharGen::CostFun(ModelVector& model, const WString& sent) {
-	// takes a model and a sentence and
-	// calculates the loss. Also returns the Graph
-	// object which can be used to do backprop
-	int n = sent.GetCount();
-	Cost c;
-	Graph& G = c.G;
-	double log2ppl = 0.0;
-	double cost = 0.0;
-	CellMemory prev;
-	for (int i = -1; i < n; i++) {
-		// start and end tokens are zeros
-		int ix_source = i ==  -1 ? 0 : letterToIndex[sent[ i ]]; // first step: start with START token
-		int ix_target = i == n-1 ? 0 : letterToIndex[sent[i+1]]; // last step: end with END token
-		
-		CellMemory lh = ForwardIndex(G, model, ix_source, prev);
-		prev = lh;
-		
-		// set gradients into logprobabilities
-		logprobs = lh.o; // interpret output as logprobs
-		Volume probs = Softmax(logprobs); // compute the softmax probabilities
-		
-		log2ppl += -log2(probs.Get(ix_target)); // accumulate base 2 log prob and do smoothing
-		cost += -log(probs.Get(ix_target));
-		
-		// write gradients into log probabilities
-		for(int j = 0; j < probs.GetLength(); j++)
-			logprobs.SetGradient(j, probs.Get(j));
-		logprobs.AddGradient(ix_target, -1);
-	}
-	
-	c.ppl = pow(2, log2ppl / (n - 1));
-	c.cost = cost;
-	return c;
 }
 
 double CharGen::Median(Vector<double>& values) {
@@ -325,28 +216,24 @@ double CharGen::Median(Vector<double>& values) {
 }
 
 void CharGen::Tick() {
+	TimeStop ts;  // log start timestamp
 	
 	// sample sentence fromd data
 	int sentix = Random(data_sents.GetCount());
 	const WString& sent = data_sents[sentix];
+	LOG(sent.ToString());
 	
-	TimeStop ts;  // log start timestamp
 	
-	// evaluate cost function on a sentence
-	Cost cost_struct = CostFun(model, sent);
+	sequence.SetCount(sent.GetCount());
+	for(int i = 0; i < sent.GetCount(); i++)
+		sequence[i] = letterToIndex.Get(sent[i]);
 	
-	// use built up graph to compute backprop (set .dw fields in mats)
-	cost_struct.G.Backward();
-	
-	// perform param update
-	SolverStat solver_stats;// = solver.Step(model, learning_rate, regc, clipval);
-	Panic("TODO");
-	
-	//$("#gradclip").text('grad clipped ratio: ' + solver_stats.ratio_clipped)
+	ses.Learn(sequence);
 	
 	int tick_time = ts.Elapsed();
 	
-	ppl_list.Add(cost_struct.ppl); // keep track of perplexity
+	double ppl = ses.GetPerplexity();
+	ppl_list.Add(ppl); // keep track of perplexity
 	
 	// evaluate now and then
 	tick_iter += 1;
@@ -355,56 +242,29 @@ void CharGen::Tick() {
 		WString samples;
 		for (int q = 0; q < 5; q++) {
 			if (q) samples += "\n\n";
-			samples += PredictSentence(model, true, sample_softmax_temperature);
+			samples += PredictSentence(true, sample_softmax_temperature);
 		}
+		
+		GuiLock __;
 		this->samples.SetData(samples);
 	}
 	if (tick_iter % 10 == 0) {
 		// draw argmax prediction
-		WString pred = PredictSentence(model, false);
+		WString pred = PredictSentence(false);
+		LOG("Predicted: " << pred.ToString());
+		
+		GuiLock __;
 		argmaxpred.SetData(pred);
 		
 		// keep track of perplexity
 		lbl_epoch.SetLabel("epoch: " + FormatDoubleFix(tick_iter/epoch_size, 2));
-		lbl_perp.SetLabel("perplexity: " + FormatDoubleFix(cost_struct.ppl, 2));
+		lbl_perp.SetLabel("perplexity: " + FormatDoubleFix(ppl, 2));
 		lbl_time.SetLabel("forw/bwd time per example: " + FormatDoubleFix(tick_time, 1) + "ms");
 		
 		if (tick_iter % 100 == 0) {
 			double median_ppl = Median(ppl_list);
 			ppl_list.SetCount(0);
 			perp.AddValue(median_ppl);
-		}
-	}
-}
-
-void CharGen::GradCheck() {
-	Vector<Volume> model;// = InitModel();
-	Panic("TODO");
-	String sent = "^test sentence$";
-	Cost cost_struct;
-	// = CostFun(model, sent);
-	Panic("TODO");
-	cost_struct.G.Backward();
-	double eps = 0.000001;
-	double oldval = 0;
-	
-	for (int k = 0; k < model.GetCount(); k++) {
-		Volume& m = model[k]; // mat ref
-		for (int i = 0; i < m.GetLength(); i++) {
-			oldval = m.Get(i);
-			m.Set(i, oldval + eps);
-			Cost c0;// = CostFun(model, sent);
-			Panic("TODO");
-			m.Set(i, oldval - eps);
-			Cost c1;// = CostFun(model, sent);
-			m.Set(i, oldval);
-			
-			double gnum = (c0.cost - c1.cost)/(2 * eps);
-			double ganal = m.GetGradient(i);
-			double relerr = (gnum - ganal)/(fabs(gnum) + fabs(ganal));
-			if (relerr > 1e-1) {
-				LOG(k << ": numeric: " << gnum << ", analytic: " << ganal << ", err: " << relerr);
-			}
 		}
 	}
 }

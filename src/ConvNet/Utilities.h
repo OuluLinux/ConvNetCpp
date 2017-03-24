@@ -10,9 +10,12 @@ using namespace Upp;
 
 class VolumeDataBase {
 	
+protected:
+	bool protect;
+	
 public:
-	VolumeDataBase() {}
-	virtual ~VolumeDataBase() {}
+	VolumeDataBase() : protect(false) {}
+	virtual ~VolumeDataBase() {ASSERT(!protect);}
 	virtual double operator[](int i) const = 0;
 	virtual double Get(int i) const = 0;
 	virtual int GetCount() const = 0;
@@ -22,6 +25,9 @@ public:
 	
 	inline double Get(int x, int y, int d, int width, int depth) const {return Get(((width * y) + x) * depth + d);}
 	inline void   Set(int x, int y, int d, int width, int depth, double value) {Set(((width * y) + x) * depth + d, value);}
+	
+	void Protect(bool b) {protect = b;}
+	bool IsProtected() const {return protect;}
 	
 };
 
@@ -36,8 +42,8 @@ struct VolumeData : public VolumeDataBase {
 	virtual double Get(int i) const {return weights[i];}
 	virtual int GetCount() const {return weights.GetCount();}
 	virtual void Set(int i, double d) {weights[i] = d;}
-	virtual void SetCount(int i) {weights.SetCount(i);}
-	virtual void SetCount(int i, double d) {weights.SetCount(i, d);}
+	virtual void SetCount(int i) {ASSERT(i >= weights.GetCount() || !protect); weights.SetCount(i);}
+	virtual void SetCount(int i, double d) {ASSERT(i >= weights.GetCount() || !protect); weights.SetCount(i, d);}
 };
 
 template <class T, int DIV>
@@ -79,7 +85,6 @@ public:
 
 	
 	Volume();
-	Volume(int, int) {Panic("TODO");}
 	Volume(int width, int height, int depth, Volume& vol);
 	Volume(int width, int height, int depth, VolumeDataBase& weights);
 	Volume(int width, int height, int depth, const Vector<double>& weights);
@@ -97,6 +102,8 @@ public:
 	
 	const VolumeDataBase& GetWeights() const {return *weights;}
 	const Vector<double>& GetGradients() const {return weight_gradients;}
+	
+	void Protect(bool b=true) {weights->Protect(b);}
 	
 	void Add(int i, double v);
 	void Add(int x, int y, int d, double v);

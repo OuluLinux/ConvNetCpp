@@ -12,12 +12,14 @@ Volume::Volume() {
 }
 
 Volume::Volume(int width, int height, int depth) {
+	ASSERT(width > 0 && height > 0 && depth > 0);
 	owned_weights = true;
 	weights = new VolumeData<double>();
 	Init(width, height, depth);
 }
 
 Volume::Volume(int width, int height, int depth, double c) {
+	ASSERT(width > 0 && height > 0 && depth > 0);
 	owned_weights = true;
 	weights = new VolumeData<double>();
 	Init(width, height, depth, c);
@@ -37,6 +39,7 @@ Volume::Volume(const Vector<double>& weights) {
 }
 
 Volume::Volume(int width, int height, int depth, VolumeDataBase& weights) {
+	ASSERT(width > 0 && height > 0 && depth > 0);
 	this->width = width;
 	this->height = height;
 	this->depth = depth;
@@ -49,6 +52,7 @@ Volume::Volume(int width, int height, int depth, VolumeDataBase& weights) {
 }
 
 Volume::Volume(int width, int height, int depth, const Vector<double>& weights) {
+	ASSERT(width > 0 && height > 0 && depth > 0);
 	this->width = width;
 	this->height = height;
 	this->depth = depth;
@@ -63,6 +67,7 @@ Volume::Volume(int width, int height, int depth, const Vector<double>& weights) 
 }
 
 Volume::Volume(int width, int height, int depth, Volume& vol) {
+	ASSERT(width > 0 && height > 0 && depth > 0);
 	this->width = width;
 	this->height = height;
 	this->depth = depth;
@@ -150,6 +155,7 @@ Volume& Volume::operator=(const Volume& src) {
 }
 
 Volume& Volume::Init(int width, int height, int depth) {
+	ASSERT(width > 0 && height > 0 && depth > 0);
 	if (!owned_weights) {
 		owned_weights = true;
 		weights = new VolumeData<double>();
@@ -177,6 +183,7 @@ Volume& Volume::Init(int width, int height, int depth) {
 
 
 Volume& Volume::Init(int width, int height, int depth, double default_value) {
+	ASSERT(width > 0 && height > 0 && depth > 0);
 	if (!owned_weights) {
 		owned_weights = true;
 		weights = new VolumeData<double>();

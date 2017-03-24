@@ -28,30 +28,25 @@ struct Cost {
 
 class CharGen : public WithMainLayout<TopWindow> {
 	
-	ReinforceRowPluck rowPluck;
-	
-	RNN rnn;
-	LSTM lstm;
-	Solver solver;
+	//RNN rnn;
+	//LSTM lstm;
+	//Solver solver;
 	VectorMap<int, int> letterToIndex;
 	VectorMap<int, int> indexToLetter;
 	Vector<WString> vocab;
 	Vector<WString> data_sents;
 	Vector<double> ppl_list;
 	Vector<int> hidden_sizes;
-	ModelVector model;
+	Vector<int> sequence;
+	//ModelVector model;
+	RecurrentSession ses;
 	Volume logprobs;
 	String model_str;
-	String generator;
-	double regc;
-	double clipval;
 	double sample_softmax_temperature;
 	int input_size;
 	int output_size;
 	int epoch_size;
-	int letter_size;
 	int tick_iter;
-	int max_chars_gen;
 	bool running, stopped;
 	
 public:
@@ -73,14 +68,12 @@ public:
 	void LoadPretrained();
 	void Pause();
 	void InitVocab(Vector<WString>& sents, int count_threshold);
-	void UtilAddToModel(LSTMModel& modelto, LSTMModel& modelfrom);
-	ModelVector InitModel();
-	CellMemory ForwardIndex(Graph& G, ModelVector& model, int ix, CellMemory& prev);
-	WString PredictSentence(ModelVector& model, bool samplei=false, double temperature=1.0);
-	Cost CostFun(ModelVector& model, const WString& sent);
+	//ModelVector InitModel();
+	//CellMemory ForwardIndex(Graph& G, ModelVector& model, int ix, CellMemory* prev);
+	WString PredictSentence(bool samplei=false, double temperature=1.0);
 	double Median(Vector<double>& values);
 	void Tick();
-	void GradCheck();
+	//void GradCheck();
 };
 
 #endif

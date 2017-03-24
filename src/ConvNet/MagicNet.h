@@ -24,10 +24,6 @@ protected:
 	// history of all candidates that were fully evaluated on all folds
 	Array<Session> evaluated_candidates;
 	
-	// used utilities, make explicit local references
-	//var weightedSample = global.weightedSample;
-	//var arrUnique = global.arrUnique;
-	
 	double train_ratio;
 	int num_folds;
 	int num_candidates;

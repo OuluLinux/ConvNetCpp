@@ -1,6 +1,8 @@
 #ifndef _ConvNet_Agent_h_
 #define _ConvNet_Agent_h_
 
+#include "Recurrent.h"
+
 namespace ConvNet {
 
 enum {ACT_LEFT, ACT_UP, ACT_RIGHT, ACT_DOWN, ACT_IN, ACT_OUT, ACT_IDLE};

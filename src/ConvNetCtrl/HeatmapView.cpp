@@ -93,7 +93,7 @@ void HeatmapView::PaintGraph(Draw& d) {
 	int y3 = y + txt_sz.cy + 2;
 	
 	for(int i = 1; i < layer_count; i++) {
-		ReinforceBase& lb = graph->GetLayer(i);
+		RecurrentBase& lb = graph->GetLayer(i);
 		if (!lb.input1) continue;
 		
 		// Last volume in first layer is input, which might be invalid pointer

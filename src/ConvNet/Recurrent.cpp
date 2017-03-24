@@ -2,205 +2,156 @@
 
 namespace ConvNet {
 
-LSTM::LSTM() {
-	
+
+
+double sig(double x) {
+	// helper function for computing sigmoid
+	return 1.0 / (1.0 + exp(-x));
+}
+
+RecurrentBase::RecurrentBase() {
+	input1 = NULL;
+	input2 = NULL;
+}
+
+RecurrentBase::RecurrentBase(Volume& input) {
+	input1 = &input;
+	input2 = NULL;
+}
+
+RecurrentBase::RecurrentBase(Volume& input1, Volume& input2) {
+	this->input1 = &input1;
+	this->input2 = &input2;
+}
+
+RecurrentBase::~RecurrentBase() {
 	
 }
 
+Volume& RecurrentBase::Forward(Volume& input) {
+	input1 = &input;
+	input2 = NULL;
+	return Forward();
+}
 
-ModelVector LSTM::Init(int input_size, Vector<int>& hidden_sizes, int output_size) {
-	// hidden size should be a list
+Volume& RecurrentBase::Forward(Volume& input1, Volume& input2) {
+	this->input1 = &input1;
+	this->input2 = &input2;
+	return Forward();
+}
+
+
+
+
+
+
+
+
+
+Volume& RecurrentRowPluck::Forward() {
+	Volume& input = *input1;
 	
-	ModelVector vec;
-	vec.model.SetCount(hidden_sizes.GetCount());
+	// pluck a row of input with index ix and return it as col vector
+	ASSERT(*ix >= 0 && *ix < input.GetLength());
+	int w = input.GetWidth();
 	
-	int hidden_size = 0;
-	for (int d = 0; d < hidden_sizes.GetCount(); d++) { // loop over depths
-		LSTMModel& m = vec.model[d];
-		
-		int prev_size = d == 0 ? input_size : hidden_sizes[d - 1];
-		hidden_size = hidden_sizes[d];
-		
-		// gates parametersforward
-		m.Wix	= RandVolume(hidden_size, prev_size , 0, 0.08);
-		m.Wih	= RandVolume(hidden_size, hidden_size , 0, 0.08);
-		m.bi	= Volume(hidden_size, 1);
-		m.Wfx	= RandVolume(hidden_size, prev_size , 0, 0.08);
-		m.Wfh	= RandVolume(hidden_size, hidden_size , 0, 0.08);
-		m.bf	= Volume(hidden_size, 1);
-		m.Wox	= RandVolume(hidden_size, prev_size , 0, 0.08);
-		m.Woh	= RandVolume(hidden_size, hidden_size , 0, 0.08);
-		m.bo	= Volume(hidden_size, 1);
-		
-		// cell write params
-		m.Wcx	= RandVolume(hidden_size, prev_size , 0, 0.08);
-		m.Wch	= RandVolume(hidden_size, hidden_size , 0, 0.08);
-		m.bc	= Volume(hidden_size, 1);
+	output.Init(1, w, 1, 0);
+	for (int i = 0, h = w; i < h; i++) {
+		output.Set(0, i, 0, input.Get(i, *ix, 0)); // copy over the data
+	}
+	return output;
+}
+
+void RecurrentRowPluck::Backward() {
+	int w = input1->GetWidth();
+	
+	for (int i = 0; i < w; i++) {
+		input1->AddGradient(i, *ix, 0, output.GetGradient(0, i, 0));
+	}
+}
+
+
+
+
+
+
+
+Volume& RecurrentTanh::Forward() {
+	Volume& input = *input1;
+	
+	// tanh nonlinearity
+	output.Init(input.GetWidth(), input.GetHeight(), input.GetDepth(), 0.0);
+	int n = input.GetLength();
+	for (int i = 0; i < n; i++) {
+		output.Set(i, tanh(input.Get(i)));
 	}
 	
-	// decoder params
-	vec.Whd	= RandVolume(output_size, hidden_size, 0, 0.08);
-	vec.bd	= Volume(output_size, 1);
-	
-	return vec;
+	return output;
 }
 
-CellMemory LSTM::Forward(const Graph& G, ModelVector& vec, const Vector<int>& hidden_sizes, Volume& x, CellMemory* prev) {
-	// forward prop for a single tick of LSTM
-	// G is graph to append ops to
-	// model contains LSTM parameters
-	// x is 1D column vector with observation
-	// prev is a struct containing hidden and cell
-	// from previous iteration
-	
-	Vector<Volume> hidden_prevs;
-	Vector<Volume> cell_prevs;
-	
-	hidden_prevs.SetCount(hidden_sizes.GetCount());
-	cell_prevs.SetCount(hidden_sizes.GetCount());
-	
-	/*if (prev == null || typeof prev.h == 'undefined') {*/
-	for (int d = 0; d < hidden_sizes.GetCount(); d++) {
-		hidden_prevs[d].Init(hidden_sizes[d], 1, 1);
-		cell_prevs[d].Init(hidden_sizes[d], 1, 1);
+void RecurrentTanh::Backward() {
+	int n = input1->GetLength();
+	for (int i = 0; i < n; i++) {
+		// grad for z = Tanh(x) is (1 - z^2)
+		double mwi = output.Get(i);
+		double d = (1.0 - mwi * mwi) * output.GetGradient(i);
+		input1->AddGradient(i, d);
 	}
-	/*} else {
-		hidden_prevs <<= prev.h;
-		cell_prevs <<= prev.c;
-	}*/
-	Panic("TODO");
+}
+
+
+
+
+
+
+
+
+Volume& RecurrentSigmoid::Forward() {
+	Volume& input = *input1;
 	
-	
-	// return cell memory, hidden representation and output
-	CellMemory cm;
-	//return {'h':hidden, 'c':cell, 'o' : output};
-	
-	Vector<Volume>& hidden = cm.h;
-	Vector<Volume>& cell = cm.c;
-	for (int d = 0; d < hidden_sizes.GetCount(); d++) {
-		LSTMModel& m = vec.model[d];
-		
-		Volume& input_vector = d == 0 ? x : hidden[d-1];
-		Volume& hidden_prev = hidden_prevs[d];
-		Volume& cell_prev = cell_prevs[d];
-		
-		// input gate
-		Volume& h0 = mul(m.Wix, input_vector);
-		Volume& h1 = mul(m.Wih, hidden_prev);
-		Volume& input_gate = sigmoid(add(add(h0,h1), m.bi));
-		
-		// forget gate
-		Volume& h2 = mul(m.Wfx, input_vector);
-		Volume& h3 = mul(m.Wfh, hidden_prev);
-		Volume& forget_gate = sigmoid(add(add(h2, h3), m.bf));
-		
-		// output gate
-		Volume& h4 = mul(m.Wox, input_vector);
-		Volume& h5 = mul(m.Woh, hidden_prev);
-		Volume& output_gate = sigmoid(add(add(h4, h5), m.bo));
-		
-		// write operation on cells
-		Volume& h6 = mul(m.Wcx, input_vector);
-		Volume& h7 = mul(m.Wch, hidden_prev);
-		Volume& cell_write = tanh(add(add(h6, h7), m.bc));
-		
-		// compute new cell activation
-		Volume& retain_cell = eltmul(forget_gate, cell_prev); // what do we keep from cell
-		Volume& write_cell = eltmul(input_gate, cell_write); // what do we write to cell
-		Volume& cell_d = add(retain_cell, write_cell); // new cell contents
-		
-		// compute hidden state as gated, saturated cell activations
-		Volume& hidden_d = eltmul(output_gate, tanh(cell_d));
-		
-		hidden.Add(hidden_d);
-		cell.Add(cell_d);
+	// sigmoid nonlinearity
+	output.Init(input);
+	int n = input.GetLength();
+	for (int i = 0; i < n; i++) {
+		output.Set(i, sig(input.Get(i)));
 	}
 	
-	// one decoder to outputs at end
-	Volume& output = add(mul(vec.Whd, hidden.Top()), vec.bd);
-	cm.o = output;
-	
-	return cm;
+	return output;
 }
 
-
-
-
-
-
-
-
-
-
-
-RNN::RNN() {
-	
-}
-
-ModelVector RNN::Init(int input_size, Vector<int>& hidden_sizes, int output_size) {
-	ModelVector model;
-	
-	// hidden size should be a list
-	int hidden_size;
-	
-	// loop over depths
-	for (int d = 0; d < hidden_sizes.GetCount(); d++) {
-		int prev_size = d == 0 ? input_size : hidden_sizes[d - 1];
-		hidden_size = hidden_sizes[d];
-		LSTMModel& m = model.model[d];
-		m.Wxh = RandVolume(hidden_size, prev_size , 0, 0.08);
-		m.Whh = RandVolume(hidden_size, hidden_size, 0, 0.08);
-		m.bhh.Init(hidden_size, 1, 1);
+void RecurrentSigmoid::Backward() {
+	int n = input1->GetLength();
+	for (int i = 0; i < n; i++) {
+		// grad for z = Tanh(x) is (1 - z^2)
+		double mwi = output.Get(i);
+		input1->AddGradient(i, mwi * (1.0 - mwi) * output.GetGradient(i));
 	}
-	// decoder params
-	model.Whd = RandVolume(output_size, hidden_size, 0, 0.08);
-	model.bd.Init(output_size, 1, 1);
-	
-	return model;
 }
 
-CellMemory RNN::Forward(const Graph& G, ModelVector& model, const Vector<int>& hidden_sizes, Volume& x, CellMemory* prev) {
-	CellMemory cm;
+
+
+
+
+
+
+
+Volume& RecurrentRelu::Forward() {
+	Volume& input = *input1;
 	
-	// forward prop for a single tick of RNN
-	// G is graph to append ops to
-	// model contains RNN parameters
-	// x is 1D column vector with observation
-	// prev is a struct containing hidden activations from last step
-	
-	Vector<Volume> hidden_prevs_;
-	Vector<Volume>* hidden_prevs;
-	
-	if (prev == NULL) {
-		hidden_prevs = &hidden_prevs_;
-		hidden_prevs_.Clear();
-		for (int d = 0; d < hidden_sizes.GetCount(); d++) {
-			hidden_prevs_.Add().Init(hidden_sizes[d], 1, 1);
-		}
-	} else {
-		hidden_prevs = &prev->h;
+	output.Init(input);
+	int n = input.GetLength();
+	for (int i = 0; i < n; i++) {
+		output.Set(i, max(0.0, input.Get(i))); // relu
 	}
 	
-	Vector<Volume>& hidden = cm.h;
-	
-	for (int d = 0; d < hidden_sizes.GetCount(); d++) {
-		LSTMModel& m = model.model[d];
-		
-		Volume& input_vector = d == 0 ? x : hidden[d-1];
-		Volume& hidden_prev = (*hidden_prevs)[d];
-		
-		Volume& h0 = mul(m.Wxh, input_vector);
-		Volume& h1 = mul(m.Whh, hidden_prev);
-		Volume& hidden_d = relu(add2(add1(h0, h1), m.bhh));
-		
-		hidden.Add(hidden_d);
+	return output;
+}
+
+void RecurrentRelu::Backward() {
+	int n = input1->GetLength();
+	for (int i = 0; i < n; i++) {
+		input1->AddGradient(i, input1->Get(i) > 0 ? output.GetGradient(i) : 0.0);
 	}
-	
-	// one decoder to outputs at end
-	cm.o = add1(mul(model.Whd, hidden[hidden.GetCount() - 1]), model.bd);
-	
-	// return cell memory, hidden representation and output
-	return cm;
 }
 
 
@@ -210,57 +161,325 @@ CellMemory RNN::Forward(const Graph& G, ModelVector& model, const Vector<int>& h
 
 
 
-
-
-
-
-
-
-Solver::Solver() {
-	decay_rate = 0.999;
-	smooth_eps = 1e-8;
-}
-
-SolverStat Solver::Step(Vector<Volume>& model, int step_size, int regc, int clipval) {
-	// perform parameter update
-	SolverStat solver_stats;
-	int num_clipped = 0;
-	int num_tot = 0;
-	for(int k = 0; k < model.GetCount(); k++) {
+Volume& RecurrentMul::Forward() {
+	Volume& input1 = *this->input1;
+	Volume& input2 = *this->input2;
+	
+	// multiply matrices input1 * input2
+	ASSERT_(input1.GetWidth() == input2.GetHeight(), "matmul dimensions misaligned");
+	
+	int h = input1.GetHeight();
+	int w = input2.GetWidth();
+	output.Init(w, h, 1, 0);
+	
+	// loop over rows of input1
+	for (int i = 0; i < h; i++) {
 		
-		Volume& m = model[k]; // mat ref
-		if (k == step_cache.GetCount()) {
-			step_cache.Add().Init(m.GetWidth(), m.GetHeight(), m.GetDepth(), 0);
-		}
-		else {ASSERT(k < step_cache.GetCount());}
-		
-		Volume& s = step_cache[k];
-		for (int i = 0; i < m.GetLength(); i++) {
+		// loop over cols of input2
+		for (int j = 0; j < w; j++) {
 			
-			// rmsprop adaptive learning rate
-			double mdwi = m.GetGradient(i);
-			s.Set(i, s.Get(i) * decay_rate + (1.0 - decay_rate) * mdwi * mdwi);
-			
-			// gradient clip
-			if (mdwi > clipval) {
-				mdwi = clipval;
-				num_clipped++;
+			// dot product loop
+			double dot = 0.0;
+			for (int k = 0; k < input1.GetWidth(); k++) {
+				dot += input1.Get(k, i, 0) * input2.Get(j, k, 0);
 			}
-			if (mdwi < -clipval) {
-				mdwi = -clipval;
-				num_clipped++;
-			}
-			num_tot++;
-			
-			// update (and regularize)
-			m.Add(i, - step_size * mdwi / sqrt(s.Get(i) + smooth_eps) - regc * m.Get(i));
-			m.SetGradient(i, 0); // reset gradients for next iteration
+			output.Set(j, i, 0, dot);
 		}
-		
 	}
-	solver_stats.ratio_clipped = num_clipped * 1.0 / num_tot;
-	return solver_stats;
+	return output;
 }
+
+void RecurrentMul::Backward() {
+	
+	// loop over rows of m1
+	for (int i = 0; i < input1->GetHeight(); i++) {
+		
+		// loop over cols of m2
+		for (int j = 0; j < input2->GetWidth(); j++) {
+			
+			// dot product loop
+			for (int k = 0; k < input1->GetWidth(); k++) {
+				double b = output.GetGradient(j, i, 0);
+				input1->AddGradient(k, i, 0, input2->Get(j, k, 0) * b);
+				input2->AddGradient(j, k, 0, input1->Get(k, i, 0) * b);
+			}
+		}
+	}
+}
+
+
+
+
+
+
+
+
+Volume& RecurrentAdd::Forward() {
+	Volume& input1 = *this->input1;
+	Volume& input2 = *this->input2;
+	
+	ASSERT(input1.GetLength() == input2.GetLength());
+	
+	output.Init(input1);
+	for (int i = 0; i < input1.GetLength(); i++) {
+		output.Set(i, input1.Get(i) + input2.Get(i));
+	}
+	
+	return output;
+}
+
+void RecurrentAdd::Backward() {
+	for (int i = 0; i < input1->GetLength(); i++) {
+		input1->AddGradient(i, output.GetGradient(i));
+		input2->AddGradient(i, output.GetGradient(i));
+	}
+}
+
+
+
+
+
+
+
+
+
+Volume& RecurrentDot::Forward() {
+	Volume& input1 = *this->input1;
+	Volume& input2 = *this->input2;
+	
+	// input1 and input2 are both column vectors
+	ASSERT(input1.GetLength() == input2.GetLength());
+	
+	output.Init(1, 1, 1, 0);
+	
+	double dot = 0.0;
+	for (int i = 0; i < input1.GetLength(); i++) {
+		dot += input1.Get(i) * input2.Get(i);
+	}
+	
+	output.Set(0, dot);
+	return output;
+}
+
+void RecurrentDot::Backward() {
+	for (int i = 0; i < input1->GetLength(); i++) {
+		input1->AddGradient(i, input2->Get(i) * output.GetGradient(0));
+		input2->AddGradient(i, input1->Get(i) * output.GetGradient(0));
+	}
+}
+
+
+
+
+
+
+
+
+Volume& RecurrentEltMul::Forward() {
+	Volume& input1 = *this->input1;
+	Volume& input2 = *this->input2;
+	
+	ASSERT(input1.GetLength() == input2.GetLength());
+	ASSERT(input1.GetLength() > 0);
+	
+	output.Init(input1);
+	
+	for (int i = 0; i < input1.GetLength(); i++) {
+		output.Set(i, input1.Get(i) * input2.Get(i));
+	}
+	
+	return output;
+}
+
+void RecurrentEltMul::Backward() {
+	for (int i = 0; i < input1->GetLength(); i++) {
+		input1->AddGradient(i, input2->Get(i) * output.GetGradient(i));
+		input2->AddGradient(i, input1->Get(i) * output.GetGradient(i));
+	}
+}
+
+
+
+
+Volume& RecurrentCopy::Forward() {
+	*input2 = *input1;
+	return *input2;
+}
+
+void RecurrentCopy::Backward() {
+	*input1 = *input2;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+Graph::Graph() {
+	
+}
+
+Graph::~Graph() {
+	Clear();
+}
+
+void Graph::Clear() {
+	while (layers.GetCount()) {
+		RecurrentBase* l = layers[0];
+		layers.Remove(0);
+		extra_args.Remove(0);
+		delete l;
+	}
+}
+
+Volume& Graph::Forward(Volume& input) {
+	Volume* v = &input;
+	for (int i = 0; i < layers.GetCount(); i++) {
+		RecurrentBase& b = *layers[i];
+		int args = b.GetArgCount();
+		if (args == 1) {
+			v = &b.Forward(*v);
+		}
+		else {
+			v = &b.Forward(*extra_args[i], *v);
+		}
+	}
+	return *v;
+}
+
+void Graph::Backward() {
+	for (int i = layers.GetCount()-1; i >= 0; i--) {
+		layers[i]->Backward();
+	}
+}
+
+
+Volume& Graph::AddRowPluck(int* row) {
+	extra_args.Add(0);
+	return layers.Add(new RecurrentRowPluck(row))->output;
+}
+
+Volume& Graph::AddTanh() {
+	extra_args.Add(0);
+	return layers.Add(new RecurrentTanh())->output;
+}
+
+Volume& Graph::AddSigmoid() {
+	extra_args.Add(0);
+	return layers.Add(new RecurrentSigmoid())->output;
+}
+
+Volume& Graph::AddRelu() {
+	extra_args.Add(0);
+	return layers.Add(new RecurrentRelu())->output;
+}
+
+Volume& Graph::AddMul(Volume& multiplier) {
+	extra_args.Add(&multiplier);
+	return layers.Add(new RecurrentMul())->output;
+}
+
+Volume& Graph::AddAdd(Volume& addition) {
+	extra_args.Add(&addition);
+	return layers.Add(new RecurrentAdd())->output;
+}
+
+Volume& Graph::AddDot(Volume& v) {
+	extra_args.Add(&v);
+	return layers.Add(new RecurrentDot())->output;
+}
+
+Volume& Graph::AddEltMul(Volume& v) {
+	extra_args.Add(&v);
+	return layers.Add(new RecurrentEltMul())->output;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+GraphTree::GraphTree() {
+	
+}
+
+GraphTree::~GraphTree() {
+	Clear();
+}
+
+void GraphTree::Clear() {
+	while (layers.GetCount()) {
+		RecurrentBase* l = layers[0];
+		layers.Remove(0);
+		delete l;
+	}
+}
+
+Volume& GraphTree::Forward() {
+	Volume* v = 0;
+	for (int i = 0; i < layers.GetCount(); i++) {
+		v = &layers[i]->Forward();
+	}
+	return *v;
+}
+
+void GraphTree::Backward() {
+	for (int i = layers.GetCount()-1; i >= 0; i--) {
+		layers[i]->Backward();
+	}
+}
+
+Volume& GraphTree::AddRowPluck(int* row, Volume& in) {
+	return layers.Add(new RecurrentRowPluck(row, in))->output;
+}
+
+Volume& GraphTree::AddTanh(Volume& in) {
+	return layers.Add(new RecurrentTanh(in))->output;
+}
+
+Volume& GraphTree::AddSigmoid(Volume& in) {
+	return layers.Add(new RecurrentSigmoid(in))->output;
+}
+
+Volume& GraphTree::AddRelu(Volume& in) {
+	return layers.Add(new RecurrentRelu(in))->output;
+}
+
+Volume& GraphTree::AddMul(Volume& in1, Volume& in2) {
+	return layers.Add(new RecurrentMul(in1, in2))->output;
+}
+
+Volume& GraphTree::AddAdd(Volume& in1, Volume& in2) {
+	return layers.Add(new RecurrentAdd(in1, in2))->output;
+}
+
+Volume& GraphTree::AddDot(Volume& in1, Volume& in2) {
+	return layers.Add(new RecurrentDot(in1, in2))->output;
+}
+
+Volume& GraphTree::AddEltMul(Volume& in1, Volume& in2) {
+	return layers.Add(new RecurrentEltMul(in1, in2))->output;
+}
+
+Volume& GraphTree::AddCopy(Volume& src, Volume& dst) {
+	return layers.Add(new RecurrentCopy(src, dst))->output;
+}
+
+
 
 
 Volume Softmax(const Volume& m) {
@@ -290,3 +509,5 @@ Volume Softmax(const Volume& m) {
 }
 
 }
+
+
