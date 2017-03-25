@@ -221,15 +221,6 @@ struct LSTMModel : Moveable<LSTMModel> {
 	// LSTM
 	Volume Wix, Wih, bi, Wfx, Wfh, bf, Wox, Woh, bo, Wcx, Wch, bc;
 	
-	LSTMModel() {
-		
-	}
-	
-	LSTMModel& operator=(const LSTMModel& m) {
-		Panic("TODO");
-		return *this;
-	}
-	
 	static int GetCount() {return 12;}
 	Volume& GetVolume(int i) {
 		ASSERT(i >= 0 && i < 12);
@@ -255,15 +246,6 @@ struct RNNModel : Moveable<RNNModel> {
 	
 	// RNN
 	Volume Wxh, Whh, bhh;
-	
-	RNNModel() {
-		
-	}
-	
-	RNNModel& operator=(const LSTMModel& m) {
-		Panic("TODO");
-		return *this;
-	}
 	
 	static int GetCount() {return 3;}
 	Volume& GetVolume(int i) {

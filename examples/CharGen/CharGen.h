@@ -27,10 +27,6 @@ struct Cost {
 };
 
 class CharGen : public WithMainLayout<TopWindow> {
-	
-	//RNN rnn;
-	//LSTM lstm;
-	//Solver solver;
 	VectorMap<int, int> letterToIndex;
 	VectorMap<int, int> indexToLetter;
 	Vector<WString> vocab;
@@ -38,16 +34,16 @@ class CharGen : public WithMainLayout<TopWindow> {
 	Vector<double> ppl_list;
 	Vector<int> hidden_sizes;
 	Vector<int> sequence;
-	//ModelVector model;
 	RecurrentSession ses;
 	Volume logprobs;
 	String model_str;
+	SpinLock lock;
 	double sample_softmax_temperature;
 	int input_size;
 	int output_size;
 	int epoch_size;
 	int tick_iter;
-	bool running, stopped;
+	bool running, stopped, paused;
 	
 public:
 	typedef CharGen CLASSNAME;
@@ -57,23 +53,25 @@ public:
 	void Start();
 	void Stop();
 	void Ticking();
-	void Reset(bool init_reward, bool start);
+	void Reset();
 	void Reload();
-	void Refresher();
 	
 	void SetLearningRate();
 	void SetSampleTemperature();
 	void Save();
 	void Load();
 	void LoadPretrained();
+	void LoadJSON(const String& json);
+	void StoreJSON(String& json);
 	void Pause();
+	void Resume();
 	void InitVocab(Vector<WString>& sents, int count_threshold);
-	//ModelVector InitModel();
-	//CellMemory ForwardIndex(Graph& G, ModelVector& model, int ix, CellMemory* prev);
 	WString PredictSentence(bool samplei=false, double temperature=1.0);
 	double Median(Vector<double>& values);
 	void Tick();
-	//void GradCheck();
+	void SetSamples(WString s) {samples.SetData(s);}
+	void SetArgMaxSample(WString s) {argmaxpred.SetData(s);}
+	void SetStats(double epoch, double ppl, int time);
 };
 
 #endif

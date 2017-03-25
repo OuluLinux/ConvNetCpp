@@ -1100,20 +1100,4 @@ double DQNAgent::LearnFromTuple(Volume& s0, int a0, double reward0, Volume& s1, 
 	return tderror;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

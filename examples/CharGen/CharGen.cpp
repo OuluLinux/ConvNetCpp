@@ -2,22 +2,6 @@
 #include "CharGen.brc"
 #include <plugin/bz2/bz2.h>
 
-
-
-/*
-
-// model parameters
-generator = 'lstm'; // can be 'rnn' or 'lstm'
-hidden_sizes = [20,20]; // list of sizes of hidden layers
-letter_size = 5; // size of letter embeddings
-
-// optimization
-regc = 0.000001; // L2 regularization strength
-learning_rate = 0.01; // learning rate
-clipval = 5.0; // clip gradients at this value
-  
- */
- 
 CharGen::CharGen() {
 	Title("Character Generation Demo");
 	Icon(CharGenImg::icon());
@@ -28,14 +12,19 @@ CharGen::CharGen() {
 	
 	running = false;
 	stopped = true;
+	paused = false;
 	
 	model_str = "{\n"
-			"\t\"generator\":\"lstm\",\n"
-			"\t\"hidden_sizes\":[20,20],\n"
-			"\t\"letter_size\":5,\n"
-			"\t\"regc\":0.000001,\n"
-			"\t\"learning_rate\":0.01,\n"
-			"\t\"clipval\":5.0\n"
+	
+			// model parameters
+			"\t\"generator\":\"lstm\",\n" // can be 'rnn' or 'lstm'
+			"\t\"hidden_sizes\":[20,20],\n" // list of sizes of hidden layers
+			"\t\"letter_size\":5,\n" // size of letter embeddings
+			
+			// optimization
+			"\t\"regc\":0.000001,\n" // L2 regularization strength
+			"\t\"learning_rate\":0.01,\n" // learning rate
+			"\t\"clipval\":5.0\n" // clip gradients at this value
 			"}";
 	
 	input.SetData(input_str);
@@ -48,10 +37,12 @@ CharGen::CharGen() {
 	temp.MinMax(10, 900);
 	temp.SetData(100);
 	temp <<= THISBACK(SetSampleTemperature);
+	restart <<= THISBACK(Reset);
 	save <<= THISBACK(Save);
 	load <<= THISBACK(Load);
 	load_pretrained <<= THISBACK(LoadPretrained);
 	pause <<= THISBACK(Pause);
+	resume <<= THISBACK(Resume);
 	
 	CtrlLayout(*this);
 	
@@ -66,7 +57,6 @@ CharGen::CharGen() {
 	output_size = -1;
 	
 	PostCallback(THISBACK(Reload));
-	//PostCallback(THISBACK(LoadPretrained));
 	PostCallback(THISBACK(Start));
 }
 
@@ -89,19 +79,21 @@ void CharGen::Stop() {
 void CharGen::Ticking() {
 	while (running) {
 		Tick();
+		while (running && paused) Sleep(100);
 	}
 	stopped = true;
 }
 
-void CharGen::Reset(bool init_reward, bool start) {
-	
+void CharGen::Reset() {
+	Stop();
+	Reload();
+	Start();
 }
 
 void CharGen::Reload() {
 	// note: reinit writes global vars
 	
 	perp.Clear();
-	
 	tick_iter = 0;
 	
 	// process the input, filter out blanks
@@ -117,77 +109,164 @@ void CharGen::Reload() {
 	InitVocab(data_sents, 1); // takes count threshold for characters
 	
 	// eval options to set some globals
-	ses.LoadJSON(model_edit.GetData());
+	ValueMap js = ParseJSON((String)model_edit.GetData());
+	LOG((String)model_edit.GetData());
+	ses.Load(js);
 	ses.SetInputSize(input_size);
 	ses.SetOutputSize(output_size);
 	ses.Init();
 	
 	learning_rate_slider.SetData(ses.GetLearningRate() / 0.00001);
-}
-
-void CharGen::Refresher() {
-	
+	SetLearningRate();
 }
 
 void CharGen::SetLearningRate() {
-	
+	double value = learning_rate_slider.GetData();
+	value *= 0.00001;
+	ses.SetLearningRate(value);
+	lbl_learning_rate.SetLabel(FormatDoubleFix(value, 5, FD_ZEROS));
 }
 
 void CharGen::SetSampleTemperature() {
-	
+	double value = temp.GetData();
+	value *= 0.01;
+	sample_softmax_temperature = value;
+	lbl_temp.SetLabel(FormatDoubleFix(value, 2, FD_ZEROS));
 }
 
 void CharGen::Save() {
+	String file = SelectFileSaveAs("JSON files\t*.json\nAll files\t*.*");
+	if (file.IsEmpty()) return;
 	
+	// Save json
+	String json;
+	StoreJSON(json);
+	
+	FileOut fout(file);
+	if (!fout.IsOpen()) {
+		PromptOK("Error: could not open file " + file);
+		return;
+	}
+	fout << json;
 }
 
 void CharGen::Load() {
+	String file = SelectFileOpen("JSON files\t*.json\nAll files\t*.*");
+	if (file.IsEmpty()) return;
 	
+	if (!FileExists(file)) {
+		PromptOK("File does not exists");
+		return;
+	}
+	
+	// Load json
+	String json = LoadFile(file);
+	if (json.IsEmpty()) {
+		PromptOK("File is empty");
+		return;
+	}
+	
+	LoadJSON(json);
 }
 
 void CharGen::LoadPretrained() {
 	Stop();
-	
 	MemReadStream pretrained_mem(pretrained, pretrained_length);
 	String pretrained_str = BZ2Decompress(pretrained_mem);
+	LoadJSON(pretrained_str);
+}
+
+void CharGen::LoadJSON(const String& json) {
+	Stop();
 	
-	ses.LoadJSON(pretrained_str);
-	ses.SetInputSize(input_size);
-	ses.SetOutputSize(output_size);
-	ses.Init();
-	ses.LoadJSON(pretrained_str);
+	{
+		ValueMap map = ParseJSON(json);
+		
+		ses.Load(map);
+		ses.SetInputSize(input_size);
+		ses.SetOutputSize(output_size);
+		ses.InitGraphs();
+		
+		letterToIndex.Clear();
+		indexToLetter.Clear();
+		vocab.Clear();
+		
+		ValueMap l2i = map.GetAdd("letterToIndex");
+		for(int i = 0; i < l2i.GetCount(); i++) {
+			String k = l2i.GetKey(i);
+			int v = l2i.GetValue(i);
+			letterToIndex.Add(k.ToWString()[0], v);
+		}
 	
-	letterToIndex.Clear();
-	indexToLetter.Clear();
-	vocab.Clear();
-	
-	ValueMap map = ParseJSON(pretrained_str);
-	
-	ValueMap l2i = map.GetAdd("letterToIndex");
-	for(int i = 0; i < l2i.GetCount(); i++) {
-		String k = l2i.GetKey(i);
-		int v = l2i.GetValue(i);
-		letterToIndex.Add(k.ToWString()[0], v);
+		ValueMap i2l = map.GetAdd("indexToLetter");
+		int count = i2l.GetCount();
+		for(int i = 0; i < count; i++) {
+			String k = i2l.GetKey(i);
+			String v = i2l.GetValue(i);
+			indexToLetter.Add(StrInt(k), v.ToWString()[0]);
+		}
+		
+		ValueMap v = map.GetAdd("vocab");
+		for(int i = 0; i < v.GetCount(); i++) {
+			vocab.Add(String(v[i]).ToWString());
+		}
+		
+		perp.Clear();
+		tick_iter = 0;
+		learning_rate_slider.SetData(ses.GetLearningRate() / 0.00001);
+		SetLearningRate();
 	}
 	
-	ValueMap i2l = map.GetAdd("indexToLetter");
-	int count = i2l.GetCount();
-	for(int i = 0; i < count; i++) {
-		String k = i2l.GetKey(i);
-		String v = i2l.GetValue(i);
-		indexToLetter.Add(StrInt(k), v.ToWString()[0]);
-	}
+	Start();
+}
+
+void CharGen::StoreJSON(String& json) {
+	Stop();
 	
-	ValueMap v = map.GetAdd("vocab");
-	for(int i = 0; i < v.GetCount(); i++) {
-		vocab.Add(String(v[i]).ToWString());
+	{
+		ValueMap js;
+		
+		ses.Store(js);
+		
+		ValueMap l2i;
+		for(int i = 0; i < letterToIndex.GetCount(); i++) {
+			int k = letterToIndex.GetKey(i);
+			int v = letterToIndex[i];
+			WString ws;
+			ws.Cat(k);
+			l2i.Add(ws.ToString(), v);
+		}
+		js.GetAdd("letterToIndex") = l2i;
+	
+		ValueMap i2l;
+		int count = indexToLetter.GetCount();
+		for(int i = 0; i < count; i++) {
+			int k = indexToLetter.GetKey(i);
+			int v = indexToLetter[i];
+			WString ws;
+			ws.Cat(v);
+			i2l.Add(IntStr(k), ws.ToString());
+		}
+		js.GetAdd("indexToLetter") = i2l;
+		
+		ValueMap v;
+		for(int i = 0; i < vocab.GetCount(); i++) {
+			v.Add(IntStr(i), vocab[i].ToString());
+		}
+		js.GetAdd("vocab") = v;
+		
+		json = FixJsonComma(AsJSON(js, true));
 	}
 	
 	Start();
 }
 
 void CharGen::Pause() {
-	
+	paused = true;
+}
+
+void CharGen::Resume() {
+	paused = false;
 }
 
 void CharGen::InitVocab(Vector<WString>& sents, int count_threshold) {
@@ -216,9 +295,6 @@ void CharGen::InitVocab(Vector<WString>& sents, int count_threshold) {
 			// add character to vocab
 			letterToIndex.Add(ch, q);
 			indexToLetter.Add(q, ch);
-			/*WString ws;
-			ws.Cat(ch);
-			vocab.Add(ws);*/
 			vocab.Add().Cat(ch);
 			q++;
 		}
@@ -259,8 +335,6 @@ void CharGen::Tick() {
 	// sample sentence fromd data
 	int sentix = Random(data_sents.GetCount());
 	const WString& sent = data_sents[sentix];
-	LOG(sent.ToString());
-	
 	
 	sequence.SetCount(sent.GetCount());
 	for(int i = 0; i < sent.GetCount(); i++) {
@@ -276,6 +350,7 @@ void CharGen::Tick() {
 	
 	// evaluate now and then
 	tick_iter += 1;
+	
 	if (tick_iter % 50 == 0) {
 		// draw samples
 		WString samples;
@@ -284,21 +359,16 @@ void CharGen::Tick() {
 			samples += PredictSentence(true, sample_softmax_temperature);
 		}
 		
-		GuiLock __;
-		this->samples.SetData(samples);
+		PostCallback(THISBACK1(SetSamples, samples));
 	}
 	if (tick_iter % 10 == 0) {
 		// draw argmax prediction
 		WString pred = PredictSentence(false);
-		LOG("Predicted: " << pred);
 		
-		GuiLock __;
-		argmaxpred.SetData(pred);
+		PostCallback(THISBACK1(SetArgMaxSample, pred));
 		
 		// keep track of perplexity
-		lbl_epoch.SetLabel("epoch: " + FormatDoubleFix((double)tick_iter/epoch_size, 2));
-		lbl_perp.SetLabel("perplexity: " + FormatDoubleFix(ppl, 2));
-		lbl_time.SetLabel("forw/bwd time per example: " + FormatDoubleFix(tick_time, 1) + "ms");
+		PostCallback(THISBACK3(SetStats, (double)tick_iter/epoch_size, ppl, tick_time));
 		
 		if (tick_iter % 100 == 0) {
 			double median_ppl = Median(ppl_list);
@@ -306,4 +376,10 @@ void CharGen::Tick() {
 			perp.AddValue(median_ppl);
 		}
 	}
+}
+
+void CharGen::SetStats(double epoch, double ppl, int time) {
+	lbl_epoch.SetLabel("epoch: " + FormatDoubleFix(epoch, 2, FD_ZEROS));
+	lbl_perp.SetLabel("perplexity: " + FormatDoubleFix(ppl, 2, FD_ZEROS));
+	lbl_time.SetLabel("forw/bwd time per example: " + FormatDoubleFix(time, 1) + "ms");
 }

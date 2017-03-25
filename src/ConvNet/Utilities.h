@@ -283,6 +283,32 @@ public:
 
 void RandomPermutation(int n, Vector<int>& array);
 
+inline String FixJsonComma(const String& json) {
+	// HOTFIX: Bug in older U++: test if json puts , instead of .
+	String s = Format("%.16g", 7.56);
+	if (s.Find(",") != -1) {
+		String fix_tmp;
+		
+		char prev = json[0];
+		fix_tmp.Cat(prev);
+		
+		int count = json.GetCount()-1;
+		for(int i = 1; i < count; i++) {
+			char cur = json[i];
+			char next = json[i+1];
+			if (cur == ',' && IsDigit(prev) && IsDigit(next))
+				fix_tmp.Cat('.');
+			else
+				fix_tmp.Cat(cur);
+			prev = cur;
+		}
+		fix_tmp.Cat(json[count]);
+		
+		return fix_tmp;
+	}
+	return json;
+}
+
 }
 
 

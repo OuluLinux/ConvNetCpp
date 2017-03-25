@@ -74,8 +74,6 @@ Volume& RecurrentSession::GetVolume(int i) {
 }
 
 void RecurrentSession::Init() {
-	step_cache.Clear();
-	
 	ASSERT_(input_size != -1, "Input size must be set");
 	ASSERT_(output_size != -1, "Output size must be set");
 	
@@ -89,6 +87,13 @@ void RecurrentSession::Init() {
 	}
 	else Panic("Invalid RecurrentSession mode");
 	
+	InitGraphs();
+}
+
+void RecurrentSession::InitGraphs() {
+	ASSERT(mode == MODE_RNN || mode == MODE_LSTM);
+	
+	step_cache.Clear();
 	int hidden_count = hidden_sizes.GetCount();
 	ASSERT_(hidden_count > 0, "Hidden sizes must be set");
 	
@@ -116,8 +121,6 @@ void RecurrentSession::Init() {
 				InitLSTM(i, j, hidden_graphs[j]);
 		}
 	}
-	
-	
 }
 
 void RecurrentSession::InitRNN() {
@@ -162,9 +165,7 @@ void RecurrentSession::InitRNN(int i, int j, GraphTree& g) {
 	
 	// one decoder to outputs at end
 	if (j == hidden_prevs.GetCount() - 1) {
-		GraphTree& og = g;// = output_graphs[i];
-		//og.Clear();
-		og.AddAdd(og.AddMul(Whd, hidden_nexts[j]), bd);
+		g.AddAdd(g.AddMul(Whd, hidden_nexts[j]), bd);
 	}
 }
 
@@ -257,9 +258,7 @@ void RecurrentSession::InitLSTM(int i, int j, GraphTree& g) {
 	
 	// one decoder to outputs at end
 	if (j == hidden_prevs.GetCount() - 1) {
-		GraphTree& og = g;//output_graphs[i];
-		//og.Clear();
-		og.AddAdd(og.AddMul(Whd, hidden_nexts[j]), bd);
+		g.AddAdd(g.AddMul(Whd, hidden_nexts[j]), bd);
 	}
 }
 
@@ -271,7 +270,9 @@ void RecurrentSession::Learn(const Vector<int>& input_sequence) {
 	
 	// Copy input sequence. Fixed index_sequence addresses are used in RowPluck.
 	int n = input_sequence.GetCount();
-	index_sequence[0] = 0;
+	
+	// start and end tokens are zeros
+	index_sequence[0] = 0; // first step: start with START token
 	for(int i = 0; i < n; i++)
 		index_sequence[i+1] = input_sequence[i]; // this value is used in the RowPluck
 	for(int i = n+1; i < index_sequence.GetCount(); i++)
@@ -280,8 +281,6 @@ void RecurrentSession::Learn(const Vector<int>& input_sequence) {
 	ResetPrevs();
 	
 	for(int i = 0; i <= n; i++) {
-		// start and end tokens are zeros
-		//int ix_source = index_sequence[i]; // first step: start with START token
 		int ix_target = i == n ? 0 : index_sequence[i+1]; // last step: end with END token
 		
 		Array<GraphTree>& list = graphs[i];
@@ -289,10 +288,7 @@ void RecurrentSession::Learn(const Vector<int>& input_sequence) {
 			list[j].Forward();
 		}
 		
-		//GraphTree& output_graph = output_graphs[i];
-		//Volume& logprobs = output_graph.Forward();
 		Volume& logprobs = list.Top().Top().output;
-		
 		Volume probs = Softmax(logprobs); // compute the softmax probabilities
 		
 		log2ppl += -log2(probs.Get(ix_target)); // accumulate base 2 log prob and do smoothing
@@ -340,7 +336,6 @@ void RecurrentSession::SolverStep() {
 		}
 		
 		for (int i = 0; i < m.GetLength(); i++) {
-			
 			// rmsprop adaptive learning rate
 			double mdwi = m.GetGradient(i);
 			s.Set(i, s.Get(i) * decay_rate + (1.0 - decay_rate) * mdwi * mdwi);
@@ -391,12 +386,6 @@ void RecurrentSession::Predict(Vector<int>& output_sequence, bool samplei, doubl
 	ResetPrevs();
 	
 	for (int i = 0; ; i++) {
-		// RNN tick
-		//int ix = i == 0 ? 0 : index_sequence[i-1];
-		
-		// Set index to variable what RowPluck reads
-		//index_sequence[i] = ix;
-		
 		Array<GraphTree>& list = graphs[i];
 		for(int j = 0; j < list.GetCount(); j++) {
 			GraphTree& g = list[j];
@@ -404,10 +393,7 @@ void RecurrentSession::Predict(Vector<int>& output_sequence, bool samplei, doubl
 		}
 		
 		// sample predicted letter
-		//GraphTree& output_graph = output_graphs[i];
-		//Volume logprobs = output_graph.Forward(); // not reference because of editing
 		Volume& logprobs = list.Top().Top().output;
-		
 		
 		if (temperature != 1.0 && samplei) {
 			// scale log probabilities by temperature and renormalize
@@ -421,7 +407,6 @@ void RecurrentSession::Predict(Vector<int>& output_sequence, bool samplei, doubl
 		
 		Volume probs = Softmax(logprobs);
 		
-		
 		int ix = 0;
 		if (samplei) {
 			ix = probs.GetSampledColumn();
@@ -433,13 +418,14 @@ void RecurrentSession::Predict(Vector<int>& output_sequence, bool samplei, doubl
 		if (i+1 >= max_graphs) break; // something is wrong
 		
 		output_sequence.Add(ix);
+		
+		// Set index to variable what RowPluck reads
 		index_sequence[i+1] = ix;
 	}
 }
 
-void RecurrentSession::LoadJSON(const String& json) {
-	ValueMap js = ParseJSON(json);
-	#define LOAD(x) if (js.Find(#x) != -1) x = js.GetAdd(#x);
+void RecurrentSession::Load(const ValueMap& js) {
+	#define LOAD(x) if (js.Find(#x) != -1) {x = js.GetValue(js.Find(#x));}
 	
 	String generator;
 	LOAD(generator);
@@ -447,7 +433,7 @@ void RecurrentSession::LoadJSON(const String& json) {
 	
 	if (js.Find("hidden_sizes") != -1) {
 		hidden_sizes.Clear();
-		ValueMap hs = js.GetAdd("hidden_sizes");
+		ValueMap hs = js.GetValue(js.Find("hidden_sizes"));
 		for(int i = 0; i < hs.GetCount(); i++)
 			hidden_sizes.Add(hs[i]);
 	}
@@ -458,9 +444,9 @@ void RecurrentSession::LoadJSON(const String& json) {
 	LOAD(clipval);
 	
 	if (js.Find("model") != -1) {
-		ValueMap model = js.GetAdd("model");
+		ValueMap model = js.GetValue(js.Find("model"));
 		
-		#define LOADVOL(x) {ValueMap map = model.GetAdd(#x); this->x.Load(map);}
+		#define LOADVOL(x) {ValueMap map = model.GetValue(model.Find(#x)); this->x.Load(map);}
 		LOADVOL(Wil);
 		LOADVOL(Whd);
 		LOADVOL(bd);
@@ -472,7 +458,7 @@ void RecurrentSession::LoadJSON(const String& json) {
 		
 		for(int i = 0; i < hidden_sizes.GetCount(); i++) {
 			if (mode == MODE_LSTM) {
-				#define LOADMODVOL(x) {ValueMap map = model.GetAdd(#x + IntStr(i)); lstm_model[i].x.Load(map);}
+				#define LOADMODVOL(x) {ValueMap map = model.GetValue(model.Find(#x + IntStr(i))); lstm_model[i].x.Load(map);}
 				LOADMODVOL(Wix);
 				LOADMODVOL(Wih);
 				LOADMODVOL(bi);
@@ -488,7 +474,7 @@ void RecurrentSession::LoadJSON(const String& json) {
 				#undef LOADMODVOL
 			}
 			else {
-				#define LOADMODVOL(x) {ValueMap map = model.GetAdd(#x + IntStr(i)); rnn_model[i].x.Load(map);}
+				#define LOADMODVOL(x) {ValueMap map = model.GetValue(model.Find(#x + IntStr(i))); rnn_model[i].x.Load(map);}
 				LOADMODVOL(Wxh);
 				LOADMODVOL(Whh);
 				LOADMODVOL(bhh);
@@ -497,6 +483,58 @@ void RecurrentSession::LoadJSON(const String& json) {
 		}
 	}
 	#undef LOAD
+}
+
+void RecurrentSession::Store(ValueMap& js) {
+	#define SAVE(x) js.GetAdd(#x) = x;
+	
+	String generator = mode == MODE_LSTM ? "lstm" : "rnn";
+	SAVE(generator);
+	
+	ValueMap hs;
+	for(int i = 0; i < hidden_sizes.GetCount(); i++)
+		hs.Add(IntStr(i), hidden_sizes[i]);
+	
+	SAVE(letter_size);
+	SAVE(regc);
+	SAVE(learning_rate);
+	SAVE(clipval);
+	
+	ValueMap model;
+	
+	#define SAVEVOL(x) {ValueMap map; this->x.Store(map); model.GetAdd(#x) = map;}
+	SAVEVOL(Wil);
+	SAVEVOL(Whd);
+	SAVEVOL(bd);
+	#undef SAVEVOL
+	
+	for(int i = 0; i < hidden_sizes.GetCount(); i++) {
+		if (mode == MODE_LSTM) {
+			#define SAVEMODVOL(x) {ValueMap map; lstm_model[i].x.Store(map); model.GetAdd(#x + IntStr(i)) = map;}
+			SAVEMODVOL(Wix);
+			SAVEMODVOL(Wih);
+			SAVEMODVOL(bi);
+			SAVEMODVOL(Wfx);
+			SAVEMODVOL(Wfh);
+			SAVEMODVOL(bf);
+			SAVEMODVOL(Wox);
+			SAVEMODVOL(Woh);
+			SAVEMODVOL(bo);
+			SAVEMODVOL(Wcx);
+			SAVEMODVOL(Wch);
+			SAVEMODVOL(bc);
+			#undef SAVEMODVOL
+		}
+		else {
+			#define SAVEMODVOL(x) {ValueMap map; rnn_model[i].x.Store(map); model.GetAdd(#x + IntStr(i)) = map;}
+			SAVEMODVOL(Wxh);
+			SAVEMODVOL(Whh);
+			SAVEMODVOL(bhh);
+			#undef SAVEMODVOL
+		}
+	}
+	
+	js.Add("model", model);
 }
 
 }

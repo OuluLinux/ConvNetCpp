@@ -73,7 +73,6 @@ public:
 	void SetReward(int x, int y, int d, double reward);
 	void SetReward(int s, double reward) {this->reward[s] = reward;}
 	void SetDisabled(int x, int y, int d, bool disable=true);
-	
 };
 
 

@@ -475,32 +475,9 @@ bool Session::StoreJSON(String& json) {
 	ValueMap js;
 	js.GetAdd("layers") = new_layers;
 	
-	json = AsJSON(js, true);
+	json = FixJsonComma(AsJSON(js, true));
 	
 	Leave();
-	
-	// HOTFIX: Bug in older U++: test if json puts , instead of .
-	String s = Format("%.16g", 7.56);
-	if (s.Find(",") != -1) {
-		String fix_tmp;
-		
-		char prev = json[0];
-		fix_tmp.Cat(prev);
-		
-		int count = json.GetCount()-1;
-		for(int i = 1; i < count; i++) {
-			char cur = json[i];
-			char next = json[i+1];
-			if (cur == ',' && IsDigit(prev) && IsDigit(next))
-				fix_tmp.Cat('.');
-			else
-				fix_tmp.Cat(cur);
-			prev = cur;
-		}
-		fix_tmp.Cat(json[count]);
-		
-		json = fix_tmp;
-	}
 	
 	return true;
 }
@@ -643,4 +620,10 @@ SvmLayer& Session::AddSVMLayer(int class_count) {
 	return *svm;
 }
 
+
+
+
+
+
 }
+

@@ -63,9 +63,11 @@ public:
 	~RecurrentSession();
 	
 	void Init();
+	void InitGraphs();
 	void Learn(const Vector<int>& index_sequence);
 	void Predict(Vector<int>& index_sequence, bool samplei=false, double temperature=1.0);
-	void LoadJSON(const String& json);
+	void Load(const ValueMap& js);
+	void Store(ValueMap& js);
 	
 	double GetPerplexity() const {return ppl;}
 	double GetCost() const {return cost;}
@@ -73,6 +75,7 @@ public:
 	
 	void SetInputSize(int i) {input_size = i;}
 	void SetOutputSize(int i) {output_size = i;}
+	void SetLearningRate(double d) {learning_rate = d;}
 	
 };
 
