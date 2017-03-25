@@ -1,4 +1,4 @@
-description "ConvNetJS Automatic Prediction demo using MagicNet class.\377";
+description "Automatic Prediction demo using MagicNet class.\377";
 
 uses
 	CtrlLib,

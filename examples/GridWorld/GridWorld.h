@@ -20,15 +20,12 @@ class GridWorld : public TopWindow {
 	
 	
 	DPAgent agent;
-	bool running;
 	
 public:
 	typedef GridWorld CLASSNAME;
 	GridWorld();
 	~GridWorld();
 	
-	void Start();
-	void Stop();
 	void Reset(bool init_reward);
 	void Refresher();
 	void UpdatePolicy();

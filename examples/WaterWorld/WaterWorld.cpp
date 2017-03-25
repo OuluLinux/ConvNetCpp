@@ -9,8 +9,6 @@ WaterWorld::WaterWorld() {
 	
 	world.agents[0].world = this;
 	
-	running = false;
-	stopped = true;
 	ticking_running = false;
 	ticking_stopped = true;
 	simspeed = 2;
@@ -68,6 +66,8 @@ WaterWorld::WaterWorld() {
 	PostCallback(THISBACK(Reload));
 	PostCallback(THISBACK(Start));
 	RefreshEpsilon();
+	
+	SetTimeCallback(-1, THISBACK(Refresher));
 }
 
 WaterWorld::~WaterWorld() {
@@ -102,14 +102,9 @@ void WaterWorld::Refresher() {
 	world.Refresh();
 	RefreshStatus();
 	network_view.Refresh();
-	if (running) PostCallback(THISBACK(Refresher));
 }
 
 void WaterWorld::Start() {
-	running = true;
-	stopped = false;
-	PostCallback(THISBACK(Refresher));
-	
 	ASSERT(!ticking_running);
 	ticking_running = true;
 	ticking_stopped = false;

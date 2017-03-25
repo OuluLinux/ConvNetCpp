@@ -25,7 +25,6 @@ class TemporalDifference : public DockWindow {
 	
 	TDAgent agent;
 	String t;
-	bool running;
 	
 public:
 	typedef TemporalDifference CLASSNAME;
@@ -36,7 +35,6 @@ public:
 	
 	void Reload();
 	void Refresher();
-	void Start();
 	void Reset(bool init_reward, bool start);
 	void ToggleIteration();
 	void GridFocus();

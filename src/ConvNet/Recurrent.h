@@ -260,7 +260,7 @@ struct RNNModel : Moveable<RNNModel> {
 };
 
 
-Volume Softmax(const Volume& m);
+void Softmax(const Volume& m, Volume& out);
 
 }
 

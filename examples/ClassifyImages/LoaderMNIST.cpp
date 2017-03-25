@@ -33,10 +33,8 @@ void LoaderMNIST::Progress(int actual, int total, String label) {
 	lbl.SetLabel(label);
 }
 
-bool LoaderMNIST::SubProgress(int actual, int total) {
-	GuiLock __;
+void LoaderMNIST::SubProgress(int actual, int total) {
 	sub.Set(actual, total);
-	return false;
 }
 
 void LoaderMNIST::Load() {
@@ -145,7 +143,7 @@ void LoaderMNIST::Load() {
 					out.Set(p, pixel / 255.0);
 				}
 				if ((j % 100) == 0)
-					SubProgress(j, items);
+					PostCallback(THISBACK2(SubProgress, j, items));
 			}
 			
 			

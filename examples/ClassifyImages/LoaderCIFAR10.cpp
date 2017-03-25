@@ -33,10 +33,8 @@ void LoaderCIFAR10::Progress(int actual, int total, String label) {
 	lbl.SetLabel(label);
 }
 
-bool LoaderCIFAR10::SubProgress(int actual, int total) {
-	GuiLock __;
+void LoaderCIFAR10::SubProgress(int actual, int total) {
 	sub.Set(actual, total);
-	return false;
 }
 
 void LoaderCIFAR10::Load() {
@@ -125,7 +123,7 @@ void LoaderCIFAR10::Load() {
 			}
 			
 			if ((j % 100) == 0)
-				SubProgress(j, items);
+				PostCallback(THISBACK2(SubProgress, j, items));
 		}
 		
 		LOG("Read OK: " << file);

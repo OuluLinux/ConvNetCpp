@@ -76,6 +76,7 @@ class NetworkOptimization : public DockWindow {
 	// Main view
 	MetaSessionGraph graph;
 	Mutex plot_lock;
+	StaticRect bg;
 	
 	
 	Data train_import_data;

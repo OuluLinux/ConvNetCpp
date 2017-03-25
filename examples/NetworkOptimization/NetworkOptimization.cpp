@@ -94,6 +94,9 @@ NetworkOptimization::NetworkOptimization() {
 	
 	FillData(1);
 	
+	bg.Color(White());
+	Add(bg.SizePos()); // try to prevent black image between graph resets in windows
+	
 	graph.SetMetaSession(mnet);
 	Add(graph.SizePos());
 	

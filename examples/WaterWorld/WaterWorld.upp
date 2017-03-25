@@ -1,4 +1,4 @@
-description "ReinforceJS: Deep Q Learning demo with a more realistic and larger setup\377";
+description "Deep Q Learning demo with a more realistic and larger setup\377";
 
 uses
 	CtrlLib,

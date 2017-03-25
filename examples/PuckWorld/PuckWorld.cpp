@@ -168,7 +168,6 @@ PuckWorld::PuckWorld() {
 	Sizeable().MaximizeBox().MinimizeBox();
 	
 	agent.pworld = this;
-	running = false;
 	
 	
 	t =		"{\n"
@@ -223,7 +222,8 @@ PuckWorld::PuckWorld() {
 	PostCallback(THISBACK2(Reset, true, true));
 	PostCallback(THISBACK(Reload));
 	RefreshEpsilon();
-	Start();
+	
+	SetTimeCallback(-1, THISBACK(Refresher));
 }
 
 PuckWorld::~PuckWorld() {
@@ -239,15 +239,6 @@ void PuckWorld::DockInit() {
 void PuckWorld::Refresher() {
 	pworld.Refresh();
 	RefreshStatus();
-	
-	if (running) PostCallback(THISBACK(Refresher));
-}
-
-void PuckWorld::Start() {
-	if (!running) {
-		running = true;
-		PostCallback(THISBACK(Refresher));
-	}
 }
 
 void PuckWorld::Reset(bool init_reward, bool start) {

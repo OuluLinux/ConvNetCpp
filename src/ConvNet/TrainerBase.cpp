@@ -21,7 +21,6 @@ TrainerBase::TrainerBase(Net& net) {
 	momentum = 0.9;
 	eps = 1e-6;
 	ro = 0.95;
-	
 }
 
 void TrainerBase::Train(Volume& x, int pos, double y) {

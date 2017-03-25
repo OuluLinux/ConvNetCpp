@@ -309,7 +309,6 @@ void CharGen::InitVocab(Vector<WString>& sents, int count_threshold) {
 }
 
 WString CharGen::PredictSentence(bool samplei, double temperature) {
-	Vector<int> sequence;
 	ses.Predict(sequence, samplei, temperature);
 	
 	WString s;

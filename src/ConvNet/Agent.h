@@ -226,6 +226,7 @@ class DQNAgent : public Agent {
 	int t;
 	bool has_reward;
 	
+	Volume state;
 	Volume state0, state1;
 	int action0, action1;
 	double reward0;
@@ -263,7 +264,7 @@ public:
 
 
 
-Volume	RandVolume(int n, int d, double mu, double std);
+void	RandVolume(int n, int d, double mu, double std, Volume& out);
 int		SampleWeighted(Vector<double>& p);
 void	UpdateMat(Volume& m, double alpha);
 void	UpdateNet(DQNet& net, double alpha);

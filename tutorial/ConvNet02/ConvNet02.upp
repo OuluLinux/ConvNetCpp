@@ -6,3 +6,6 @@ uses
 file
 	ConvNet02.cpp;
 
+mainconfig
+	"" = "MT";
+

@@ -1,4 +1,4 @@
-description "ReinforceJS: A Deep Q Learning modification of PuckWorld\377";
+description "A Deep Q Learning modification of PuckWorld\377";
 
 uses
 	CtrlLib,

@@ -9,9 +9,6 @@ RegressionPainter::RegressionPainter() {
 	Icon(RegressionPainterImg::icon());
 	Sizeable().MaximizeBox().MinimizeBox().Zoomable();
 	
-	running = false;
-	stopped = true;
-	
 	t =		"[\n"
 			"\t{\"type\":\"input\", \"input_width\":1, \"input_height\":1, \"input_depth\":2},\n" // 2 inputs: x, y
 			"\t{\"type\":\"fc\", \"neuron_count\":20, \"activation\": \"relu\"},\n"
@@ -55,6 +52,8 @@ RegressionPainter::RegressionPainter() {
 	ses.WhenStepInterval << THISBACK(StepInterval);
 	
 	PostCallback(THISBACK(SetImage));
+	
+	SetTimeCallback(-1, THISBACK(Refresher));
 }
 
 void RegressionPainter::DockInit() {
@@ -76,16 +75,11 @@ void RegressionPainter::RefreshLearningRate() {
 	if (!ses.GetTrainer()) return;
 	ses.GetTrainer()->SetLearningRate(rate);
 	
-	GuiLock __;
 	lbl_slider.SetLabel("Learning rate: " + DblStr(rate));
 }
 
 void RegressionPainter::Refresher() {
-	
 	RefreshStatus();
-	
-	if (running) PostCallback(THISBACK(Refresher));
-	else stopped = true;
 }
 
 void RegressionPainter::Reload() {
@@ -97,15 +91,6 @@ void RegressionPainter::Reload() {
 	
 	if (success) {
 		ses.StartTraining();
-		Start();
-	}
-}
-
-void RegressionPainter::Start() {
-	if (!running) {
-		running = true;
-		stopped = false;
-		PostCallback(THISBACK(Refresher));
 	}
 }
 

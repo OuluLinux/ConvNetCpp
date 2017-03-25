@@ -84,7 +84,6 @@ protected:
 	DocEdit agent_edit;
 	
 	String t;
-	bool running;
 	
 	
 public:
@@ -94,7 +93,6 @@ public:
 	
 	virtual void DockInit();
 	
-	void Start();
 	void Reset(bool init_reward, bool start);
 	void Reload();
 	void Refresher();

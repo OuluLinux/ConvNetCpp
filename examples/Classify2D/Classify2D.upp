@@ -1,10 +1,11 @@
-description "ConvNetJS: Interactively classify toy 2-D data with a Neural Network \377";
+description "Interactively classify toy 2-D data with a Neural Network \377";
 
 uses
 	ConvNet,
 	CtrlLib,
 	ConvNetCtrl,
-	plugin/z;
+	plugin/z,
+	Docking;
 
 file
 	main.cpp,

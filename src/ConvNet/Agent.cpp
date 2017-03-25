@@ -10,8 +10,8 @@ namespace ConvNet {
 
 
 // return Mat but filled with random numbers from gaussian
-Volume RandVolume(int n, int d, double mu, double std) {
-	Volume m(d, n, 1, 0);
+void RandVolume(int n, int d, double mu, double std, Volume& m) {
+	m.Init(d, n, 1, 0);
 	
 	std::default_random_engine generator;
 	std::normal_distribution<double> distribution(mu, std);
@@ -19,8 +19,6 @@ Volume RandVolume(int n, int d, double mu, double std) {
 	
 	for (int i = 0; i < m.GetLength(); i++)
 		m.Set(i, distribution(generator));
-	
-	return m;
 }
 
 int SampleWeighted(Vector<double>& p) {
@@ -935,10 +933,10 @@ void DQNAgent::Reset() {
 	// not proud of  better solution is to have a whole Net object
 	// on top of Mats, but for now sticking with this
 	
-	net.W1 = RandVolume(nh, ns, 0, 0.01);
+	RandVolume(nh, ns, 0, 0.01, net.W1);
 	net.b1.Init(1, nh, 1, 0);
 	//net.b1 = RandVolume(nh, 1, 0, 0.01);
-	net.W2 = RandVolume(na, nh, 0, 0.01);
+	RandVolume(na, nh, 0, 0.01, net.W2);
 	net.b2.Init(1, na, 1, 0);
 	//net.b2 = RandVolume(na, 1, 0, 0.01);
 	
@@ -1015,7 +1013,7 @@ int DQNAgent::Act(int x, int y, int d) {
 int DQNAgent::Act(const Vector<double>& slist) {
 	
 	// convert to a Mat column vector
-	Volume state(width, height, depth, slist);
+	state.Init(width, height, depth, slist);
 	
 	// epsilon greedy policy
 	int action;

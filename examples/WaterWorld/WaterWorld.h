@@ -164,7 +164,6 @@ protected:
 	DocEdit agent_edit;
 	String t;
 	int simspeed;
-	bool running, stopped;
 	bool ticking_running, ticking_stopped;
 	
 	SpinLock ticking_lock;

@@ -182,7 +182,7 @@ Volume& Volume::Init(int width, int height, int depth) {
 }
 
 
-Volume& Volume::Init(int width, int height, int depth, double default_value) {
+Volume& Volume::Init(int width, int height, int depth, double default_value, bool def_only_with_resize) {
 	ASSERT(width > 0 && height > 0 && depth > 0);
 	if (!owned_weights) {
 		owned_weights = true;
@@ -195,13 +195,48 @@ Volume& Volume::Init(int width, int height, int depth, double default_value) {
 	this->depth = depth;
 	
 	int n = width * height * depth;
+	int prev_length = length;
+	
+	length = n;
+	weights->SetCount(n);
+	weight_gradients.SetCount(n);
+	
+	if (def_only_with_resize) {
+		for (int i = prev_length; i < n; i++) {
+			weights->Set(i, default_value);
+			weight_gradients[i] = 0.0;
+		}
+	} else {
+		for (int i = 0; i < n; i++) {
+			weights->Set(i, default_value);
+			weight_gradients[i] = 0.0;
+		}
+	}
+	
+	return *this;
+}
+
+Volume& Volume::Init(int width, int height, int depth, const Vector<double>& w) {
+	ASSERT(width > 0 && height > 0 && depth > 0);
+	if (!owned_weights) {
+		owned_weights = true;
+		weights = new VolumeData<double>();
+	}
+	
+	// we were given dimensions of the vol
+	this->width = width;
+	this->height = height;
+	this->depth = depth;
+	
+	int n = width * height * depth;
+	ASSERT(n == w.GetCount());
 	
 	length = n;
 	weights->SetCount(n);
 	weight_gradients.SetCount(n);
 	
 	for (int i = 0; i < n; i++) {
-		weights->Set(i, default_value);
+		weights->Set(i, w[i]);
 		weight_gradients[i] = 0.0;
 	}
 	
@@ -279,6 +314,12 @@ void Volume::SetConst(double c) {
 	ASSERT(owned_weights);
 	for (int i = 0; i < weights->GetCount(); i++) {
 		weights->Set(i, c);
+	}
+}
+
+void Volume::SetConstGradient(double c) {
+	for (int i = 0; i < weight_gradients.GetCount(); i++) {
+		weight_gradients[i] = c;
 	}
 }
 

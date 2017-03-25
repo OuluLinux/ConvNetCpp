@@ -1,4 +1,4 @@
-description "ConvNetJS: Trainer benchmark demo on MNIST\377";
+description "Trainer benchmark demo on MNIST\377";
 
 uses
 	CtrlLib,

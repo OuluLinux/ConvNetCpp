@@ -323,9 +323,12 @@ public:
 
 // Local Response Normalization Layer
 class LrnLayer : public LayerBase {
+	Volume S_cache;
+	double k, alpha, beta;
+	int n;
 	
 public:
-	LrnLayer();
+	LrnLayer(double k, int n, double alpha, double beta);
 	LrnLayer(ValueMap values) {Load(values);}
 	
 	virtual Volume& Forward(Volume& input, bool is_training = false);

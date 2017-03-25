@@ -1,50 +1,80 @@
 # ConvNetC++
-C++ port of [ConvNetJS](https://github.com/karpathy/convnetjs) and [ConvNetSharp](https://github.com/cbovar/ConvNetSharp). You can use ConvNetC++ to train and evaluate convolutional neural networks 
-(CNN).
+ConvNetC++ is a C++ port of [ConvNetJS](https://github.com/karpathy/convnetjs) and [ConvNetSharp](https://github.com/cbovar/ConvNetSharp). [RecurrentJS](https://github.com/karpathy/recurrentjs) and 
+[ReinforceJS](https://github.com/karpathy/reinforcejs) are also included in the port.
 
-Thank you very much to the original author (Andrej Karpathy), C# translator (Cédric Bovar) and to all the contributors to ConvNetJS!
+ConvNetC++ is a C++ implementation of Neural networks, together with nice native GUI demos. It currently supports:
 
-## Example
+- Common **Neural Network modules** (fully connected layers, non-linearities)
+- Classification (SVM/Softmax) and Regression (L2) **cost functions**
+- Ability to specify and train **Convolutional Networks** that process images
+- An **Reinforcement Learning** module, based on Deep Q Learning
+- Deep **Recurrent Neural Networks** (RNN) 
+- **Long Short-Term Memory networks** (LSTM) 
+- In fact, the library is more general because it has functionality to construct arbitrary **expression graphs** over which the library can perform **automatic differentiation** similar to what you may 
 
-Screenshot of [a MNIST digit classification example](http://cs.stanford.edu/people/karpathy/convnetjs/demo/mnist.html) translated to ConvNetC++. 
-![Classify MNIST example](https://github.com/sppp/ConvNetC-/raw/master/doc/classifymnist.png)
+## Example code
 
-Screenshot of [a CIFAR-10 classification example](http://cs.stanford.edu/people/karpathy/convnetjs/demo/cifar10.html) translated to ConvNetC++. 
-![Classify CIFAR-10 example](https://github.com/sppp/ConvNetC-/raw/master/doc/classifycifar10.png)
+For screenshots of examples, see [the gallery](https://github.com/sppp/ConvNetC-/blob/master/GALLERY.md).
 
-Screenshot of [a MNIST digit autoencoder example](http://cs.stanford.edu/people/karpathy/convnetjs/demo/autoencoder.html) translated to ConvNetC++. 
-![MNIST Autoencoder example](https://github.com/sppp/ConvNetC-/raw/master/doc/autoencodemnist.png)
+ConvNetC++ includes all original examples from ConvNetJS and also examples from RecurrentJS and ReinforceJS, even tough they were separate libraries originally.
 
-Screenshot of [a toy 1d regression example](http://cs.stanford.edu/people/karpathy/convnetjs/demo/regression.html) translated to ConvNetC++. 
-![a toy 1d regression example](https://github.com/sppp/ConvNetC-/raw/master/doc/toy1dregression.png)
+```c++
+// species a 2-layer neural network with one hidden layer of 20 neurons
+Net net;
 
-Screenshot of [a toy 2d classification example](http://cs.stanford.edu/people/karpathy/convnetjs/demo/classify2d.html) translated to ConvNetC++. 
-![Classify2D example](https://github.com/sppp/ConvNetC-/raw/master/doc/classify2d.png)
+// input layer declares size of input. here: 2-D data
+// ConvNet U++ works on 3-Dimensional volumes (width, height, depth), but if you're not dealing with images
+// then the first two dimensions (width, height) will always be kept at size 1
+InputLayer input(1, 1, 2);
+net.AddLayer(input);
 
-Screenshot of [Deep Q Learning Demo](http://cs.stanford.edu/people/karpathy/convnetjs/demo/rldemo.html) translated to ConvNetC++. 
-![Deep Q Learning Demo](https://github.com/sppp/ConvNetC-/raw/master/doc/deepqlearning.png)
+// declare 20 neurons
+FullyConnLayer fullcon1(20);
+fullcon1.bias_pref = 0.1;
+net.AddLayer(fullcon1);
 
-Screenshot of [Image Painting Demo](http://cs.stanford.edu/people/karpathy/convnetjs/demo/image_regression.html) translated to ConvNetC++. 
-![Image Painting Demo](https://github.com/sppp/ConvNetC-/raw/master/doc/imagepainting.png)
+// declare a ReLU (rectified linear unit non-linearity)
+ReluLayer relu1;
+net.AddLayer(relu1);
 
-Screenshot of [Automatic Prediction Demo](http://cs.stanford.edu/people/karpathy/convnetjs/demo/automatic.html) translated to ConvNetC++. 
-![Automatic Prediction Demo](https://github.com/sppp/ConvNetC-/raw/master/doc/optimization.png)
+// declare 20 neurons
+FullyConnLayer fullcon2(20);
+fullcon2.bias_pref = 0.1;
+net.AddLayer(fullcon2);
 
-Screenshot of [Trainer demo on MNIST](http://cs.stanford.edu/people/karpathy/convnetjs/demo/trainers.html) translated to ConvNetC++. 
-![Trainer demo on MNIST](https://github.com/sppp/ConvNetC-/raw/master/doc/benchmark.png)
+// declare a ReLU (rectified linear unit non-linearity)
+ReluLayer relu2;
+net.AddLayer(relu2);
 
-Screenshot of [GridWorld: Dynamic Programming Demo](http://cs.stanford.edu/people/karpathy/reinforcejs/gridworld_dp.html) translated to ConvNetC++.
-![GridWorld: Dynamic Programming Demo](https://github.com/sppp/ConvNetC-/raw/master/doc/gridworld.jpg)
+// declare a fully connected layer that will be used by the softmax layer
+FullyConnLayer fullcon3(2);
+net.AddLayer(fullcon3);
 
-Screenshot of [GridWorld: Temporal Difference Learning Demo](http://cs.stanford.edu/people/karpathy/reinforcejs/gridworld_td.html) translated to ConvNetC++.
-![GridWorld: Temporal Difference Learning Demo](https://github.com/sppp/ConvNetC-/raw/master/doc/tempdiff.jpg)
+// a softmax classifier predicting probabilities for two classes: 0,1
+SoftmaxLayer softmax(2);
+net.AddLayer(softmax);
 
-Screenshot of [PuckWorld: Deep Q Learning Demo](http://cs.stanford.edu/people/karpathy/reinforcejs/puckworld.html) translated to ConvNetC++.
-![PuckWorld: Deep Q Learning Demo](https://github.com/sppp/ConvNetC-/raw/master/doc/puckworld.jpg)
+// forward a random data point through the network
+Volume x(1, 1, 2, 0);
+x.Set(0, +0.5);
+x.Set(1, -1.3);
+Volume& probability_volume = net.Forward(x);
 
-Screenshot of [WaterWorld: Deep Q Learning Demo](http://cs.stanford.edu/people/karpathy/reinforcejs/waterworld.html) translated to ConvNetC++.
-![WaterWorld: Deep Q Learning Demo](https://github.com/sppp/ConvNetC-/raw/master/doc/waterworld.jpg)
+// prob is a Volume. Volumes have a property Weights that stores the raw data, and WeightGradients that stores gradients
+LOG("probability that x is class 0: " << probability_volume.GetWeights()[0]); // prints 0.50101
 
-Screenshot of [Deep Recurrent Nets character generation demo](http://cs.stanford.edu/people/karpathy/recurrentjs/) translated to ConvNetC++.
-![Deep Recurrent Nets character generation demo](https://github.com/sppp/ConvNetC-/raw/master/doc/chargen.jpg)
+SgdTrainer trainer(net);
+trainer.SetLearningRate(0.01).SetL2Decay(0.001);
+trainer.Train(x, 0, 0);
 
+Volume& probability_volume2 = net.Forward(x);
+LOG("probability that x is class 0: " << probability_volume2.GetWeights()[0]);
+// prints 0.50374
+```
+
+## Compiling the library and examples
+ConvNetC++ requires the cross-platform library [Ultimate++](https://sourceforge.net/projects/upp/files/upp/2015.2/), which works in all platforms. Even Windows XP is supported, because the U++ version 
+9251 and Windows 7 SDK are the minimum requirements.
+
+After you have installed the Ultimate++, create a new assembly for the ConvNetC++ by looking included assemblies as examples.
+You can compile examples with the included MINGW compiler, but compiling them with the Visual Studio compiler makes it a lot faster.

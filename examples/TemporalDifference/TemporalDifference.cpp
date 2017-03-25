@@ -20,9 +20,6 @@ TemporalDifference::TemporalDifference() {
 	Icon(TemporalDifferenceImg::icon());
 	Sizeable().MaximizeBox().MinimizeBox();
 	
-	running = false;
-	
-	
 	t =		"{\n"
 			"\t\"update\":\"qlearn\",\n"
 			"\t\"gamma\":0.3,\n"
@@ -76,7 +73,8 @@ TemporalDifference::TemporalDifference() {
 	
 	PostCallback(THISBACK2(Reset, true, true));
 	PostCallback(THISBACK(Reload));
-	Start();
+	
+	SetTimeCallback(-1, THISBACK(Refresher));
 }
 
 TemporalDifference::~TemporalDifference() {
@@ -90,8 +88,6 @@ void TemporalDifference::DockInit() {
 
 void TemporalDifference::Refresher() {
 	gworld.Refresh();
-	
-	if (running) PostCallback(THISBACK(Refresher));
 }
 
 void TemporalDifference::Reload() {
@@ -105,14 +101,6 @@ void TemporalDifference::Reload() {
 	
 	GridFocus();
 }
-
-void TemporalDifference::Start() {
-	if (!running) {
-		running = true;
-		PostCallback(THISBACK(Refresher));
-	}
-}
-
 
 void TemporalDifference::Reset(bool init_reward, bool start) {
 	agent.Stop();

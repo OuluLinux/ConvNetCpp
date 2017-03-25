@@ -1,4 +1,4 @@
-description "ConvNetJS: toy 1D regression\377";
+description "Toy 1D regression\377";
 
 uses
 	CtrlLib,

@@ -55,7 +55,7 @@ Volume& RecurrentRowPluck::Forward() {
 	ASSERT(*ix >= 0 && *ix < input.GetLength());
 	int w = input.GetWidth();
 	
-	output.Init(1, w, 1, 0);
+	output.Init(1, w, 1, 0, true);
 	for (int i = 0, h = w; i < h; i++) {
 		output.Set(0, i, 0, input.Get(i, *ix, 0)); // copy over the data
 	}
@@ -80,7 +80,7 @@ Volume& RecurrentTanh::Forward() {
 	Volume& input = *input1;
 	
 	// tanh nonlinearity
-	output.Init(input.GetWidth(), input.GetHeight(), input.GetDepth(), 0.0);
+	output.Init(input.GetWidth(), input.GetHeight(), input.GetDepth(), 0.0, true);
 	int n = input.GetLength();
 	for (int i = 0; i < n; i++) {
 		output.Set(i, tanh(input.Get(i)));
@@ -110,7 +110,7 @@ Volume& RecurrentSigmoid::Forward() {
 	Volume& input = *input1;
 	
 	// sigmoid nonlinearity
-	output.Init(input);
+	output.Init(input.GetWidth(), input.GetHeight(), input.GetDepth(), 0.0, true);
 	int n = input.GetLength();
 	for (int i = 0; i < n; i++) {
 		output.Set(i, sig(input.Get(i)));
@@ -138,7 +138,7 @@ void RecurrentSigmoid::Backward() {
 Volume& RecurrentRelu::Forward() {
 	Volume& input = *input1;
 	
-	output.Init(input);
+	output.Init(input.GetWidth(), input.GetHeight(), input.GetDepth(), 0.0, true);
 	int n = input.GetLength();
 	for (int i = 0; i < n; i++) {
 		output.Set(i, max(0.0, input.Get(i))); // relu
@@ -170,7 +170,7 @@ Volume& RecurrentMul::Forward() {
 	
 	int h = input1.GetHeight();
 	int w = input2.GetWidth();
-	output.Init(w, h, 1, 0);
+	output.Init(w, h, 1, 0.0, true);
 	
 	// loop over rows of input1
 	for (int i = 0; i < h; i++) {
@@ -220,7 +220,7 @@ Volume& RecurrentAdd::Forward() {
 	
 	ASSERT(input1.GetLength() == input2.GetLength());
 	
-	output.Init(input1);
+	output.Init(input1.GetWidth(), input1.GetHeight(), input1.GetDepth(), 0.0, true);
 	for (int i = 0; i < input1.GetLength(); i++) {
 		output.Set(i, input1.Get(i) + input2.Get(i));
 	}
@@ -250,7 +250,7 @@ Volume& RecurrentDot::Forward() {
 	// input1 and input2 are both column vectors
 	ASSERT(input1.GetLength() == input2.GetLength());
 	
-	output.Init(1, 1, 1, 0);
+	output.Init(1, 1, 1, 0, true);
 	
 	double dot = 0.0;
 	for (int i = 0; i < input1.GetLength(); i++) {
@@ -282,7 +282,7 @@ Volume& RecurrentEltMul::Forward() {
 	ASSERT(input1.GetLength() == input2.GetLength());
 	ASSERT(input1.GetLength() > 0);
 	
-	output.Init(input1);
+	output.Init(input1.GetWidth(), input1.GetHeight(), input1.GetDepth(), 0.0, true);
 	
 	for (int i = 0; i < input1.GetLength(); i++) {
 		output.Set(i, input1.Get(i) * input2.Get(i));
@@ -482,8 +482,8 @@ Volume& GraphTree::AddCopy(Volume& src, Volume& dst) {
 
 
 
-Volume Softmax(const Volume& m) {
-	Volume out(m.GetWidth(), m.GetHeight(), m.GetDepth(), 0.0); // probability volume
+void Softmax(const Volume& m, Volume& out) {
+	out.Init(m.GetWidth(), m.GetHeight(), m.GetDepth(), 0.0, true); // probability volume
 	double maxval = -DBL_MAX;
 	
 	for (int i = 0; i < m.GetLength(); i++) {
@@ -505,7 +505,6 @@ Volume Softmax(const Volume& m) {
 	// no backward pass here needed
 	// since we will use the computed probabilities outside
 	// to set gradients directly on m
-	return out;
 }
 
 }

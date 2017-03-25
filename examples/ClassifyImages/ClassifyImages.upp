@@ -1,4 +1,4 @@
-description "ConvNetJS: Trains a Convolutional Neural Network on the image dataset.\377";
+description "Trains a Convolutional Neural Network on the image dataset.\377";
 
 uses
 	CtrlLib,

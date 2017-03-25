@@ -21,7 +21,7 @@ public:
 	void Cancel() {ret_value = 1; Close();}
 	void Load();
 	void Progress(int actual, int total, String label);
-	bool SubProgress(int actual, int total);
+	void SubProgress(int actual, int total);
 	void Close0() {Close();}
 	bool IsFail() {return ret_value;}
 	

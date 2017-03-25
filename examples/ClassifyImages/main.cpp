@@ -33,8 +33,7 @@ public:
 	int ret;
 };
 
-GUI_APP_MAIN
-{
+GUI_APP_MAIN {
 	int loader, type;
 	{
 		OpenDialog odlg;

@@ -17,8 +17,6 @@ ReinforcedLearning::ReinforcedLearning() {
 	Icon(ReinforcedLearningImg::icon());
 	Sizeable().MaximizeBox().MinimizeBox().Zoomable();
 	
-	running = false;
-	stopped = true;
 	ticking_running = false;
 	ticking_stopped = true;
 	
@@ -78,7 +76,8 @@ ReinforcedLearning::ReinforcedLearning() {
 	
 	reward_graph.SetSession(world.agents[0].brain);
 	
-    Start();
+	PostCallback(THISBACK(Start));
+	SetTimeCallback(-1, THISBACK(Refresher));
 }
 
 ReinforcedLearning::~ReinforcedLearning() {
@@ -192,14 +191,9 @@ void ReinforcedLearning::Reload() {
 void ReinforcedLearning::Start() {
 	GoFast();
 	
-	running = true;
-	stopped = false;
-	PostCallback(THISBACK(Refresher));
-	
 	ticking_running = true;
 	ticking_stopped = false;
 	Thread::Start(THISBACK(Ticking));
-	
 }
 
 void ReinforcedLearning::Refresher() {
@@ -210,8 +204,6 @@ void ReinforcedLearning::Refresher() {
 		reward_graph.RefreshData();
 		RefreshStatus();
 	}
-	if (running) PostCallback(THISBACK(Refresher));
-	else stopped = true;
 }
 
 void ReinforcedLearning::LoadPreTrained() {

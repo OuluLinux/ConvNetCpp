@@ -77,7 +77,7 @@ void RecurrentSession::Init() {
 	ASSERT_(input_size != -1, "Input size must be set");
 	ASSERT_(output_size != -1, "Output size must be set");
 	
-	Wil = RandVolume(input_size, letter_size, 0, 0.08);
+	RandVolume(input_size, letter_size, 0, 0.08, Wil);
 	
 	if (mode == MODE_RNN) {
 		InitRNN();
@@ -98,17 +98,19 @@ void RecurrentSession::InitGraphs() {
 	ASSERT_(hidden_count > 0, "Hidden sizes must be set");
 	
 	for (int i = 0; i < hidden_prevs.GetCount(); i++) {
-		Vector<Volume>& hidden_prevs = this->hidden_prevs[i];
-		hidden_prevs.SetCount(hidden_count);
-		for (int d = 0; d < hidden_count; d++) {
-			hidden_prevs[d].Init(1, hidden_sizes[d], 1, 0);
-		}
-		
-		Vector<Volume>& cell_prevs = this->cell_prevs[i];
-		cell_prevs.SetCount(hidden_count);
-		for (int d = 0; d < hidden_count; d++) {
-			cell_prevs[d].Init(1, hidden_sizes[d], 1, 0);
-		}
+		Vector<Volume*>& hidden_prevs = this->hidden_prevs[i];
+		Vector<Volume*>& cell_prevs = this->cell_prevs[i];
+		hidden_prevs.SetCount(hidden_count, NULL);
+		cell_prevs.SetCount(hidden_count, NULL);
+	}
+	
+	first_hidden.SetCount(hidden_count);
+	first_cell.SetCount(hidden_count);
+	for(int i = 0; i < hidden_count; i++) {
+		hidden_prevs[0][i]	= &first_hidden[i];
+		cell_prevs[0][i]	= &first_cell[i];
+		first_hidden[i]	.Init(1, hidden_sizes[i], 1, 0);
+		first_cell[i]	.Init(1, hidden_sizes[i], 1, 0);
 	}
 	
 	for (int i = 0; i < graphs.GetCount(); i++) {
@@ -132,13 +134,13 @@ void RecurrentSession::InitRNN() {
 		int prev_size = d == 0 ? letter_size : hidden_sizes[d - 1];
 		hidden_size = hidden_sizes[d];
 		RNNModel& m = rnn_model[d];
-		m.Wxh = RandVolume(hidden_size, prev_size,		0, 0.08);
-		m.Whh = RandVolume(hidden_size, hidden_size,	0, 0.08);
+		RandVolume(hidden_size, prev_size,		0, 0.08,	m.Wxh);
+		RandVolume(hidden_size, hidden_size,	0, 0.08,	m.Whh);
 		m.bhh.Init(1, hidden_size, 1, 0);
 	}
 	
 	// decoder params
-	Whd = RandVolume(output_size, hidden_size, 0, 0.08);
+	RandVolume(output_size, hidden_size, 0, 0.08,	Whd);
 	bd.Init(1, output_size, 1, 0);
 }
 
@@ -147,25 +149,27 @@ void RecurrentSession::InitRNN(int i, int j, GraphTree& g) {
 	
 	g.Clear();
 	
-	Vector<Volume>& hidden_prevs = this->hidden_prevs[i];
-	Vector<Volume>& hidden_nexts = this->hidden_prevs[i+1];
+	Vector<Volume*>& hidden_prevs = this->hidden_prevs[i];
+	Vector<Volume*>& hidden_nexts = this->hidden_prevs[i+1];
 	
 	if (j == 0) {
 		input = &g.AddRowPluck(&index_sequence[i], Wil);
 	}
 	
-	Volume& input_vector = j == 0 ? *input : hidden_nexts[j-1];
-	Volume& hidden_prev = hidden_prevs[j];
+	Volume& input_vector = j == 0 ? *input : *hidden_nexts[j-1];
+	Volume& hidden_prev = *hidden_prevs[j];
 	
 	Volume& h0 = g.AddMul(m.Wxh, input_vector);
 	Volume& h1 = g.AddMul(m.Whh, hidden_prev);
 	Volume& hidden_d = g.AddRelu(g.AddAdd(g.AddAdd(h0, h1), m.bhh));
 	
-	g.AddCopy(hidden_d, hidden_nexts[j]);
+	//g.AddCopy(hidden_d, hidden_nexts[j]);
+	hidden_nexts[j] = &hidden_d;
 	
 	// one decoder to outputs at end
 	if (j == hidden_prevs.GetCount() - 1) {
-		g.AddAdd(g.AddMul(Whd, hidden_nexts[j]), bd);
+		//g.AddAdd(g.AddMul(Whd, hidden_nexts[j]), bd);
+		g.AddAdd(g.AddMul(Whd, hidden_d), bd);
 	}
 }
 
@@ -183,24 +187,24 @@ void RecurrentSession::InitLSTM() {
 		hidden_size = hidden_sizes[d];
 		
 		// gates parameters
-		m.Wix	= RandVolume(hidden_size, prev_size,	0, 0.08);
-		m.Wih	= RandVolume(hidden_size, hidden_size,	0, 0.08);
+		RandVolume(hidden_size, prev_size,		0, 0.08,	m.Wix);
+		RandVolume(hidden_size, hidden_size,	0, 0.08,	m.Wih);
 		m.bi	.Init(1, hidden_size, 1, 0);
-		m.Wfx	= RandVolume(hidden_size, prev_size,	0, 0.08);
-		m.Wfh	= RandVolume(hidden_size, hidden_size,	0, 0.08);
+		RandVolume(hidden_size, prev_size,		0, 0.08,	m.Wfx);
+		RandVolume(hidden_size, hidden_size,	0, 0.08,	m.Wfh);
 		m.bf	.Init(1, hidden_size, 1, 0);
-		m.Wox	= RandVolume(hidden_size, prev_size,	0, 0.08);
-		m.Woh	= RandVolume(hidden_size, hidden_size,	0, 0.08);
+		RandVolume(hidden_size, prev_size,		0, 0.08,	m.Wox);
+		RandVolume(hidden_size, hidden_size,	0, 0.08,	m.Woh);
 		m.bo	.Init(1, hidden_size, 1, 0);
 		
 		// cell write params
-		m.Wcx	= RandVolume(hidden_size, prev_size,	0, 0.08);
-		m.Wch	= RandVolume(hidden_size, hidden_size,	0, 0.08);
+		RandVolume(hidden_size, prev_size,		0, 0.08,	m.Wcx);
+		RandVolume(hidden_size, hidden_size,	0, 0.08,	m.Wch);
 		m.bc	.Init(1, hidden_size, 1, 0);
 	}
 	
 	// decoder params
-	Whd	= RandVolume(output_size, hidden_size, 0, 0.08);
+	RandVolume(output_size, hidden_size,	0, 0.08,	Whd);
 	bd.Init(1, output_size, 1, 0);
 }
 
@@ -211,18 +215,18 @@ void RecurrentSession::InitLSTM(int i, int j, GraphTree& g) {
 	
 	// Graph uses hidden_prevs[j-1] so two hidden previous vectors are needed.
 	// Otherwise the result could be written over hidden_prevs[j] immediately.
-	Vector<Volume>& hidden_prevs = this->hidden_prevs[i];
-	Vector<Volume>& hidden_nexts = this->hidden_prevs[i+1];
-	Vector<Volume>& cell_prevs = this->cell_prevs[i];
-	Vector<Volume>& cell_nexts = this->cell_prevs[i+1];
+	Vector<Volume*>& hidden_prevs = this->hidden_prevs[i];
+	Vector<Volume*>& hidden_nexts = this->hidden_prevs[i+1];
+	Vector<Volume*>& cell_prevs = this->cell_prevs[i];
+	Vector<Volume*>& cell_nexts = this->cell_prevs[i+1];
 	
 	if (j == 0) {
 		input = &g.AddRowPluck(&index_sequence[i], Wil);
 	}
 	
-	Volume& input_vector = j == 0 ? *input : hidden_nexts[j-1];
-	Volume& hidden_prev = hidden_prevs[j];
-	Volume& cell_prev = cell_prevs[j];
+	Volume& input_vector = j == 0 ? *input : *hidden_nexts[j-1];
+	Volume& hidden_prev = *hidden_prevs[j];
+	Volume& cell_prev = *cell_prevs[j];
 	
 	// input gate
 	Volume& h0 = g.AddMul(m.Wix, input_vector);
@@ -252,13 +256,16 @@ void RecurrentSession::InitLSTM(int i, int j, GraphTree& g) {
 	// compute hidden state as gated, saturated cell activations
 	Volume& hidden_d = g.AddEltMul(output_gate, g.AddTanh(cell_d));
 	
-	g.AddCopy(hidden_d,	hidden_nexts[j]);
-	g.AddCopy(cell_d,	cell_nexts[j]);
+	//g.AddCopy(hidden_d,	hidden_nexts[j]);
+	//g.AddCopy(cell_d,	cell_nexts[j]);
+	hidden_nexts[j] = &hidden_d;
+	cell_nexts[j] = &cell_d;
 	
 	
 	// one decoder to outputs at end
 	if (j == hidden_prevs.GetCount() - 1) {
-		g.AddAdd(g.AddMul(Whd, hidden_nexts[j]), bd);
+		//g.AddAdd(g.AddMul(Whd, hidden_nexts[j]), bd);
+		g.AddAdd(g.AddMul(Whd, hidden_d), bd);
 	}
 }
 
@@ -289,7 +296,7 @@ void RecurrentSession::Learn(const Vector<int>& input_sequence) {
 		}
 		
 		Volume& logprobs = list.Top().Top().output;
-		Volume probs = Softmax(logprobs); // compute the softmax probabilities
+		Softmax(logprobs, probs); // compute the softmax probabilities
 		
 		log2ppl += -log2(probs.Get(ix_target)); // accumulate base 2 log prob and do smoothing
 		cost += -log(probs.Get(ix_target));
@@ -363,16 +370,14 @@ void RecurrentSession::SolverStep() {
 void RecurrentSession::ResetPrevs() {
 	int hidden_count = hidden_sizes.GetCount();
 	
-	Vector<Volume>& hidden_prevs = this->hidden_prevs[0];
-	hidden_prevs.SetCount(hidden_count);
+	first_hidden.SetCount(hidden_count);
 	for (int d = 0; d < hidden_count; d++) {
-		hidden_prevs[d].Init(1, hidden_sizes[d], 1, 0);
+		first_hidden[d].Init(1, hidden_sizes[d], 1, 0);
 	}
 	
-	Vector<Volume>& cell_prevs = this->cell_prevs[0];
-	cell_prevs.SetCount(hidden_count);
+	first_cell.SetCount(hidden_count);
 	for (int d = 0; d < hidden_count; d++) {
-		cell_prevs[d].Init(1, hidden_sizes[d], 1, 0);
+		first_cell[d].Init(1, hidden_sizes[d], 1, 0);
 	}
 }
 
@@ -405,7 +410,7 @@ void RecurrentSession::Predict(Vector<int>& output_sequence, bool samplei, doubl
 			}
 		}
 		
-		Volume probs = Softmax(logprobs);
+		Softmax(logprobs, probs);
 		
 		int ix = 0;
 		if (samplei) {

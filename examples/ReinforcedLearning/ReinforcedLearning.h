@@ -148,7 +148,6 @@ class ReinforcedLearning : public DockWindow {
 	int simspeed;
 	int average_size;
 	bool skipdraw;
-	bool running, stopped;
 	bool ticking_running, ticking_stopped;
 	SpinLock ticking_lock;
 	

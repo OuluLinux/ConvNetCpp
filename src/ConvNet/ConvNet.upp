@@ -1,4 +1,4 @@
-description "ReinforceJS: C++ port of C# port of ConvNetJS.  ConvNet is a library for training Deep Learning models.\377B128,0,255";
+description "C++ port of C# port of ConvNetJS.  ConvNet is a library for training Deep Learning models.\377B128,0,255";
 
 uses
 	Core,

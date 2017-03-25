@@ -48,10 +48,7 @@ CONSOLE_APP_MAIN {
 	// we may want to  regress multiple outputs and in this special case we
 	// used num_neurons:1 for the regression to only regress one.
 	SgdTrainer trainer(net);
-	trainer.learning_rate = 0.01;
-	trainer.momentum = 0.0;
-	trainer.batch_size = 1;
-	trainer.l2_decay = 0.001;
+	trainer.SetLearningRate(0.01).SetMomentum(0.0).SetBatchSize(1).SetL2Decay(0.001);
 	ses.SetTrainer(trainer);
 	
 	Volume vol(1, 1, 2);

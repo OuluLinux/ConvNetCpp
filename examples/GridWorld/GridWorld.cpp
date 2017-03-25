@@ -9,8 +9,6 @@ GridWorld::GridWorld() {
 	Icon(GridWorldImg::icon());
 	Sizeable().MaximizeBox().MinimizeBox();
 	
-	running = false;
-	
 	Add(btnsplit.HSizePos().TopPos(0,30));
 	Add(gworld.HSizePos().VSizePos(30,30));
 	Add(lbl_reward.LeftPos(4,200-4).BottomPos(0,30));
@@ -34,28 +32,16 @@ GridWorld::GridWorld() {
 	
 	
 	PostCallback(THISBACK1(Reset, true));
-	Start();
+	
+	SetTimeCallback(-1, THISBACK(Refresher));
 }
 
 GridWorld::~GridWorld() {
-	Stop();
 	agent.Stop();
-}
-
-void GridWorld::Start() {
-	if (running) return;
-	running = true;
-	PostCallback(THISBACK(Refresher));
-}
-
-void GridWorld::Stop() {
-	running = false;
 }
 
 void GridWorld::Refresher() {
 	gworld.Refresh();
-	
-	if (running) PostCallback(THISBACK(Refresher));
 }
 
 void GridWorld::Reset(bool init_reward) {

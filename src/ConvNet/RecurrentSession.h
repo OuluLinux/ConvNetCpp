@@ -30,11 +30,13 @@ protected:
 	double smooth_eps;
 	
 	// Session vars
-	Vector<Vector<Volume> > hidden_prevs;
-	Vector<Vector<Volume> > cell_prevs;
+	Vector<Volume> first_hidden, first_cell;
+	Vector<Vector<Volume*> > hidden_prevs;
+	Vector<Vector<Volume*> > cell_prevs;
 	Vector<int> hidden_sizes;
 	Array<int> index_sequence; // Array instead of vector to allow resizing
 	Volume* input;
+	Volume probs;
 	double ppl, cost;
 	double regc;
 	double learning_rate;

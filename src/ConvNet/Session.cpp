@@ -322,6 +322,10 @@ bool Session::MakeLayers(const String& json) {
 			ARG(l2_decay_mul);
 			ARG(stride);
 			ARG(pad);
+			ARG(k);
+			ARG(n);
+			ARG(alpha);
+			ARG(beta);
 			
 			if(type == "softmax" || type == "svm") {
 				// add an fc layer here, there is no reason the user should
@@ -347,7 +351,7 @@ bool Session::MakeLayers(const String& json) {
 			}
 			
 			if      (type == "fc")			AddFullyConnLayer(REQ(neuron_count), DEF(l1_decay_mul, 0.0), DEF(l2_decay_mul, 1.0), DEF(bias_pref, 0.0));
-			else if (type == "lrn")			AddLrnLayer();
+			else if (type == "lrn")			AddLrnLayer(REQ(k), REQ(n), REQ(alpha), REQ(beta));
 			else if (type == "dropout")		AddDropoutLayer(REQ(drop_prob));
 			else if (type == "input")		AddInputLayer(REQ(input_width), REQ(input_height), REQ(input_depth));
 			else if (type == "softmax")		AddSoftmaxLayer(REQ(class_count));
@@ -524,13 +528,8 @@ FullyConnLayer& Session::AddFullyConnLayer(int neuron_count, double l1_decay_mul
 	return *fc;
 }
 
-LrnLayer& Session::AddLrnLayer() {
-	
-	
-	
-	throw NotImplementedException("LrnLayer");
-	
-	LrnLayer* lrn = new LrnLayer();
+LrnLayer& Session::AddLrnLayer(double k, double n, double alpha, double beta) {
+	LrnLayer* lrn = new LrnLayer(k, n, alpha, beta);
 	owned_layers.Add(lrn);
 	net.AddLayer(*lrn);
 	return *lrn;

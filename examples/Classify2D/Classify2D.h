@@ -2,6 +2,7 @@
 #define _Classify2D_Classify2D_h_
 
 #include <ConvNetCtrl/ConvNetCtrl.h>
+#include <Docking/Docking.h>
 using namespace Upp;
 using namespace ConvNet;
 
@@ -10,7 +11,7 @@ using namespace ConvNet;
 #include <Draw/iml_header.h>
 
 
-class Classify2D : public TopWindow {
+class Classify2D : public DockWindow {
 	
 protected:
 	friend class PointCtrl;
@@ -23,7 +24,7 @@ protected:
 	ParentCtrl net_ctrl;
 	DocEdit net_edit;
 	Button reload_btn;
-	Splitter v_split, h_split;
+	Splitter h_split;
 	ParentCtrl parent_pctrl;
 	PointCtrl pctrl;
 	Splitter pctrl_btns;
@@ -36,6 +37,8 @@ public:
 	Classify2D();
 	~Classify2D();
 	
+	virtual void DockInit();
+	
 	void ViewLayer(int i);
 	void Reload();
 	void RandomData(int count=40);
@@ -43,8 +46,6 @@ public:
 	void CircleData(int count=100);
 	void SpiralData(int count=100);
 	void Refresher();
-	
-	void Start();
 	
 };
 

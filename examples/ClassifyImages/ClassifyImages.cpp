@@ -92,9 +92,6 @@ ClassifyImages::ClassifyImages(int loader, int type)
 	
 	net_edit.SetData(t);
 	
-	running = false;
-	stopped = true;
-	
 	average_size = 10;
 	max_diff_imgs = 100000; // not limiting currently
 	
@@ -160,6 +157,7 @@ ClassifyImages::ClassifyImages(int loader, int type)
 	graph.SetSession(ses);
 	graph.SetModeLoss();
 	
+	SetTimeCallback(-1, THISBACK(Refresher));
 }
 
 ClassifyImages::~ClassifyImages() {
@@ -224,7 +222,6 @@ void ClassifyImages::OpenFile() {
 	}
 	
 	ResetAll();
-	Start();
 }
 
 void ClassifyImages::SaveFile() {
@@ -262,15 +259,6 @@ void ClassifyImages::Reload() {
 	
 	if (success) {
 		ses.StartTraining();
-		Start();
-	}
-}
-
-void ClassifyImages::Start() {
-	if (!running) {
-		running = true;
-		stopped = false;
-		PostCallback(THISBACK(Refresher));
 	}
 }
 
@@ -304,9 +292,6 @@ void ClassifyImages::Refresher() {
 		
 	graph.RefreshData();
 	RefreshStatus();
-
-	if (running) PostCallback(THISBACK(Refresher));
-	else stopped = true;
 }
 
 void ClassifyImages::ResetAll() {

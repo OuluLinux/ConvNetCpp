@@ -69,7 +69,7 @@ public:
 	SessionData& Data()		{return *used_data;}
 	
 	FullyConnLayer&		AddFullyConnLayer(int neuron_count, double l1_decay_mul=0.0, double l2_decay_mul=1.0, double bias_pref=0.0);
-	LrnLayer&			AddLrnLayer();
+	LrnLayer&			AddLrnLayer(double k, double n, double alpha, double beta);
 	DropOutLayer&		AddDropoutLayer(double drop_prob);
 	InputLayer&			AddInputLayer(int input_width, int input_height, int input_depth);
 	SoftmaxLayer&		AddSoftmaxLayer(int class_count);

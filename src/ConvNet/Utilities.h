@@ -94,7 +94,8 @@ public:
 	Volume(const Vector<double>& weights);
 	Volume& Init(const Volume& v, double default_value=0.0) {return Init(v.GetWidth(), v.GetHeight(), v.GetDepth(), default_value);}
 	Volume& Init(int width, int height, int depth); // Volume will be filled with random numbers
-	Volume& Init(int width, int height, int depth, double default_value);
+	Volume& Init(int width, int height, int depth, const Vector<double>& weights);
+	Volume& Init(int width, int height, int depth, double default_value, bool def_only_with_resize=false);
 	
 	~Volume();
 	
@@ -116,6 +117,7 @@ public:
 	double GetGradient(int x, int y, int d) const;
 	void Set(int x, int y, int d, double v);
 	void SetConst(double c);
+	void SetConstGradient(double c);
 	void SetGradient(int x, int y, int d, double v);
 	double Get(int i) const;
 	void Set(int i, double v);

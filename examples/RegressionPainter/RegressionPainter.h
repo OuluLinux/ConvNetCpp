@@ -51,7 +51,6 @@ struct PainterImage : public Display {
 class RegressionPainter : public DockWindow {
 	Session ses;
 	String t;
-	bool running, stopped;
 	
 	ArrayCtrl img_list;
 	ConvNet::ImageRegression img_ctrl;
@@ -79,7 +78,6 @@ public:
 	void SetImage();
 	void Refresher();
 	void Reload();
-	void Start();
 	
 };
 

@@ -47,7 +47,6 @@ class ClassifyImages : public DockWindow {
 	bool is_training;
 	bool do_flip;
 	bool has_colors;
-	bool running, stopped;
 	
 public:
 	typedef ClassifyImages CLASSNAME;
@@ -58,14 +57,12 @@ public:
 	
 	Session& GetSession() {return ses;}
 	
-	void Start();
 	void Refresher();
 	void ApplySettings();
 	void OpenFile();
 	void SaveFile();
 	void Reload();
 	void RefreshStatus();
-	void StopRefresher() {running = false; while (!stopped) Sleep(100);}
 	void RefreshPredictions() {pred_view.Refresh();}
 	
 	void UpdateNetParamDisplay();

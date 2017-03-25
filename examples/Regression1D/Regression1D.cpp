@@ -9,9 +9,6 @@ Regression1D::Regression1D() {
 	Icon(Regression1DImg::icon());
 	Sizeable().MaximizeBox().MinimizeBox().Zoomable();
 	
-	running = false;
-	stopped = true;
-	
 	function = 0;
 	
 	t =		"[\n"
@@ -51,6 +48,8 @@ Regression1D::Regression1D() {
 	
 	Regenerate();
 	Reload();
+	
+	SetTimeCallback(-1, THISBACK(Refresher));
 }
 
 void Regression1D::DockInit() {
@@ -59,9 +58,6 @@ void Regression1D::DockInit() {
 
 void Regression1D::Refresher() {
 	layer_ctrl.Refresh();
-	
-	if (running) PostCallback(THISBACK(Refresher));
-	else stopped = true;
 }
 
 void Regression1D::Reload() {
@@ -75,15 +71,6 @@ void Regression1D::Reload() {
 	
 	if (success) {
 		ses.StartTraining();
-		Start();
-	}
-}
-
-void Regression1D::Start() {
-	if (!running) {
-		running = true;
-		stopped = false;
-		PostCallback(THISBACK(Refresher));
 	}
 }
 

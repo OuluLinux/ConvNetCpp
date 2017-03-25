@@ -9,9 +9,6 @@ Classify2D::Classify2D() {
 	Icon(Classify2DImg::icon());
 	Sizeable().MaximizeBox().MinimizeBox();
 	
-	running = false;
-	stopped = true;
-	
 	lctrl.SetSession(session);
 	pctrl.SetSession(session);
 	
@@ -29,10 +26,6 @@ Classify2D::Classify2D() {
 	reload_btn.SetLabel("Reload network");
 	reload_btn <<= THISBACK(Reload);
 	
-	v_split << net_ctrl << h_split;
-	v_split.Vert();
-	v_split.SetPos(2500);
-	
 	h_split.Horz();
 	h_split << parent_pctrl << lctrl;
 	
@@ -49,21 +42,21 @@ Classify2D::Classify2D() {
 	btn_spiral <<= THISBACK1(SpiralData, 100);
 	btn_random <<= THISBACK1(RandomData, 40);
 	
-	Add(v_split.SizePos());
+	Add(h_split.SizePos());
 	
 	net_edit.SetData(t);
     
     PostCallback(THISBACK(OriginalData));
+	
+	SetTimeCallback(-1, THISBACK(Refresher));
 }
 
 Classify2D::~Classify2D() {
 	session.StopTraining();
 }
 
-void Classify2D::Start() {
-	running = true;
-	stopped = false;
-	PostCallback(THISBACK(Refresher));
+void Classify2D::DockInit() {
+	AutoHide(DOCK_LEFT, Dockable(net_ctrl, "Edit Network").SizeHint(Size(320, 240)));
 }
 
 void Classify2D::ViewLayer(int i) {
@@ -74,10 +67,6 @@ void Classify2D::Reload() {
 	String net_str = net_edit.GetData();
 	session.MakeLayers(net_str);
 	session.StartTraining();
-	
-	if (stopped) {
-		Start();
-	}
 }
 
 void Classify2D::RandomData(int count) {
@@ -179,8 +168,6 @@ void Classify2D::Refresher() {
 		pctrl.Refresh();
 		lctrl.Refresh();
 	}
-	if (running) PostCallback(THISBACK(Refresher));
-	else stopped = true;
 }
 
 

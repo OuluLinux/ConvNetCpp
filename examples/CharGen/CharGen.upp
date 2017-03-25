@@ -1,4 +1,4 @@
-description "RecurrentJS: Deep Recurrent Nets character generation demo\377";
+description "Deep Recurrent Nets character generation demo\377";
 
 uses
 	CtrlLib,

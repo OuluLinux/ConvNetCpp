@@ -72,16 +72,13 @@ CONSOLE_APP_MAIN {
 	Volume& probability_volume = net.Forward(x);
 	
 	// prob is a Volume. Volumes have a property Weights that stores the raw data, and WeightGradients that stores gradients
-	DUMPC(probability_volume.GetWeights());
 	LOG("probability that x is class 0: " << probability_volume.GetWeights()[0]); // prints 0.50101
 	
 	SgdTrainer trainer(net);
-	trainer.learning_rate = 0.01;
-	trainer.l2_decay = 0.001;
+	trainer.SetLearningRate(0.01).SetL2Decay(0.001);
 	trainer.Train(x, 0, 0);
 	
 	Volume& probability_volume2 = net.Forward(x);
-	DUMPC(probability_volume2.GetWeights());
 	LOG("probability that x is class 0: " << probability_volume2.GetWeights()[0]);
 	// prints 0.50374
 	

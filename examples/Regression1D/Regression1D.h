@@ -28,7 +28,6 @@ class Regression1D : public DockWindow {
 	
 	String t;
 	int function;
-	bool running, stopped;
 	
 public:
 	typedef Regression1D CLASSNAME;
@@ -36,7 +35,6 @@ public:
 	
 	virtual void DockInit();
 	
-	void Start();
 	void Reload();
 	void Regenerate();
 	void Refresher();
