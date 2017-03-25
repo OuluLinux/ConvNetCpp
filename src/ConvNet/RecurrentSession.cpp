@@ -168,7 +168,6 @@ void RecurrentSession::InitRNN(int i, int j, GraphTree& g) {
 	
 	// one decoder to outputs at end
 	if (j == hidden_prevs.GetCount() - 1) {
-		//g.AddAdd(g.AddMul(Whd, hidden_nexts[j]), bd);
 		g.AddAdd(g.AddMul(Whd, hidden_d), bd);
 	}
 }
@@ -213,8 +212,6 @@ void RecurrentSession::InitLSTM(int i, int j, GraphTree& g) {
 	
 	g.Clear();
 	
-	// Graph uses hidden_prevs[j-1] so two hidden previous vectors are needed.
-	// Otherwise the result could be written over hidden_prevs[j] immediately.
 	Vector<Volume*>& hidden_prevs = this->hidden_prevs[i];
 	Vector<Volume*>& hidden_nexts = this->hidden_prevs[i+1];
 	Vector<Volume*>& cell_prevs = this->cell_prevs[i];
@@ -256,15 +253,12 @@ void RecurrentSession::InitLSTM(int i, int j, GraphTree& g) {
 	// compute hidden state as gated, saturated cell activations
 	Volume& hidden_d = g.AddEltMul(output_gate, g.AddTanh(cell_d));
 	
-	//g.AddCopy(hidden_d,	hidden_nexts[j]);
-	//g.AddCopy(cell_d,	cell_nexts[j]);
 	hidden_nexts[j] = &hidden_d;
 	cell_nexts[j] = &cell_d;
 	
 	
 	// one decoder to outputs at end
 	if (j == hidden_prevs.GetCount() - 1) {
-		//g.AddAdd(g.AddMul(Whd, hidden_nexts[j]), bd);
 		g.AddAdd(g.AddMul(Whd, hidden_d), bd);
 	}
 }

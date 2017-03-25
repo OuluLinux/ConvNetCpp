@@ -5,7 +5,7 @@
 #include <Draw/iml_source.h>
 
 GUI_APP_MAIN {
-	if (0) {
+	if (1) {
 		CharGen().Run();
 	}
 	// For valgrinding

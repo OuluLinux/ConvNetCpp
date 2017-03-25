@@ -23,7 +23,7 @@ CharGen::CharGen() {
 			
 			// optimization
 			"\t\"regc\":0.000001,\n" // L2 regularization strength
-			"\t\"learning_rate\":0.01,\n" // learning rate
+			"\t\"learning_rate\":0.001,\n" // learning rate
 			"\t\"clipval\":5.0\n" // clip gradients at this value
 			"}";
 	
@@ -110,7 +110,6 @@ void CharGen::Reload() {
 	
 	// eval options to set some globals
 	ValueMap js = ParseJSON((String)model_edit.GetData());
-	LOG((String)model_edit.GetData());
 	ses.Load(js);
 	ses.SetInputSize(input_size);
 	ses.SetOutputSize(output_size);

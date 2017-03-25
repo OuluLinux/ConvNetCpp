@@ -92,7 +92,7 @@ NetworkOptimization::NetworkOptimization() {
 	
 	status_ctrl.Add(status.HSizePos(4,4).VSizePos(4,4));
 	
-	FillData(1);
+	FillData(0);
 	
 	bg.Color(White());
 	Add(bg.SizePos()); // try to prevent black image between graph resets in windows
