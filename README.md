@@ -14,7 +14,7 @@ It currently supports:
 
 ## Example code
 
-For screenshots of examples, see [the gallery](https://github.com/sppp/ConvNetC-/blob/master/GALLERY.md).
+For screenshots of examples, see [the gallery](https://github.com/sppp/ConvNetCpp/blob/master/GALLERY.md).
 
 ConvNetC++ includes all original examples from ConvNetJS and also examples from RecurrentJS and ReinforceJS, even tough they were separate libraries originally.
 
