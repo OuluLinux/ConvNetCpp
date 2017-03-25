@@ -1,6 +1,6 @@
 # ConvNetC++
-ConvNetC++ is a C++ port of [ConvNetJS](https://github.com/karpathy/convnetjs) and [ConvNetSharp](https://github.com/cbovar/ConvNetSharp). [RecurrentJS](https://github.com/karpathy/recurrentjs) and 
-[ReinforceJS](https://github.com/karpathy/reinforcejs) are also included in the port.
+ConvNetC++ is a C++ port of [ConvNetJS](https://github.com/karpathy/convnetjs), [ConvNetSharp](https://github.com/cbovar/ConvNetSharp), [RecurrentJS](https://github.com/karpathy/recurrentjs) and 
+[ReinforceJS](https://github.com/karpathy/reinforcejs).
 
 It currently supports:
 
