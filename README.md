@@ -2,7 +2,7 @@
 ConvNetC++ is a C++ port of [ConvNetJS](https://github.com/karpathy/convnetjs) and [ConvNetSharp](https://github.com/cbovar/ConvNetSharp). [RecurrentJS](https://github.com/karpathy/recurrentjs) and 
 [ReinforceJS](https://github.com/karpathy/reinforcejs) are also included in the port.
 
-ConvNetC++ is a C++ implementation of Neural networks, together with nice native GUI demos. It currently supports:
+It currently supports:
 
 - Common **Neural Network modules** (fully connected layers, non-linearities)
 - Classification (SVM/Softmax) and Regression (L2) **cost functions**
@@ -18,6 +18,7 @@ For screenshots of examples, see [the gallery](https://github.com/sppp/ConvNetC-
 
 ConvNetC++ includes all original examples from ConvNetJS and also examples from RecurrentJS and ReinforceJS, even tough they were separate libraries originally.
 
+A typical usage might look something like:
 ```c++
 // species a 2-layer neural network with one hidden layer of 20 neurons
 Net net;
@@ -73,8 +74,8 @@ LOG("probability that x is class 0: " << probability_volume2.GetWeights()[0]);
 ```
 
 ## Compiling the library and examples
-ConvNetC++ requires the cross-platform library [Ultimate++](https://sourceforge.net/projects/upp/files/upp/2015.2/), which works in all platforms. Even Windows XP is supported, because the U++ version 
-9251 and Windows 7 SDK are the minimum requirements.
+ConvNetC++ requires the cross-platform library [Ultimate++](https://sourceforge.net/projects/upp/files/upp/2015.2/), which works in all platforms (Windows, Linux, OSX, FreeBSD). Even Windows XP is 
+supported, because the U++ version 9251 and Windows 7 SDK are the minimum requirements. Getting this to work in OSX is probably easier with wine, than with native solution, which is incomplete.
 
 After you have installed the Ultimate++, create a new assembly for the ConvNetC++ by looking included assemblies as examples.
 You can compile examples with the included MINGW compiler, but compiling them with the Visual Studio compiler makes it a lot faster.
