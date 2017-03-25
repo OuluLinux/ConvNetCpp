@@ -182,7 +182,7 @@ Volume& Volume::Init(int width, int height, int depth) {
 }
 
 
-Volume& Volume::Init(int width, int height, int depth, double default_value, bool def_only_with_resize) {
+Volume& Volume::Init(int width, int height, int depth, double default_value) {
 	ASSERT(width > 0 && height > 0 && depth > 0);
 	if (!owned_weights) {
 		owned_weights = true;
@@ -201,16 +201,9 @@ Volume& Volume::Init(int width, int height, int depth, double default_value, boo
 	weights->SetCount(n);
 	weight_gradients.SetCount(n);
 	
-	if (def_only_with_resize) {
-		for (int i = prev_length; i < n; i++) {
-			weights->Set(i, default_value);
-			weight_gradients[i] = 0.0;
-		}
-	} else {
-		for (int i = 0; i < n; i++) {
-			weights->Set(i, default_value);
-			weight_gradients[i] = 0.0;
-		}
+	for (int i = 0; i < n; i++) {
+		weights->Set(i, default_value);
+		weight_gradients[i] = 0.0;
 	}
 	
 	return *this;
