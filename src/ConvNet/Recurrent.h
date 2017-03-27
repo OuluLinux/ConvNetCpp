@@ -153,6 +153,37 @@ public:
 	
 };
 
+class RecurrentAddConst : public RecurrentBase {
+	double d;
+	
+public:
+	RecurrentAddConst(double d, Volume& in) : RecurrentBase(in), d(d) {};
+	~RecurrentAddConst() {}
+	virtual Volume& Forward();
+	virtual void Backward();
+	virtual String GetKey() const {return "AddConst";}
+	virtual int GetArgCount() const {return 1;}
+	
+};
+
+class RecurrentMulConst : public RecurrentBase {
+	double d;
+	
+public:
+	RecurrentMulConst(double d, Volume& in) : RecurrentBase(in), d(d) {};
+	~RecurrentMulConst() {}
+	virtual Volume& Forward();
+	virtual void Backward();
+	virtual String GetKey() const {return "AddConst";}
+	virtual int GetArgCount() const {return 1;}
+	
+};
+
+
+
+
+
+
 // Graph follows Net class, and allow easy pipeline creation.
 // This is not very useful in complex problems.
 class Graph {
@@ -203,6 +234,8 @@ public:
 	Volume& AddDot(Volume& in1, Volume& in2);
 	Volume& AddEltMul(Volume& in1, Volume& in2);
 	Volume& AddCopy(Volume& src, Volume& dst);
+	Volume& AddAddConstant(double d, Volume& in);
+	Volume& AddMulConstant(double d, Volume& in);
 	
 	RecurrentBase& GetLayer(int i) {return *layers[i];}
 	int GetCount() const {return layers.GetCount();}
@@ -214,11 +247,30 @@ public:
 
 
 
-
+struct HighwayModel : Moveable<HighwayModel> {
+	
+	Volume noise_i[2];
+	Volume noise_h[2];
+	Volume Wix, Wih;
+	
+	static int GetCount() {return 6;}
+	
+	Volume& GetVolume(int i) {
+		ASSERT(i >= 0 && i < 6);
+		switch (i) {
+			case 0: return noise_i[0];
+			case 1: return noise_i[1];
+			case 2: return noise_h[0];
+			case 3: return noise_h[1];
+			case 4: return Wix;
+			case 5: return Wih;
+			default: return Wih;
+		}
+	}
+};
 
 struct LSTMModel : Moveable<LSTMModel> {
 	
-	// LSTM
 	Volume Wix, Wih, bi, Wfx, Wfh, bf, Wox, Woh, bo, Wcx, Wch, bc;
 	
 	static int GetCount() {return 12;}
@@ -244,7 +296,6 @@ struct LSTMModel : Moveable<LSTMModel> {
 
 struct RNNModel : Moveable<RNNModel> {
 	
-	// RNN
 	Volume Wxh, Whh, bhh;
 	
 	static int GetCount() {return 3;}

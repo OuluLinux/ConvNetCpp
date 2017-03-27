@@ -167,6 +167,7 @@ Volume& RecurrentMul::Forward() {
 	
 	// multiply matrices input1 * input2
 	ASSERT_(input1.GetWidth() == input2.GetHeight(), "matmul dimensions misaligned");
+	//ASSERT(input1.GetLength() == input2.GetLength());
 	
 	int h = input1.GetHeight();
 	int w = input2.GetWidth();
@@ -308,6 +309,54 @@ Volume& RecurrentCopy::Forward() {
 
 void RecurrentCopy::Backward() {
 	*input1 = *input2;
+}
+
+
+
+
+
+
+Volume& RecurrentAddConst::Forward() {
+	Volume& input1 = *this->input1;
+	
+	output.Init(input1.GetWidth(), input1.GetHeight(), input1.GetDepth(), 0.0);
+	for (int i = 0; i < input1.GetLength(); i++) {
+		output.Set(i, input1.Get(i) + d);
+	}
+	
+	return output;
+}
+
+void RecurrentAddConst::Backward() {
+	for (int i = 0; i < input1->GetLength(); i++) {
+		input1->AddGradient(i, output.GetGradient(i));
+	}
+}
+
+
+
+
+
+
+
+
+
+Volume& RecurrentMulConst::Forward() {
+	Volume& input1 = *this->input1;
+	
+	output.Init(input1.GetWidth(), input1.GetHeight(), input1.GetDepth(), 0.0);
+	//output.Init(input1.GetHeight(), input1.GetWidth(), input1.GetDepth(), 0.0);
+	for (int i = 0; i < input1.GetLength(); i++) {
+		output.Set(i, input1.Get(i) * d);
+	}
+	
+	return output;
+}
+
+void RecurrentMulConst::Backward() {
+	for (int i = 0; i < input1->GetLength(); i++) {
+		input1->AddGradient(i, output.GetGradient(i));
+	}
 }
 
 
@@ -479,7 +528,13 @@ Volume& GraphTree::AddCopy(Volume& src, Volume& dst) {
 	return layers.Add(new RecurrentCopy(src, dst))->output;
 }
 
+Volume& GraphTree::AddAddConstant(double d, Volume& in) {
+	return layers.Add(new RecurrentAddConst(d, in))->output;
+}
 
+Volume& GraphTree::AddMulConstant(double d, Volume& in) {
+	return layers.Add(new RecurrentMulConst(d, in))->output;
+}
 
 
 void Softmax(const Volume& m, Volume& out) {

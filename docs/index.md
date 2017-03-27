@@ -1,4 +1,4 @@
-ConvNetC++ is a C++ implementation of Neural networks, together with nice native GUI demos. It currently supports:
+ConvNetC++ is a C++ implementation of neural networks, together with nice native GUI demos. It currently supports:
 - Common **Neural Network modules** (fully connected layers, non-linearities)
 - Classification (SVM/Softmax) and Regression (L2) **cost functions**
 - Ability to specify and train **Convolutional Networks** that process images

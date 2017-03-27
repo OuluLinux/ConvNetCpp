@@ -20,6 +20,7 @@ protected:
 	Array<Array<GraphTree> > graphs;
 	
 	// ModelVector
+	Vector<HighwayModel> hw_model;
 	Vector<LSTMModel> lstm_model;
 	Vector<RNNModel> rnn_model;
 	Volume Whd, bd, Wil;
@@ -42,18 +43,21 @@ protected:
 	double learning_rate;
 	double clipval;
 	double ratio_clipped;
+	double initial_bias;
 	int mode;
 	int input_size;
 	int output_size;
 	int letter_size;
 	int max_graphs;
 	
-	enum {MODE_RNN, MODE_LSTM};
+	enum {MODE_RNN, MODE_LSTM, MODE_HIGHWAY};
 	
 	void InitRNN();
 	void InitRNN(int i, int j, GraphTree& g);
 	void InitLSTM();
 	void InitLSTM(int i, int j, GraphTree& g);
+	void InitHighway();
+	void InitHighway(int i, int j, GraphTree& g);
 	void Backward(int seq_end_cursor);
 	void SolverStep();
 	void ResetPrevs();

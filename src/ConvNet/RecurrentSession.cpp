@@ -11,6 +11,7 @@ RecurrentSession::RecurrentSession() {
 	output_size = -1;
 	letter_size = -1;
 	max_graphs = 100;
+	initial_bias = -4;
 	
 	// Solver
 	decay_rate = 0.999;
@@ -32,6 +33,8 @@ int RecurrentSession::GetVolumeCount() {
 		count = rnn_model.GetCount() * RNNModel::GetCount();
 	else if (mode == MODE_LSTM)
 		count = lstm_model.GetCount() * LSTMModel::GetCount();
+	else if (mode == MODE_HIGHWAY)
+		count = hw_model.GetCount() * HighwayModel::GetCount();
 	else
 		Panic("Invalid mode");
 	count += 3;
@@ -47,6 +50,10 @@ Volume& RecurrentSession::GetVolume(int i) {
 	else if (mode == MODE_LSTM) {
 		rows = lstm_model.GetCount();
 		cols = LSTMModel::GetCount();
+	}
+	else if (mode == MODE_HIGHWAY) {
+		rows = hw_model.GetCount();
+		cols = HighwayModel::GetCount();
 	}
 	else Panic("Invalid mode");
 	
@@ -67,6 +74,9 @@ Volume& RecurrentSession::GetVolume(int i) {
 		else if (mode == MODE_LSTM) {
 			return lstm_model[row].GetVolume(col);
 		}
+		else if (mode == MODE_HIGHWAY) {
+			return hw_model[row].GetVolume(col);
+		}
 		else Panic("Invalid mode");
 	}
 	
@@ -77,6 +87,9 @@ void RecurrentSession::Init() {
 	ASSERT_(input_size != -1, "Input size must be set");
 	ASSERT_(output_size != -1, "Output size must be set");
 	
+	if (mode == MODE_HIGHWAY)
+		letter_size = hidden_sizes[0];
+	     
 	RandVolume(input_size, letter_size, 0, 0.08, Wil);
 	
 	if (mode == MODE_RNN) {
@@ -85,13 +98,16 @@ void RecurrentSession::Init() {
 	else if (mode == MODE_LSTM) {
 		InitLSTM();
 	}
+	else if (mode == MODE_HIGHWAY) {
+		InitHighway();
+	}
 	else Panic("Invalid RecurrentSession mode");
 	
 	InitGraphs();
 }
 
 void RecurrentSession::InitGraphs() {
-	ASSERT(mode == MODE_RNN || mode == MODE_LSTM);
+	ASSERT(mode == MODE_RNN || mode == MODE_LSTM || mode == MODE_HIGHWAY);
 	
 	step_cache.Clear();
 	int hidden_count = hidden_sizes.GetCount();
@@ -119,8 +135,10 @@ void RecurrentSession::InitGraphs() {
 		for (int j = 0; j < hidden_count; j++) {
 			if (mode == MODE_RNN)
 				InitRNN(i, j, hidden_graphs[j]);
-			else
+			else if (mode == MODE_LSTM)
 				InitLSTM(i, j, hidden_graphs[j]);
+			else
+				InitHighway(i, j, hidden_graphs[j]);
 		}
 	}
 }
@@ -263,6 +281,94 @@ void RecurrentSession::InitLSTM(int i, int j, GraphTree& g) {
 	}
 }
 
+void RecurrentSession::InitHighway() {
+	int hidden_size = 0;
+	
+	// loop over depths
+	hw_model.SetCount(hidden_sizes.GetCount());
+	for (int d = 0; d < hidden_sizes.GetCount(); d++) {
+		// loop over depths
+		HighwayModel& m = hw_model[d];
+		
+		int prev_size = d == 0 ? letter_size : hidden_sizes[d - 1];
+		hidden_size = hidden_sizes[d];
+		
+		// Same as in RNN and LSTM, but is slow and doesn't give better accuracy
+		//RandVolume(hidden_size, prev_size,		0, 0.08,	m.Wix);
+		//RandVolume(hidden_size, hidden_size,	0, 0.08,	m.Wih);
+		
+		RandVolume(hidden_size, 1,		0, 0.08,	m.Wix);
+		RandVolume(hidden_size, 1	,	0, 0.08,	m.Wih);
+		RandVolume(prev_size, 1,		0, 0.08,	m.noise_i[0]);
+		RandVolume(prev_size, 1,		0, 0.08,	m.noise_i[1]);
+		RandVolume(hidden_size, 1,		0, 0.08,	m.noise_h[0]);
+		RandVolume(hidden_size, 1,		0, 0.08,	m.noise_h[1]);
+	}
+	
+	// decoder params
+	RandVolume(output_size, hidden_size,	0, 0.08,	Whd);
+	bd.Init(1, output_size, 1, 0);
+}
+
+void RecurrentSession::InitHighway(int i, int j, GraphTree& g) {
+	HighwayModel& m = hw_model[j];
+	
+	g.Clear();
+	
+	Vector<Volume*>& hidden_prevs = this->hidden_prevs[i];
+	Vector<Volume*>& hidden_nexts = this->hidden_prevs[i+1];
+	Vector<Volume*>& cell_prevs = this->cell_prevs[i];
+	Vector<Volume*>& cell_nexts = this->cell_prevs[i+1];
+	
+	if (j == 0) {
+		input = &g.AddRowPluck(&index_sequence[i], Wil);
+	}
+	
+	Volume& input_vector = j == 0 ? *input : *hidden_nexts[j-1];
+	Volume& hidden_prev = *hidden_prevs[j];
+	
+	Volume* i2h[2];
+	Volume* h2h_tab[2];
+	
+	if (j == 0) {
+		for (int k = 0; k < 2; k++) {
+			Volume& dropped_x		= g.AddMul(input_vector, m.noise_i[k]);
+			Volume& dropped_h_tab	= g.AddMul(hidden_prev, m.noise_h[k]);
+			i2h[k]					= &g.AddMul(m.Wix, dropped_x);
+			h2h_tab[k]				= &g.AddMul(m.Wih, dropped_h_tab);
+		}
+		Volume& t_gate_tab			= g.AddSigmoid(g.AddAddConstant(initial_bias, g.AddAdd(*i2h[0], *h2h_tab[0])));
+		Volume& in_transform_tab	= g.AddTanh(g.AddAdd(*i2h[1], *h2h_tab[1]));
+		Volume& c_gate_tab			= g.AddAddConstant(1, g.AddMulConstant(-1, t_gate_tab));
+		Volume& hidden_d			= g.AddAdd(
+										g.AddMul(c_gate_tab, hidden_prev),
+										g.AddMul(t_gate_tab, in_transform_tab));
+		
+		hidden_nexts[j] = &hidden_d;
+	}
+	else
+	{
+		for (int k = 0; k < 2; k++) {
+			Volume& dropped_h_tab	= g.AddMul(input_vector, m.noise_h[k]);
+			h2h_tab[k]				= &g.AddMul(m.Wix, dropped_h_tab);
+		}
+		Volume& t_gate_tab			= g.AddSigmoid(g.AddAddConstant(initial_bias, *h2h_tab[0]));
+		Volume& in_transform_tab	= g.AddTanh(*h2h_tab[1]);
+		Volume& c_gate_tab			= g.AddAddConstant(1, g.AddMulConstant(-1, t_gate_tab));
+		Volume& hidden_d			= g.AddAdd(
+										g.AddMul(c_gate_tab, input_vector),
+										g.AddMul(t_gate_tab, in_transform_tab));
+		
+		hidden_nexts[j] = &hidden_d;
+	}
+	
+	
+	// one decoder to outputs at end
+	if (j == hidden_prevs.GetCount() - 1) {
+		g.AddAdd(g.AddMul(Whd, *hidden_nexts.Top()), bd);
+	}
+}
+	
 void RecurrentSession::Learn(const Vector<int>& input_sequence) {
 	double log2ppl = 0.0;
 	double cost = 0.0;
@@ -282,6 +388,7 @@ void RecurrentSession::Learn(const Vector<int>& input_sequence) {
 	ResetPrevs();
 	
 	for(int i = 0; i <= n; i++) {
+		
 		int ix_target = i == n ? 0 : index_sequence[i+1]; // last step: end with END token
 		
 		Array<GraphTree>& list = graphs[i];
@@ -385,6 +492,7 @@ void RecurrentSession::Predict(Vector<int>& output_sequence, bool samplei, doubl
 	ResetPrevs();
 	
 	for (int i = 0; ; i++) {
+		
 		Array<GraphTree>& list = graphs[i];
 		for(int j = 0; j < list.GetCount(); j++) {
 			GraphTree& g = list[j];
@@ -428,7 +536,7 @@ void RecurrentSession::Load(const ValueMap& js) {
 	
 	String generator;
 	LOAD(generator);
-	mode = generator == "lstm" ? MODE_LSTM : MODE_RNN;
+	mode = generator == "lstm" ? MODE_LSTM : generator == "rnn" ? MODE_RNN : MODE_HIGHWAY;
 	
 	if (js.Find("hidden_sizes") != -1) {
 		hidden_sizes.Clear();
@@ -451,8 +559,9 @@ void RecurrentSession::Load(const ValueMap& js) {
 		LOADVOL(bd);
 		#undef LOADVOL
 		
-		if      (mode == MODE_LSTM) {lstm_model.SetCount(hidden_sizes.GetCount());}
-		else if (mode == MODE_RNN)  {rnn_model.SetCount(hidden_sizes.GetCount());}
+		if      (mode == MODE_LSTM)		{lstm_model.SetCount(hidden_sizes.GetCount());}
+		else if (mode == MODE_RNN)		{rnn_model.SetCount(hidden_sizes.GetCount());}
+		else if (mode == MODE_HIGHWAY)  {hw_model.SetCount(hidden_sizes.GetCount());}
 		else Panic("Invalid mode");
 		
 		for(int i = 0; i < hidden_sizes.GetCount(); i++) {
@@ -487,7 +596,7 @@ void RecurrentSession::Load(const ValueMap& js) {
 void RecurrentSession::Store(ValueMap& js) {
 	#define SAVE(x) js.GetAdd(#x) = x;
 	
-	String generator = mode == MODE_LSTM ? "lstm" : "rnn";
+	String generator = mode == MODE_LSTM ? "lstm" : mode == MODE_RNN ? "rnn" : "highway";
 	SAVE(generator);
 	
 	ValueMap hs;

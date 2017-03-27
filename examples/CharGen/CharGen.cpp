@@ -26,7 +26,19 @@ CharGen::CharGen() {
 			"\t\"learning_rate\":0.001,\n" // learning rate
 			"\t\"clipval\":5.0\n" // clip gradients at this value
 			"}";
+	/*
+	model_str = "{\n"
 	
+			// model parameters
+			"\t\"generator\":\"highway\",\n" // can be 'rnn' or 'lstm'
+			"\t\"hidden_sizes\":[100,100],\n" // list of sizes of hidden layers
+			
+			// optimization
+			"\t\"regc\":0.000001,\n" // L2 regularization strength
+			"\t\"learning_rate\":0.001,\n" // learning rate
+			"\t\"clipval\":5.0\n" // clip gradients at this value
+			"}";
+	*/
 	input.SetData(input_str);
 	model_edit.SetData(model_str);
 	
