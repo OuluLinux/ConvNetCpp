@@ -48,7 +48,7 @@ Classify2D::Classify2D() {
     
     PostCallback(THISBACK(OriginalData));
 	
-	SetTimeCallback(-15, THISBACK(Refresher));
+	SetTimeCallback(-40, THISBACK(Refresher));
 }
 
 Classify2D::~Classify2D() {

@@ -49,7 +49,7 @@ Regression1D::Regression1D() {
 	Regenerate();
 	Reload();
 	
-	SetTimeCallback(-15, THISBACK(Refresher));
+	SetTimeCallback(-40, THISBACK(Refresher));
 }
 
 void Regression1D::DockInit() {

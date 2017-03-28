@@ -223,7 +223,7 @@ PuckWorld::PuckWorld() {
 	PostCallback(THISBACK(Reload));
 	RefreshEpsilon();
 	
-	SetTimeCallback(-15, THISBACK(Refresher));
+	SetTimeCallback(-40, THISBACK(Refresher));
 }
 
 PuckWorld::~PuckWorld() {

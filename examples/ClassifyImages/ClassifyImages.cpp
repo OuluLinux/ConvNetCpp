@@ -157,7 +157,7 @@ ClassifyImages::ClassifyImages(int loader, int type)
 	graph.SetSession(ses);
 	graph.SetModeLoss();
 	
-	SetTimeCallback(-15, THISBACK(Refresher));
+	SetTimeCallback(-40, THISBACK(Refresher));
 }
 
 ClassifyImages::~ClassifyImages() {

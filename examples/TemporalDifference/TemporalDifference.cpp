@@ -74,7 +74,7 @@ TemporalDifference::TemporalDifference() {
 	PostCallback(THISBACK2(Reset, true, true));
 	PostCallback(THISBACK(Reload));
 	
-	SetTimeCallback(-15, THISBACK(Refresher));
+	SetTimeCallback(-40, THISBACK(Refresher));
 }
 
 TemporalDifference::~TemporalDifference() {

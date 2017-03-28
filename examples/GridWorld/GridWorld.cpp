@@ -33,7 +33,7 @@ GridWorld::GridWorld() {
 	
 	PostCallback(THISBACK1(Reset, true));
 	
-	SetTimeCallback(-15, THISBACK(Refresher));
+	SetTimeCallback(-40, THISBACK(Refresher));
 }
 
 GridWorld::~GridWorld() {

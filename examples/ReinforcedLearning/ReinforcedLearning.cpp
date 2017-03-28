@@ -77,7 +77,7 @@ ReinforcedLearning::ReinforcedLearning() {
 	reward_graph.SetSession(world.agents[0].brain);
 	
 	PostCallback(THISBACK(Start));
-	SetTimeCallback(-15, THISBACK(Refresher));
+	SetTimeCallback(-40, THISBACK(Refresher));
 }
 
 ReinforcedLearning::~ReinforcedLearning() {

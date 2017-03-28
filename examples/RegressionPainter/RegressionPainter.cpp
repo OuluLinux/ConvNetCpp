@@ -53,7 +53,7 @@ RegressionPainter::RegressionPainter() {
 	
 	PostCallback(THISBACK(SetImage));
 	
-	SetTimeCallback(-15, THISBACK(Refresher));
+	SetTimeCallback(-40, THISBACK(Refresher));
 }
 
 void RegressionPainter::DockInit() {

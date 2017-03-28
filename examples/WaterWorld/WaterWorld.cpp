@@ -67,7 +67,7 @@ WaterWorld::WaterWorld() {
 	PostCallback(THISBACK(Start));
 	RefreshEpsilon();
 	
-	SetTimeCallback(-15, THISBACK(Refresher));
+	SetTimeCallback(-40, THISBACK(Refresher));
 }
 
 WaterWorld::~WaterWorld() {
