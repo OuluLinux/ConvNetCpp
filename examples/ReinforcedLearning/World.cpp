@@ -255,7 +255,7 @@ void World::Paint(Draw& d) {
 		else                   fill_clr = Color(150, 150, 255);
 		double radius = it.rad;
 		double radius2 = radius * 2.0;
-		id.DrawEllipse(it.p.x - radius2, it.p.y - radius2, radius2, radius2, fill_clr, 1, Black());
+		id.DrawEllipse(it.p.x - radius, it.p.y - radius, radius2, radius2, fill_clr, 1, Black());
 	}
 	
 	d.DrawImage(0, 0, id);
