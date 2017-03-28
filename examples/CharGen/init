@@ -1,0 +1,6 @@
+#ifndef _CharGen_icpp_init_stub
+#define _CharGen_icpp_init_stub
+#include "CtrlLib/init"
+#include "ConvNetCtrl/init"
+#include "plugin/bz2/init"
+#endif

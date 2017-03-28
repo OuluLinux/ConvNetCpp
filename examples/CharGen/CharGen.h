@@ -56,6 +56,7 @@ public:
 	void Reset();
 	void Reload();
 	
+	void SetPreset(int i);
 	void SetLearningRate();
 	void SetSampleTemperature();
 	void Save();

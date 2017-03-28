@@ -198,14 +198,14 @@ public:
 	Volume& Forward(Volume& input);
 	void Backward();
 	
-	Volume& AddRowPluck(int* row);
-	Volume& AddTanh();
-	Volume& AddSigmoid();
-	Volume& AddRelu();
-	Volume& AddMul(Volume& multiplier);
-	Volume& AddAdd(Volume& addition);
-	Volume& AddDot(Volume& v);
-	Volume& AddEltMul(Volume& v);
+	Volume& RowPluck(int* row);
+	Volume& Tanh();
+	Volume& Sigmoid();
+	Volume& Relu();
+	Volume& Mul(Volume& multiplier);
+	Volume& Add(Volume& addition);
+	Volume& Dot(Volume& v);
+	Volume& EltMul(Volume& v);
 	
 	RecurrentBase& GetLayer(int i) {return *layers[i];}
 	int GetCount() const {return layers.GetCount();}
@@ -225,17 +225,17 @@ public:
 	Volume& Forward();
 	void Backward();
 	
-	Volume& AddRowPluck(int* row, Volume& in);
-	Volume& AddTanh(Volume& in);
-	Volume& AddSigmoid(Volume& in);
-	Volume& AddRelu(Volume& in);
-	Volume& AddMul(Volume& in1, Volume& in2);
-	Volume& AddAdd(Volume& in1, Volume& in2);
-	Volume& AddDot(Volume& in1, Volume& in2);
-	Volume& AddEltMul(Volume& in1, Volume& in2);
-	Volume& AddCopy(Volume& src, Volume& dst);
-	Volume& AddAddConstant(double d, Volume& in);
-	Volume& AddMulConstant(double d, Volume& in);
+	Volume& RowPluck(int* row, Volume& in);
+	Volume& Tanh(Volume& in);
+	Volume& Sigmoid(Volume& in);
+	Volume& Relu(Volume& in);
+	Volume& Mul(Volume& in1, Volume& in2);
+	Volume& Add(Volume& in1, Volume& in2);
+	Volume& Dot(Volume& in1, Volume& in2);
+	Volume& EltMul(Volume& in1, Volume& in2);
+	Volume& Copy(Volume& src, Volume& dst);
+	Volume& AddConstant(double d, Volume& in);
+	Volume& MulConstant(double d, Volume& in);
 	
 	RecurrentBase& GetLayer(int i) {return *layers[i];}
 	int GetCount() const {return layers.GetCount();}

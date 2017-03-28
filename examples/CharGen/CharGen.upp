@@ -14,7 +14,8 @@ file
 	CharGen.brc,
 	CharGen.lay,
 	input.txt,
-	pretrained.json;
+	pretrained.json,
+	RNNSolver.h;
 
 mainconfig
 	"" = "GUI MT",

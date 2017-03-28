@@ -14,33 +14,7 @@ CharGen::CharGen() {
 	stopped = true;
 	paused = false;
 	
-	model_str = "{\n"
-	
-			// model parameters
-			"\t\"generator\":\"lstm\",\n" // can be 'rnn' or 'lstm'
-			"\t\"hidden_sizes\":[20,20],\n" // list of sizes of hidden layers
-			"\t\"letter_size\":5,\n" // size of letter embeddings
-			
-			// optimization
-			"\t\"regc\":0.000001,\n" // L2 regularization strength
-			"\t\"learning_rate\":0.001,\n" // learning rate
-			"\t\"clipval\":5.0\n" // clip gradients at this value
-			"}";
-	/*
-	model_str = "{\n"
-	
-			// model parameters
-			"\t\"generator\":\"highway\",\n" // can be 'rnn' or 'lstm'
-			"\t\"hidden_sizes\":[100,100],\n" // list of sizes of hidden layers
-			
-			// optimization
-			"\t\"regc\":0.000001,\n" // L2 regularization strength
-			"\t\"learning_rate\":0.001,\n" // learning rate
-			"\t\"clipval\":5.0\n" // clip gradients at this value
-			"}";
-	*/
 	input.SetData(input_str);
-	model_edit.SetData(model_str);
 	
 	learning_rate_slider.MinMax(1,1000);
 	learning_rate_slider.SetData(1000);
@@ -55,6 +29,9 @@ CharGen::CharGen() {
 	load_pretrained <<= THISBACK(LoadPretrained);
 	pause <<= THISBACK(Pause);
 	resume <<= THISBACK(Resume);
+	set_rnn <<= THISBACK1(SetPreset, 0);
+	set_lstm <<= THISBACK1(SetPreset, 1);
+	set_hrn <<= THISBACK1(SetPreset, 2);
 	
 	CtrlLayout(*this);
 	
@@ -68,12 +45,58 @@ CharGen::CharGen() {
 	input_size = -1;
 	output_size = -1;
 	
+	PostCallback(THISBACK1(SetPreset, 1));
 	PostCallback(THISBACK(Reload));
 	PostCallback(THISBACK(Start));
 }
 
 CharGen::~CharGen() {
 	Stop();
+}
+
+void CharGen::SetPreset(int i) {
+	if (i == 0) {
+		model_str = "{\n"
+	
+			// model parameters
+			"\t\"generator\":\"rnn\",\n" // can be 'rnn' or 'lstm' or 'highway'
+			"\t\"hidden_sizes\":[20,20],\n" // list of sizes of hidden layers
+			"\t\"letter_size\":5,\n" // size of letter embeddings
+			
+			// optimization
+			"\t\"regc\":0.000001,\n" // L2 regularization strength
+			"\t\"learning_rate\":0.001,\n" // learning rate
+			"\t\"clipval\":5.0\n" // clip gradients at this value
+			"}";
+	}
+	else if (i == 1) {
+		model_str = "{\n"
+	
+			// model parameters
+			"\t\"generator\":\"lstm\",\n" // can be 'rnn' or 'lstm' or 'highway'
+			"\t\"hidden_sizes\":[20,20],\n" // list of sizes of hidden layers
+			"\t\"letter_size\":5,\n" // size of letter embeddings
+			
+			// optimization
+			"\t\"regc\":0.000001,\n" // L2 regularization strength
+			"\t\"learning_rate\":0.001,\n" // learning rate
+			"\t\"clipval\":5.0\n" // clip gradients at this value
+			"}";
+	}
+	else if (i == 2) {
+		model_str = "{\n"
+	
+			// model parameters
+			"\t\"generator\":\"highway\",\n" // can be 'rnn' or 'lstm' or 'highway'
+			"\t\"hidden_sizes\":[100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100],\n" // list of sizes of hidden layers
+			
+			// optimization
+			"\t\"regc\":0.000001,\n" // L2 regularization strength
+			"\t\"learning_rate\":0.01,\n" // learning rate
+			"\t\"clipval\":5.0\n" // clip gradients at this value
+			"}";
+	}
+	model_edit.SetData(model_str);
 }
 
 void CharGen::Start() {

@@ -913,11 +913,11 @@ DQNAgent::DQNAgent() {
 	//		var a1mat = G.Add(G.Mul(net.W1, s), net.b1);
 	//		var h1mat = G.Tanh(a1mat);
 	//		var a2mat = G.Add(G.Mul(net.W2, h1mat), net.b2);
-	G.AddMul(net.W1);
-	G.AddAdd(net.b1);
-	G.AddTanh();
-	G.AddMul(net.W2);
-	G.AddAdd(net.b2);
+	G.Mul(net.W1);
+	G.Add(net.b1);
+	G.Tanh();
+	G.Mul(net.W2);
+	G.Add(net.b2);
 	
 	has_reward = false;
 }

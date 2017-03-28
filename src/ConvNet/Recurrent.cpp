@@ -167,7 +167,6 @@ Volume& RecurrentMul::Forward() {
 	
 	// multiply matrices input1 * input2
 	ASSERT_(input1.GetWidth() == input2.GetHeight(), "matmul dimensions misaligned");
-	//ASSERT(input1.GetLength() == input2.GetLength());
 	
 	int h = input1.GetHeight();
 	int w = input2.GetWidth();
@@ -345,7 +344,6 @@ Volume& RecurrentMulConst::Forward() {
 	Volume& input1 = *this->input1;
 	
 	output.Init(input1.GetWidth(), input1.GetHeight(), input1.GetDepth(), 0.0);
-	//output.Init(input1.GetHeight(), input1.GetWidth(), input1.GetDepth(), 0.0);
 	for (int i = 0; i < input1.GetLength(); i++) {
 		output.Set(i, input1.Get(i) * d);
 	}
@@ -410,42 +408,42 @@ void Graph::Backward() {
 }
 
 
-Volume& Graph::AddRowPluck(int* row) {
+Volume& Graph::RowPluck(int* row) {
 	extra_args.Add(0);
 	return layers.Add(new RecurrentRowPluck(row))->output;
 }
 
-Volume& Graph::AddTanh() {
+Volume& Graph::Tanh() {
 	extra_args.Add(0);
 	return layers.Add(new RecurrentTanh())->output;
 }
 
-Volume& Graph::AddSigmoid() {
+Volume& Graph::Sigmoid() {
 	extra_args.Add(0);
 	return layers.Add(new RecurrentSigmoid())->output;
 }
 
-Volume& Graph::AddRelu() {
+Volume& Graph::Relu() {
 	extra_args.Add(0);
 	return layers.Add(new RecurrentRelu())->output;
 }
 
-Volume& Graph::AddMul(Volume& multiplier) {
+Volume& Graph::Mul(Volume& multiplier) {
 	extra_args.Add(&multiplier);
 	return layers.Add(new RecurrentMul())->output;
 }
 
-Volume& Graph::AddAdd(Volume& addition) {
+Volume& Graph::Add(Volume& addition) {
 	extra_args.Add(&addition);
 	return layers.Add(new RecurrentAdd())->output;
 }
 
-Volume& Graph::AddDot(Volume& v) {
+Volume& Graph::Dot(Volume& v) {
 	extra_args.Add(&v);
 	return layers.Add(new RecurrentDot())->output;
 }
 
-Volume& Graph::AddEltMul(Volume& v) {
+Volume& Graph::EltMul(Volume& v) {
 	extra_args.Add(&v);
 	return layers.Add(new RecurrentEltMul())->output;
 }
@@ -492,47 +490,47 @@ void GraphTree::Backward() {
 	}
 }
 
-Volume& GraphTree::AddRowPluck(int* row, Volume& in) {
+Volume& GraphTree::RowPluck(int* row, Volume& in) {
 	return layers.Add(new RecurrentRowPluck(row, in))->output;
 }
 
-Volume& GraphTree::AddTanh(Volume& in) {
+Volume& GraphTree::Tanh(Volume& in) {
 	return layers.Add(new RecurrentTanh(in))->output;
 }
 
-Volume& GraphTree::AddSigmoid(Volume& in) {
+Volume& GraphTree::Sigmoid(Volume& in) {
 	return layers.Add(new RecurrentSigmoid(in))->output;
 }
 
-Volume& GraphTree::AddRelu(Volume& in) {
+Volume& GraphTree::Relu(Volume& in) {
 	return layers.Add(new RecurrentRelu(in))->output;
 }
 
-Volume& GraphTree::AddMul(Volume& in1, Volume& in2) {
+Volume& GraphTree::Mul(Volume& in1, Volume& in2) {
 	return layers.Add(new RecurrentMul(in1, in2))->output;
 }
 
-Volume& GraphTree::AddAdd(Volume& in1, Volume& in2) {
+Volume& GraphTree::Add(Volume& in1, Volume& in2) {
 	return layers.Add(new RecurrentAdd(in1, in2))->output;
 }
 
-Volume& GraphTree::AddDot(Volume& in1, Volume& in2) {
+Volume& GraphTree::Dot(Volume& in1, Volume& in2) {
 	return layers.Add(new RecurrentDot(in1, in2))->output;
 }
 
-Volume& GraphTree::AddEltMul(Volume& in1, Volume& in2) {
+Volume& GraphTree::EltMul(Volume& in1, Volume& in2) {
 	return layers.Add(new RecurrentEltMul(in1, in2))->output;
 }
 
-Volume& GraphTree::AddCopy(Volume& src, Volume& dst) {
+Volume& GraphTree::Copy(Volume& src, Volume& dst) {
 	return layers.Add(new RecurrentCopy(src, dst))->output;
 }
 
-Volume& GraphTree::AddAddConstant(double d, Volume& in) {
+Volume& GraphTree::AddConstant(double d, Volume& in) {
 	return layers.Add(new RecurrentAddConst(d, in))->output;
 }
 
-Volume& GraphTree::AddMulConstant(double d, Volume& in) {
+Volume& GraphTree::MulConstant(double d, Volume& in) {
 	return layers.Add(new RecurrentMulConst(d, in))->output;
 }
 

@@ -88,9 +88,10 @@ void RecurrentSession::Init() {
 	ASSERT_(output_size != -1, "Output size must be set");
 	
 	if (mode == MODE_HIGHWAY)
-		letter_size = hidden_sizes[0];
+		RandVolume(input_size, hidden_sizes[0], 0, 0.08, Wil);
+	else
+		RandVolume(input_size, letter_size, 0, 0.08, Wil);
 	     
-	RandVolume(input_size, letter_size, 0, 0.08, Wil);
 	
 	if (mode == MODE_RNN) {
 		InitRNN();
@@ -120,6 +121,7 @@ void RecurrentSession::InitGraphs() {
 		cell_prevs.SetCount(hidden_count, NULL);
 	}
 	
+	
 	first_hidden.SetCount(hidden_count);
 	first_cell.SetCount(hidden_count);
 	for(int i = 0; i < hidden_count; i++) {
@@ -128,6 +130,7 @@ void RecurrentSession::InitGraphs() {
 		first_hidden[i]	.Init(1, hidden_sizes[i], 1, 0);
 		first_cell[i]	.Init(1, hidden_sizes[i], 1, 0);
 	}
+	
 	
 	for (int i = 0; i < graphs.GetCount(); i++) {
 		Array<GraphTree>& hidden_graphs = graphs[i];
@@ -171,22 +174,21 @@ void RecurrentSession::InitRNN(int i, int j, GraphTree& g) {
 	Vector<Volume*>& hidden_nexts = this->hidden_prevs[i+1];
 	
 	if (j == 0) {
-		input = &g.AddRowPluck(&index_sequence[i], Wil);
+		input = &g.RowPluck(&index_sequence[i], Wil);
 	}
 	
 	Volume& input_vector = j == 0 ? *input : *hidden_nexts[j-1];
 	Volume& hidden_prev = *hidden_prevs[j];
 	
-	Volume& h0 = g.AddMul(m.Wxh, input_vector);
-	Volume& h1 = g.AddMul(m.Whh, hidden_prev);
-	Volume& hidden_d = g.AddRelu(g.AddAdd(g.AddAdd(h0, h1), m.bhh));
+	Volume& h0 = g.Mul(m.Wxh, input_vector);
+	Volume& h1 = g.Mul(m.Whh, hidden_prev);
+	Volume& hidden_d = g.Relu(g.Add(g.Add(h0, h1), m.bhh));
 	
-	//g.AddCopy(hidden_d, hidden_nexts[j]);
 	hidden_nexts[j] = &hidden_d;
 	
 	// one decoder to outputs at end
 	if (j == hidden_prevs.GetCount() - 1) {
-		g.AddAdd(g.AddMul(Whd, hidden_d), bd);
+		g.Add(g.Mul(Whd, hidden_d), bd);
 	}
 }
 
@@ -236,7 +238,7 @@ void RecurrentSession::InitLSTM(int i, int j, GraphTree& g) {
 	Vector<Volume*>& cell_nexts = this->cell_prevs[i+1];
 	
 	if (j == 0) {
-		input = &g.AddRowPluck(&index_sequence[i], Wil);
+		input = &g.RowPluck(&index_sequence[i], Wil);
 	}
 	
 	Volume& input_vector = j == 0 ? *input : *hidden_nexts[j-1];
@@ -244,32 +246,32 @@ void RecurrentSession::InitLSTM(int i, int j, GraphTree& g) {
 	Volume& cell_prev = *cell_prevs[j];
 	
 	// input gate
-	Volume& h0 = g.AddMul(m.Wix, input_vector);
-	Volume& h1 = g.AddMul(m.Wih, hidden_prev);
-	Volume& input_gate = g.AddSigmoid(g.AddAdd(g.AddAdd(h0, h1), m.bi));
+	Volume& h0 = g.Mul(m.Wix, input_vector);
+	Volume& h1 = g.Mul(m.Wih, hidden_prev);
+	Volume& input_gate = g.Sigmoid(g.Add(g.Add(h0, h1), m.bi));
 	
 	// forget gate
-	Volume& h2 = g.AddMul(m.Wfx, input_vector);
-	Volume& h3 = g.AddMul(m.Wfh, hidden_prev);
-	Volume& forget_gate = g.AddSigmoid(g.AddAdd(g.AddAdd(h2, h3), m.bf));
+	Volume& h2 = g.Mul(m.Wfx, input_vector);
+	Volume& h3 = g.Mul(m.Wfh, hidden_prev);
+	Volume& forget_gate = g.Sigmoid(g.Add(g.Add(h2, h3), m.bf));
 	
 	// output gate
-	Volume& h4 = g.AddMul(m.Wox, input_vector);
-	Volume& h5 = g.AddMul(m.Woh, hidden_prev);
-	Volume& output_gate = g.AddSigmoid(g.AddAdd(g.AddAdd(h4, h5), m.bo));
+	Volume& h4 = g.Mul(m.Wox, input_vector);
+	Volume& h5 = g.Mul(m.Woh, hidden_prev);
+	Volume& output_gate = g.Sigmoid(g.Add(g.Add(h4, h5), m.bo));
 	
 	// write operation on cells
-	Volume& h6 = g.AddMul(m.Wcx, input_vector);
-	Volume& h7 = g.AddMul(m.Wch, hidden_prev);
-	Volume& cell_write = g.AddTanh(g.AddAdd(g.AddAdd(h6, h7), m.bc));
+	Volume& h6 = g.Mul(m.Wcx, input_vector);
+	Volume& h7 = g.Mul(m.Wch, hidden_prev);
+	Volume& cell_write = g.Tanh(g.Add(g.Add(h6, h7), m.bc));
 	
 	// compute new cell activation
-	Volume& retain_cell = g.AddEltMul(forget_gate, cell_prev); // what do we keep from cell
-	Volume& write_cell = g.AddEltMul(input_gate, cell_write); // what do we write to cell
-	Volume& cell_d = g.AddAdd(retain_cell, write_cell); // new cell contents
+	Volume& retain_cell = g.EltMul(forget_gate, cell_prev); // what do we keep from cell
+	Volume& write_cell = g.EltMul(input_gate, cell_write); // what do we write to cell
+	Volume& cell_d = g.Add(retain_cell, write_cell); // new cell contents
 	
 	// compute hidden state as gated, saturated cell activations
-	Volume& hidden_d = g.AddEltMul(output_gate, g.AddTanh(cell_d));
+	Volume& hidden_d = g.EltMul(output_gate, g.Tanh(cell_d));
 	
 	hidden_nexts[j] = &hidden_d;
 	cell_nexts[j] = &cell_d;
@@ -277,11 +279,12 @@ void RecurrentSession::InitLSTM(int i, int j, GraphTree& g) {
 	
 	// one decoder to outputs at end
 	if (j == hidden_prevs.GetCount() - 1) {
-		g.AddAdd(g.AddMul(Whd, hidden_d), bd);
+		g.Add(g.Mul(Whd, hidden_d), bd);
 	}
 }
 
 void RecurrentSession::InitHighway() {
+	ASSERT(input_size == output_size);
 	int hidden_size = 0;
 	
 	// loop over depths
@@ -290,19 +293,14 @@ void RecurrentSession::InitHighway() {
 		// loop over depths
 		HighwayModel& m = hw_model[d];
 		
-		int prev_size = d == 0 ? letter_size : hidden_sizes[d - 1];
 		hidden_size = hidden_sizes[d];
 		
-		// Same as in RNN and LSTM, but is slow and doesn't give better accuracy
-		//RandVolume(hidden_size, prev_size,		0, 0.08,	m.Wix);
-		//RandVolume(hidden_size, hidden_size,	0, 0.08,	m.Wih);
-		
-		RandVolume(hidden_size, 1,		0, 0.08,	m.Wix);
-		RandVolume(hidden_size, 1	,	0, 0.08,	m.Wih);
-		RandVolume(prev_size, 1,		0, 0.08,	m.noise_i[0]);
-		RandVolume(prev_size, 1,		0, 0.08,	m.noise_i[1]);
-		RandVolume(hidden_size, 1,		0, 0.08,	m.noise_h[0]);
-		RandVolume(hidden_size, 1,		0, 0.08,	m.noise_h[1]);
+		RandVolume(1, 1,						0, 0.08,	m.Wix);
+		RandVolume(1, 1,						0, 0.08,	m.Wih);
+		RandVolume(1, hidden_size,				0, 0.08,	m.noise_i[0]);
+		RandVolume(1, 1,						0, 0.08,	m.noise_i[1]);
+		RandVolume(1, hidden_size,				0, 0.08,	m.noise_h[0]);
+		RandVolume(1, 1,						0, 0.08,	m.noise_h[1]);
 	}
 	
 	// decoder params
@@ -321,7 +319,7 @@ void RecurrentSession::InitHighway(int i, int j, GraphTree& g) {
 	Vector<Volume*>& cell_nexts = this->cell_prevs[i+1];
 	
 	if (j == 0) {
-		input = &g.AddRowPluck(&index_sequence[i], Wil);
+		input = &g.RowPluck(&index_sequence[i], Wil);
 	}
 	
 	Volume& input_vector = j == 0 ? *input : *hidden_nexts[j-1];
@@ -330,34 +328,48 @@ void RecurrentSession::InitHighway(int i, int j, GraphTree& g) {
 	Volume* i2h[2];
 	Volume* h2h_tab[2];
 	
+	
+	// This is not probably the 100% correct highway rnn implementation.
+	// It works and has similar characteristics, however.
+	
 	if (j == 0) {
-		for (int k = 0; k < 2; k++) {
-			Volume& dropped_x		= g.AddMul(input_vector, m.noise_i[k]);
-			Volume& dropped_h_tab	= g.AddMul(hidden_prev, m.noise_h[k]);
-			i2h[k]					= &g.AddMul(m.Wix, dropped_x);
-			h2h_tab[k]				= &g.AddMul(m.Wih, dropped_h_tab);
+		{
+			Volume& dropped_x		= g.Mul(m.noise_i[0], input_vector);
+			Volume& dropped_h_tab	= g.Mul(m.noise_h[0], hidden_prev);
+			i2h[0]					= &g.Mul(m.Wix, dropped_x);
+			h2h_tab[0]				= &g.Mul(m.Wih, dropped_h_tab);
 		}
-		Volume& t_gate_tab			= g.AddSigmoid(g.AddAddConstant(initial_bias, g.AddAdd(*i2h[0], *h2h_tab[0])));
-		Volume& in_transform_tab	= g.AddTanh(g.AddAdd(*i2h[1], *h2h_tab[1]));
-		Volume& c_gate_tab			= g.AddAddConstant(1, g.AddMulConstant(-1, t_gate_tab));
-		Volume& hidden_d			= g.AddAdd(
-										g.AddMul(c_gate_tab, hidden_prev),
-										g.AddMul(t_gate_tab, in_transform_tab));
+		{
+			Volume& dropped_x		= g.Mul(input_vector, m.noise_i[1]);
+			Volume& dropped_h_tab	= g.Mul(hidden_prev, m.noise_h[1]);
+			i2h[1]					= &g.Mul(dropped_x, m.Wix);
+			h2h_tab[1]				= &g.Mul(dropped_h_tab, m.Wih);
+		}
+		Volume& t_gate_tab			= g.Sigmoid(g.AddConstant(initial_bias, g.Add(*i2h[0], *h2h_tab[0])));
+		Volume& in_transform_tab	= g.Tanh(g.Add(*i2h[1], *h2h_tab[1]));
+		Volume& c_gate_tab			= g.AddConstant(1, g.MulConstant(-1, t_gate_tab));
+		Volume& hidden_d			= g.Add(
+										g.Mul(hidden_prev, c_gate_tab),
+										g.Mul(in_transform_tab, t_gate_tab));
 		
 		hidden_nexts[j] = &hidden_d;
 	}
 	else
 	{
-		for (int k = 0; k < 2; k++) {
-			Volume& dropped_h_tab	= g.AddMul(input_vector, m.noise_h[k]);
-			h2h_tab[k]				= &g.AddMul(m.Wix, dropped_h_tab);
+		{
+			Volume& dropped_h_tab	= g.Mul(m.noise_h[0], input_vector);
+			h2h_tab[0]				= &g.Mul(m.Wix, dropped_h_tab);
 		}
-		Volume& t_gate_tab			= g.AddSigmoid(g.AddAddConstant(initial_bias, *h2h_tab[0]));
-		Volume& in_transform_tab	= g.AddTanh(*h2h_tab[1]);
-		Volume& c_gate_tab			= g.AddAddConstant(1, g.AddMulConstant(-1, t_gate_tab));
-		Volume& hidden_d			= g.AddAdd(
-										g.AddMul(c_gate_tab, input_vector),
-										g.AddMul(t_gate_tab, in_transform_tab));
+		{
+			Volume& dropped_h_tab	= g.Mul(input_vector, m.noise_h[1]);
+			h2h_tab[1]				= &g.Mul(dropped_h_tab, m.Wix);
+		}
+		Volume& t_gate_tab			= g.Sigmoid(g.AddConstant(initial_bias, *h2h_tab[0]));
+		Volume& in_transform_tab	= g.Tanh(*h2h_tab[1]);
+		Volume& c_gate_tab			= g.AddConstant(1, g.MulConstant(-1, t_gate_tab));
+		Volume& hidden_d			= g.Add(
+										g.Mul(input_vector, c_gate_tab),
+										g.Mul(in_transform_tab, t_gate_tab));
 		
 		hidden_nexts[j] = &hidden_d;
 	}
@@ -365,7 +377,7 @@ void RecurrentSession::InitHighway(int i, int j, GraphTree& g) {
 	
 	// one decoder to outputs at end
 	if (j == hidden_prevs.GetCount() - 1) {
-		g.AddAdd(g.AddMul(Whd, *hidden_nexts.Top()), bd);
+		g.Add(g.Mul(Whd, *hidden_nexts.Top()), bd);
 	}
 }
 	
@@ -399,8 +411,9 @@ void RecurrentSession::Learn(const Vector<int>& input_sequence) {
 		Volume& logprobs = list.Top().Top().output;
 		Softmax(logprobs, probs); // compute the softmax probabilities
 		
-		log2ppl += -log2(probs.Get(ix_target)); // accumulate base 2 log prob and do smoothing
-		cost += -log(probs.Get(ix_target));
+		double p = probs.Get(ix_target);
+		log2ppl += -log2(p); // accumulate base 2 log prob and do smoothing
+		cost += -log(p);
 		
 		// write gradients into log probabilities
 		int count = logprobs.GetLength();
