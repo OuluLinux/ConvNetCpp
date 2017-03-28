@@ -23,21 +23,21 @@ protected:
 	Vector<HighwayModel> hw_model;
 	Vector<LSTMModel> lstm_model;
 	Vector<RNNModel> rnn_model;
-	Volume Whd, bd, Wil;
+	Mat Whd, bd, Wil;
 	
 	// Solver
-	Vector<Volume> step_cache;
+	Vector<Mat> step_cache;
 	double decay_rate;
 	double smooth_eps;
 	
 	// Session vars
-	Vector<Volume> first_hidden, first_cell;
-	Vector<Vector<Volume*> > hidden_prevs;
-	Vector<Vector<Volume*> > cell_prevs;
+	Vector<Mat> first_hidden, first_cell;
+	Vector<Vector<Mat*> > hidden_prevs;
+	Vector<Vector<Mat*> > cell_prevs;
 	Vector<int> hidden_sizes;
 	Array<int> index_sequence; // Array instead of vector to allow resizing
-	Volume* input;
-	Volume probs;
+	Mat* input;
+	Mat probs;
 	double ppl, cost;
 	double regc;
 	double learning_rate;
@@ -61,8 +61,8 @@ protected:
 	void Backward(int seq_end_cursor);
 	void SolverStep();
 	void ResetPrevs();
-	int GetVolumeCount();
-	Volume& GetVolume(int i);
+	int GetMatCount();
+	Mat& GetMat(int i);
 public:
 	typedef RecurrentSession CLASSNAME;
 	RecurrentSession();

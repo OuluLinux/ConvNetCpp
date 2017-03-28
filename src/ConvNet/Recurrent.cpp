@@ -14,12 +14,12 @@ RecurrentBase::RecurrentBase() {
 	input2 = NULL;
 }
 
-RecurrentBase::RecurrentBase(Volume& input) {
+RecurrentBase::RecurrentBase(Mat& input) {
 	input1 = &input;
 	input2 = NULL;
 }
 
-RecurrentBase::RecurrentBase(Volume& input1, Volume& input2) {
+RecurrentBase::RecurrentBase(Mat& input1, Mat& input2) {
 	this->input1 = &input1;
 	this->input2 = &input2;
 }
@@ -28,13 +28,13 @@ RecurrentBase::~RecurrentBase() {
 	
 }
 
-Volume& RecurrentBase::Forward(Volume& input) {
+Mat& RecurrentBase::Forward(Mat& input) {
 	input1 = &input;
 	input2 = NULL;
 	return Forward();
 }
 
-Volume& RecurrentBase::Forward(Volume& input1, Volume& input2) {
+Mat& RecurrentBase::Forward(Mat& input1, Mat& input2) {
 	this->input1 = &input1;
 	this->input2 = &input2;
 	return Forward();
@@ -48,16 +48,16 @@ Volume& RecurrentBase::Forward(Volume& input1, Volume& input2) {
 
 
 
-Volume& RecurrentRowPluck::Forward() {
-	Volume& input = *input1;
+Mat& RecurrentRowPluck::Forward() {
+	Mat& input = *input1;
 	
 	// pluck a row of input with index ix and return it as col vector
 	ASSERT(*ix >= 0 && *ix < input.GetLength());
 	int w = input.GetWidth();
 	
-	output.Init(1, w, 1, 0);
+	output.Init(1, w, 0);
 	for (int i = 0, h = w; i < h; i++) {
-		output.Set(0, i, 0, input.Get(i, *ix, 0)); // copy over the data
+		output.Set(0, i, input.Get(i, *ix)); // copy over the data
 	}
 	return output;
 }
@@ -66,7 +66,7 @@ void RecurrentRowPluck::Backward() {
 	int w = input1->GetWidth();
 	
 	for (int i = 0; i < w; i++) {
-		input1->AddGradient(i, *ix, 0, output.GetGradient(0, i, 0));
+		input1->AddGradient(i, *ix, output.GetGradient(0, i));
 	}
 }
 
@@ -76,11 +76,11 @@ void RecurrentRowPluck::Backward() {
 
 
 
-Volume& RecurrentTanh::Forward() {
-	Volume& input = *input1;
+Mat& RecurrentTanh::Forward() {
+	Mat& input = *input1;
 	
 	// tanh nonlinearity
-	output.Init(input.GetWidth(), input.GetHeight(), input.GetDepth(), 0.0);
+	output.Init(input.GetWidth(), input.GetHeight(), 0.0);
 	int n = input.GetLength();
 	for (int i = 0; i < n; i++) {
 		output.Set(i, tanh(input.Get(i)));
@@ -106,11 +106,11 @@ void RecurrentTanh::Backward() {
 
 
 
-Volume& RecurrentSigmoid::Forward() {
-	Volume& input = *input1;
+Mat& RecurrentSigmoid::Forward() {
+	Mat& input = *input1;
 	
 	// sigmoid nonlinearity
-	output.Init(input.GetWidth(), input.GetHeight(), input.GetDepth(), 0.0);
+	output.Init(input.GetWidth(), input.GetHeight(), 0.0);
 	int n = input.GetLength();
 	for (int i = 0; i < n; i++) {
 		output.Set(i, sig(input.Get(i)));
@@ -135,10 +135,10 @@ void RecurrentSigmoid::Backward() {
 
 
 
-Volume& RecurrentRelu::Forward() {
-	Volume& input = *input1;
+Mat& RecurrentRelu::Forward() {
+	Mat& input = *input1;
 	
-	output.Init(input.GetWidth(), input.GetHeight(), input.GetDepth(), 0.0);
+	output.Init(input.GetWidth(), input.GetHeight(), 0.0);
 	int n = input.GetLength();
 	for (int i = 0; i < n; i++) {
 		output.Set(i, max(0.0, input.Get(i))); // relu
@@ -161,16 +161,16 @@ void RecurrentRelu::Backward() {
 
 
 
-Volume& RecurrentMul::Forward() {
-	Volume& input1 = *this->input1;
-	Volume& input2 = *this->input2;
+Mat& RecurrentMul::Forward() {
+	Mat& input1 = *this->input1;
+	Mat& input2 = *this->input2;
 	
 	// multiply matrices input1 * input2
 	ASSERT_(input1.GetWidth() == input2.GetHeight(), "matmul dimensions misaligned");
 	
 	int h = input1.GetHeight();
 	int w = input2.GetWidth();
-	output.Init(w, h, 1, 0.0);
+	output.Init(w, h, 0.0);
 	
 	// loop over rows of input1
 	for (int i = 0; i < h; i++) {
@@ -181,9 +181,9 @@ Volume& RecurrentMul::Forward() {
 			// dot product loop
 			double dot = 0.0;
 			for (int k = 0; k < input1.GetWidth(); k++) {
-				dot += input1.Get(k, i, 0) * input2.Get(j, k, 0);
+				dot += input1.Get(k, i) * input2.Get(j, k);
 			}
-			output.Set(j, i, 0, dot);
+			output.Set(j, i, dot);
 		}
 	}
 	return output;
@@ -199,9 +199,9 @@ void RecurrentMul::Backward() {
 			
 			// dot product loop
 			for (int k = 0; k < input1->GetWidth(); k++) {
-				double b = output.GetGradient(j, i, 0);
-				input1->AddGradient(k, i, 0, input2->Get(j, k, 0) * b);
-				input2->AddGradient(j, k, 0, input1->Get(k, i, 0) * b);
+				double b = output.GetGradient(j, i);
+				input1->AddGradient(k, i, input2->Get(j, k) * b);
+				input2->AddGradient(j, k, input1->Get(k, i) * b);
 			}
 		}
 	}
@@ -214,13 +214,13 @@ void RecurrentMul::Backward() {
 
 
 
-Volume& RecurrentAdd::Forward() {
-	Volume& input1 = *this->input1;
-	Volume& input2 = *this->input2;
+Mat& RecurrentAdd::Forward() {
+	Mat& input1 = *this->input1;
+	Mat& input2 = *this->input2;
 	
 	ASSERT(input1.GetLength() == input2.GetLength());
 	
-	output.Init(input1.GetWidth(), input1.GetHeight(), input1.GetDepth(), 0.0);
+	output.Init(input1.GetWidth(), input1.GetHeight(), 0.0);
 	for (int i = 0; i < input1.GetLength(); i++) {
 		output.Set(i, input1.Get(i) + input2.Get(i));
 	}
@@ -243,14 +243,14 @@ void RecurrentAdd::Backward() {
 
 
 
-Volume& RecurrentDot::Forward() {
-	Volume& input1 = *this->input1;
-	Volume& input2 = *this->input2;
+Mat& RecurrentDot::Forward() {
+	Mat& input1 = *this->input1;
+	Mat& input2 = *this->input2;
 	
 	// input1 and input2 are both column vectors
 	ASSERT(input1.GetLength() == input2.GetLength());
 	
-	output.Init(1, 1, 1, 0);
+	output.Init(1, 1, 0);
 	
 	double dot = 0.0;
 	for (int i = 0; i < input1.GetLength(); i++) {
@@ -275,14 +275,14 @@ void RecurrentDot::Backward() {
 
 
 
-Volume& RecurrentEltMul::Forward() {
-	Volume& input1 = *this->input1;
-	Volume& input2 = *this->input2;
+Mat& RecurrentEltMul::Forward() {
+	Mat& input1 = *this->input1;
+	Mat& input2 = *this->input2;
 	
 	ASSERT(input1.GetLength() == input2.GetLength());
 	ASSERT(input1.GetLength() > 0);
 	
-	output.Init(input1.GetWidth(), input1.GetHeight(), input1.GetDepth(), 0.0);
+	output.Init(input1.GetWidth(), input1.GetHeight(), 0.0);
 	
 	for (int i = 0; i < input1.GetLength(); i++) {
 		output.Set(i, input1.Get(i) * input2.Get(i));
@@ -301,7 +301,7 @@ void RecurrentEltMul::Backward() {
 
 
 
-Volume& RecurrentCopy::Forward() {
+Mat& RecurrentCopy::Forward() {
 	*input2 = *input1;
 	return *input2;
 }
@@ -315,10 +315,10 @@ void RecurrentCopy::Backward() {
 
 
 
-Volume& RecurrentAddConst::Forward() {
-	Volume& input1 = *this->input1;
+Mat& RecurrentAddConst::Forward() {
+	Mat& input1 = *this->input1;
 	
-	output.Init(input1.GetWidth(), input1.GetHeight(), input1.GetDepth(), 0.0);
+	output.Init(input1.GetWidth(), input1.GetHeight(), 0.0);
 	for (int i = 0; i < input1.GetLength(); i++) {
 		output.Set(i, input1.Get(i) + d);
 	}
@@ -340,10 +340,10 @@ void RecurrentAddConst::Backward() {
 
 
 
-Volume& RecurrentMulConst::Forward() {
-	Volume& input1 = *this->input1;
+Mat& RecurrentMulConst::Forward() {
+	Mat& input1 = *this->input1;
 	
-	output.Init(input1.GetWidth(), input1.GetHeight(), input1.GetDepth(), 0.0);
+	output.Init(input1.GetWidth(), input1.GetHeight(), 0.0);
 	for (int i = 0; i < input1.GetLength(); i++) {
 		output.Set(i, input1.Get(i) * d);
 	}
@@ -386,8 +386,8 @@ void Graph::Clear() {
 	}
 }
 
-Volume& Graph::Forward(Volume& input) {
-	Volume* v = &input;
+Mat& Graph::Forward(Mat& input) {
+	Mat* v = &input;
 	for (int i = 0; i < layers.GetCount(); i++) {
 		RecurrentBase& b = *layers[i];
 		int args = b.GetArgCount();
@@ -408,42 +408,42 @@ void Graph::Backward() {
 }
 
 
-Volume& Graph::RowPluck(int* row) {
+Mat& Graph::RowPluck(int* row) {
 	extra_args.Add(0);
 	return layers.Add(new RecurrentRowPluck(row))->output;
 }
 
-Volume& Graph::Tanh() {
+Mat& Graph::Tanh() {
 	extra_args.Add(0);
 	return layers.Add(new RecurrentTanh())->output;
 }
 
-Volume& Graph::Sigmoid() {
+Mat& Graph::Sigmoid() {
 	extra_args.Add(0);
 	return layers.Add(new RecurrentSigmoid())->output;
 }
 
-Volume& Graph::Relu() {
+Mat& Graph::Relu() {
 	extra_args.Add(0);
 	return layers.Add(new RecurrentRelu())->output;
 }
 
-Volume& Graph::Mul(Volume& multiplier) {
+Mat& Graph::Mul(Mat& multiplier) {
 	extra_args.Add(&multiplier);
 	return layers.Add(new RecurrentMul())->output;
 }
 
-Volume& Graph::Add(Volume& addition) {
+Mat& Graph::Add(Mat& addition) {
 	extra_args.Add(&addition);
 	return layers.Add(new RecurrentAdd())->output;
 }
 
-Volume& Graph::Dot(Volume& v) {
+Mat& Graph::Dot(Mat& v) {
 	extra_args.Add(&v);
 	return layers.Add(new RecurrentDot())->output;
 }
 
-Volume& Graph::EltMul(Volume& v) {
+Mat& Graph::EltMul(Mat& v) {
 	extra_args.Add(&v);
 	return layers.Add(new RecurrentEltMul())->output;
 }
@@ -476,8 +476,8 @@ void GraphTree::Clear() {
 	}
 }
 
-Volume& GraphTree::Forward() {
-	Volume* v = 0;
+Mat& GraphTree::Forward() {
+	Mat* v = 0;
 	for (int i = 0; i < layers.GetCount(); i++) {
 		v = &layers[i]->Forward();
 	}
@@ -490,53 +490,53 @@ void GraphTree::Backward() {
 	}
 }
 
-Volume& GraphTree::RowPluck(int* row, Volume& in) {
+Mat& GraphTree::RowPluck(int* row, Mat& in) {
 	return layers.Add(new RecurrentRowPluck(row, in))->output;
 }
 
-Volume& GraphTree::Tanh(Volume& in) {
+Mat& GraphTree::Tanh(Mat& in) {
 	return layers.Add(new RecurrentTanh(in))->output;
 }
 
-Volume& GraphTree::Sigmoid(Volume& in) {
+Mat& GraphTree::Sigmoid(Mat& in) {
 	return layers.Add(new RecurrentSigmoid(in))->output;
 }
 
-Volume& GraphTree::Relu(Volume& in) {
+Mat& GraphTree::Relu(Mat& in) {
 	return layers.Add(new RecurrentRelu(in))->output;
 }
 
-Volume& GraphTree::Mul(Volume& in1, Volume& in2) {
+Mat& GraphTree::Mul(Mat& in1, Mat& in2) {
 	return layers.Add(new RecurrentMul(in1, in2))->output;
 }
 
-Volume& GraphTree::Add(Volume& in1, Volume& in2) {
+Mat& GraphTree::Add(Mat& in1, Mat& in2) {
 	return layers.Add(new RecurrentAdd(in1, in2))->output;
 }
 
-Volume& GraphTree::Dot(Volume& in1, Volume& in2) {
+Mat& GraphTree::Dot(Mat& in1, Mat& in2) {
 	return layers.Add(new RecurrentDot(in1, in2))->output;
 }
 
-Volume& GraphTree::EltMul(Volume& in1, Volume& in2) {
+Mat& GraphTree::EltMul(Mat& in1, Mat& in2) {
 	return layers.Add(new RecurrentEltMul(in1, in2))->output;
 }
 
-Volume& GraphTree::Copy(Volume& src, Volume& dst) {
+Mat& GraphTree::Copy(Mat& src, Mat& dst) {
 	return layers.Add(new RecurrentCopy(src, dst))->output;
 }
 
-Volume& GraphTree::AddConstant(double d, Volume& in) {
+Mat& GraphTree::AddConstant(double d, Mat& in) {
 	return layers.Add(new RecurrentAddConst(d, in))->output;
 }
 
-Volume& GraphTree::MulConstant(double d, Volume& in) {
+Mat& GraphTree::MulConstant(double d, Mat& in) {
 	return layers.Add(new RecurrentMulConst(d, in))->output;
 }
 
 
-void Softmax(const Volume& m, Volume& out) {
-	out.Init(m.GetWidth(), m.GetHeight(), m.GetDepth(), 0.0); // probability volume
+void Softmax(const Mat& m, Mat& out) {
+	out.Init(m.GetWidth(), m.GetHeight(), 0.0); // probability volume
 	double maxval = -DBL_MAX;
 	
 	for (int i = 0; i < m.GetLength(); i++) {

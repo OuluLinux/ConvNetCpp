@@ -5,7 +5,7 @@
 
 namespace ConvNet {
 
-enum {ACT_LEFT, ACT_UP, ACT_RIGHT, ACT_DOWN, ACT_IN, ACT_OUT, ACT_IDLE};
+enum {ACT_LEFT, ACT_UP, ACT_RIGHT, ACT_DOWN, ACT_IDLE};
 
 class Agent {
 	
@@ -16,7 +16,7 @@ protected:
 	Vector<double> reward;
 	Vector<double> value; // state value function
 	Vector<bool> disable;
-	int width, height, depth, length;
+	int width, height, length;
 	int action_count;
 	int start_state, stop_state;
 	int iter_sleep;
@@ -32,20 +32,20 @@ public:
 	virtual void EvaluatePolicy() {Panic("not implemented");}
 	virtual void UpdatePolicy() {Panic("not implemented");}
 	virtual void Learn() = 0;
-	virtual int Act(int x, int y, int d) = 0;
-	virtual double GetValue(int x, int y, int d) const {return value[GetPos(x, y, d)];}
+	virtual int Act(int x, int y) = 0;
+	virtual double GetValue(int x, int y) const {return value[GetPos(x, y)];}
 	virtual void Load(const ValueMap& map);
 	virtual void Store(ValueMap& map);
 	virtual void LoadInit(const ValueMap& map);
-	virtual void SampleNextState(int x, int y, int d, int action, int& next_state, double& reward, bool& reset_episode);
+	virtual void SampleNextState(int x, int y, int action, int& next_state, double& reward, bool& reset_episode);
 	
 	void Start();
 	void Stop();
 	void Run();
 	void ValueIteration();
-	void Init(int width, int height, int depth, int action_count=0);
+	void Init(int width, int height, int action_count=0);
 	void ResetValues();
-	void AllowedActions(int x, int y, int d, Vector<int>& actions) const;
+	void AllowedActions(int x, int y, Vector<int>& actions) const;
 	int  Act(int state);
 	bool LoadJSON(const String& json);
 	bool LoadInitJSON(const String& json);
@@ -54,25 +54,24 @@ public:
 	double GetReward(int s) const {return reward[s];}
 	int GetNumStates() {return length;}
 	int GetMaxNumActions() {return action_count;}
-	int GetPos(int x, int y, int d) const;
+	int GetPos(int x, int y) const;
 	int GetStartState() { return start_state; }
 	int GetStopState() { return stop_state; }
 	int GetRandomState() { return Random(length); }
 	int GetWidth() const {return width;}
 	int GetHeight() const {return height;}
-	int GetDepth() const {return depth;}
-	int GetNextStateDistribution(int x, int y, int d, int a);
-	void GetXYZ(int state, int& x, int& y, int& d) const;
-	bool IsDisabled(int x, int y, int d) const {return disable[GetPos(x,y,d)];}
+	int GetNextStateDistribution(int x, int y, int a);
+	void GetXY(int state, int& x, int& y) const;
+	bool IsDisabled(int x, int y) const {return disable[GetPos(x,y)];}
 	bool IsDisabled(int i) const {return disable[i];}
 	bool IsRunning() const {return running;}
 	
-	void SetStartState(int x, int y, int d) {start_state = GetPos(x,y,d);}
-	void SetStopState(int x, int y, int d) {stop_state = GetPos(x,y,d);}
+	void SetStartState(int x, int y) {start_state = GetPos(x,y);}
+	void SetStopState(int x, int y) {stop_state = GetPos(x,y);}
 	void SetIterationDelay(int ms) {iter_sleep = ms;}
-	void SetReward(int x, int y, int d, double reward);
+	void SetReward(int x, int y, double reward);
 	void SetReward(int s, double reward) {this->reward[s] = reward;}
-	void SetDisabled(int x, int y, int d, bool disable=true);
+	void SetDisabled(int x, int y, bool disable=true);
 };
 
 
@@ -98,7 +97,7 @@ public:
 	void SetGamma(double d) {gamma = d;}
 	
 	virtual void Reset();
-	virtual int Act(int x, int y, int d);
+	virtual int Act(int x, int y);
 	virtual void Learn();
 	virtual void EvaluatePolicy();
 	virtual void UpdatePolicy();
@@ -151,8 +150,8 @@ public:
 	
 	virtual void Reset();
 	virtual void Learn();
-	virtual int Act(int x, int y, int d);
-	virtual double GetValue(int x, int y, int d) const;
+	virtual int Act(int x, int y);
+	virtual double GetValue(int x, int y) const;
 	virtual void LoadInit(const ValueMap& map);
 	
 	double GetEpsilon() const {return epsilon;}
@@ -165,7 +164,7 @@ public:
 	void Plan();
 	void LearnFromTuple(int state0, int action0, double reward0, int state1, int action1, double lambda);
 	void UpdatePriority(int s, int a, double u);
-	void UpdatePolicy(int x, int y, int d);
+	void UpdatePolicy(int x, int y);
 	
 };
 
@@ -183,10 +182,10 @@ public:
 
 
 struct DQNet {
-	Volume W1;
-	Volume b1;
-	Volume W2;
-	Volume b2;
+	Mat W1;
+	Mat b1;
+	Mat W2;
+	Mat b2;
 	
 	void Load(const ValueMap& map);
 	void Store(ValueMap& map);
@@ -196,11 +195,11 @@ struct DQNet {
 
 
 struct DQExperience : Moveable<DQExperience> {
-	Volume state0, state1;
+	Mat state0, state1;
 	int action0, action1;
 	double reward0;
 	
-	void Set(Volume& state0, int action0, double reward0, Volume& state1, int action1) {
+	void Set(Mat& state0, int action0, double reward0, Mat& state1, int action1) {
 		this->state0 = state0;
 		this->action0 = action0;
 		this->reward0 = reward0;
@@ -226,8 +225,8 @@ class DQNAgent : public Agent {
 	int t;
 	bool has_reward;
 	
-	Volume state;
-	Volume state0, state1;
+	Mat state;
+	Mat state0, state1;
 	int action0, action1;
 	double reward0;
 	
@@ -236,7 +235,7 @@ public:
 	DQNAgent();
 	
 	virtual void Learn();
-	virtual int Act(int x, int y, int d);
+	virtual int Act(int x, int y);
 	virtual void Load(const ValueMap& map);
 	virtual void Store(ValueMap& map);
 	virtual void LoadInit(const ValueMap& map);
@@ -250,7 +249,7 @@ public:
 	
 	int Act(const Vector<double>& slist);
 	void Learn(double reward1);
-	double LearnFromTuple(Volume& s0, int a0, double reward0, Volume& s1, int a1);
+	double LearnFromTuple(Mat& s0, int a0, double reward0, Mat& s1, int a1);
 	
 };
 
@@ -264,9 +263,9 @@ public:
 
 
 
-void	RandVolume(int n, int d, double mu, double std, Volume& out);
+void	RandMat(int n, int d, double mu, double std, Mat& out);
 int		SampleWeighted(Vector<double>& p);
-void	UpdateMat(Volume& m, double alpha);
+void	UpdateMat(Mat& m, double alpha);
 void	UpdateNet(DQNet& net, double alpha);
 
 }

@@ -1,6 +1,8 @@
 #ifndef _ConvNet_Recurrent_h_
 #define _ConvNet_Recurrent_h_
 
+#include "Mat.h"
+
 /*
 	Recurrent.h is a C++ conversion of Recurrent.js of Andrej Karpathy.
 	MIT License.
@@ -14,25 +16,25 @@ class RecurrentBase {
 	
 protected:
 	RecurrentBase();
-	RecurrentBase(Volume& input);
-	RecurrentBase(Volume& input1, Volume& input2);
+	RecurrentBase(Mat& input);
+	RecurrentBase(Mat& input1, Mat& input2);
 	
 public:
 	
-	Volume *input1, *input2;
-	Volume output;
+	Mat *input1, *input2;
+	Mat output;
 	
 	virtual ~RecurrentBase();
-	virtual Volume& Forward() = 0;
+	virtual Mat& Forward() = 0;
 	virtual void Backward() = 0;
 	virtual String GetKey() const {return "base";}
 	virtual int GetArgCount() const = 0;
 	
-	Volume& Forward(Volume& input);
-	Volume& Forward(Volume& input1, Volume& input2);
+	Mat& Forward(Mat& input);
+	Mat& Forward(Mat& input1, Mat& input2);
 	
-	Volume& operator() (Volume& a) {return Forward(a);}
-	Volume& operator() (Volume& a, Volume& b) {return Forward(a,b);}
+	Mat& operator() (Mat& a) {return Forward(a);}
+	Mat& operator() (Mat& a, Mat& b) {return Forward(a,b);}
 	
 };
 
@@ -41,9 +43,9 @@ class RecurrentRowPluck : public RecurrentBase {
 	
 public:
 	RecurrentRowPluck(int* i) {ix = i;}
-	RecurrentRowPluck(int* i, Volume& in) : RecurrentBase(in) {ix = i;}
+	RecurrentRowPluck(int* i, Mat& in) : RecurrentBase(in) {ix = i;}
 	~RecurrentRowPluck() {}
-	virtual Volume& Forward();
+	virtual Mat& Forward();
 	virtual void Backward();
 	virtual String GetKey() const {return "RowPluck";}
 	virtual int GetArgCount() const {return 0;}
@@ -54,9 +56,9 @@ class RecurrentTanh : public RecurrentBase {
 	
 public:
 	RecurrentTanh() {}
-	RecurrentTanh(Volume& in) : RecurrentBase(in) {};
+	RecurrentTanh(Mat& in) : RecurrentBase(in) {};
 	~RecurrentTanh() {}
-	virtual Volume& Forward();
+	virtual Mat& Forward();
 	virtual void Backward();
 	virtual String GetKey() const {return "Tanh";}
 	virtual int GetArgCount() const {return 1;}
@@ -67,9 +69,9 @@ class RecurrentSigmoid : public RecurrentBase {
 	
 public:
 	RecurrentSigmoid() {}
-	RecurrentSigmoid(Volume& in) : RecurrentBase(in) {};
+	RecurrentSigmoid(Mat& in) : RecurrentBase(in) {};
 	~RecurrentSigmoid() {}
-	virtual Volume& Forward();
+	virtual Mat& Forward();
 	virtual void Backward();
 	virtual String GetKey() const {return "Sigmoid";}
 	virtual int GetArgCount() const {return 1;}
@@ -80,9 +82,9 @@ class RecurrentRelu : public RecurrentBase {
 	
 public:
 	RecurrentRelu() {}
-	RecurrentRelu(Volume& in) : RecurrentBase(in) {};
+	RecurrentRelu(Mat& in) : RecurrentBase(in) {};
 	~RecurrentRelu() {}
-	virtual Volume& Forward();
+	virtual Mat& Forward();
 	virtual void Backward();
 	virtual String GetKey() const {return "Relu";}
 	virtual int GetArgCount() const {return 1;}
@@ -93,9 +95,9 @@ class RecurrentMul : public RecurrentBase {
 	
 public:
 	RecurrentMul() {}
-	RecurrentMul(Volume& in1, Volume& in2) : RecurrentBase(in1, in2) {};
+	RecurrentMul(Mat& in1, Mat& in2) : RecurrentBase(in1, in2) {};
 	~RecurrentMul() {}
-	virtual Volume& Forward();
+	virtual Mat& Forward();
 	virtual void Backward();
 	virtual String GetKey() const {return "Mul";}
 	virtual int GetArgCount() const {return 2;}
@@ -106,9 +108,9 @@ class RecurrentAdd : public RecurrentBase {
 	
 public:
 	RecurrentAdd() {}
-	RecurrentAdd(Volume& in1, Volume& in2) : RecurrentBase(in1, in2) {};
+	RecurrentAdd(Mat& in1, Mat& in2) : RecurrentBase(in1, in2) {};
 	~RecurrentAdd() {}
-	virtual Volume& Forward();
+	virtual Mat& Forward();
 	virtual void Backward();
 	virtual String GetKey() const {return "Add";}
 	virtual int GetArgCount() const {return 2;}
@@ -119,9 +121,9 @@ class RecurrentDot : public RecurrentBase {
 	
 public:
 	RecurrentDot() {}
-	RecurrentDot(Volume& in1, Volume& in2) : RecurrentBase(in1, in2) {};
+	RecurrentDot(Mat& in1, Mat& in2) : RecurrentBase(in1, in2) {};
 	~RecurrentDot() {}
-	virtual Volume& Forward();
+	virtual Mat& Forward();
 	virtual void Backward();
 	virtual String GetKey() const {return "Dot";}
 	virtual int GetArgCount() const {return 2;}
@@ -132,9 +134,9 @@ class RecurrentEltMul : public RecurrentBase {
 	
 public:
 	RecurrentEltMul() {}
-	RecurrentEltMul(Volume& in1, Volume& in2) : RecurrentBase(in1, in2) {};
+	RecurrentEltMul(Mat& in1, Mat& in2) : RecurrentBase(in1, in2) {};
 	~RecurrentEltMul() {}
-	virtual Volume& Forward();
+	virtual Mat& Forward();
 	virtual void Backward();
 	virtual String GetKey() const {return "EltMul";}
 	virtual int GetArgCount() const {return 2;}
@@ -144,9 +146,9 @@ public:
 class RecurrentCopy : public RecurrentBase {
 	
 public:
-	RecurrentCopy(Volume& in1, Volume& in2) : RecurrentBase(in1, in2) {};
+	RecurrentCopy(Mat& in1, Mat& in2) : RecurrentBase(in1, in2) {};
 	~RecurrentCopy() {}
-	virtual Volume& Forward();
+	virtual Mat& Forward();
 	virtual void Backward();
 	virtual String GetKey() const {return "Copy";}
 	virtual int GetArgCount() const {return 2;}
@@ -157,9 +159,9 @@ class RecurrentAddConst : public RecurrentBase {
 	double d;
 	
 public:
-	RecurrentAddConst(double d, Volume& in) : RecurrentBase(in), d(d) {};
+	RecurrentAddConst(double d, Mat& in) : RecurrentBase(in), d(d) {};
 	~RecurrentAddConst() {}
-	virtual Volume& Forward();
+	virtual Mat& Forward();
 	virtual void Backward();
 	virtual String GetKey() const {return "AddConst";}
 	virtual int GetArgCount() const {return 1;}
@@ -170,9 +172,9 @@ class RecurrentMulConst : public RecurrentBase {
 	double d;
 	
 public:
-	RecurrentMulConst(double d, Volume& in) : RecurrentBase(in), d(d) {};
+	RecurrentMulConst(double d, Mat& in) : RecurrentBase(in), d(d) {};
 	~RecurrentMulConst() {}
-	virtual Volume& Forward();
+	virtual Mat& Forward();
 	virtual void Backward();
 	virtual String GetKey() const {return "AddConst";}
 	virtual int GetArgCount() const {return 1;}
@@ -188,24 +190,24 @@ public:
 // This is not very useful in complex problems.
 class Graph {
 	Vector<RecurrentBase*> layers;
-	Vector<Volume*> extra_args;
+	Vector<Mat*> extra_args;
 	
 public:
 	Graph();
 	~Graph();
 	
 	void Clear();
-	Volume& Forward(Volume& input);
+	Mat& Forward(Mat& input);
 	void Backward();
 	
-	Volume& RowPluck(int* row);
-	Volume& Tanh();
-	Volume& Sigmoid();
-	Volume& Relu();
-	Volume& Mul(Volume& multiplier);
-	Volume& Add(Volume& addition);
-	Volume& Dot(Volume& v);
-	Volume& EltMul(Volume& v);
+	Mat& RowPluck(int* row);
+	Mat& Tanh();
+	Mat& Sigmoid();
+	Mat& Relu();
+	Mat& Mul(Mat& multiplier);
+	Mat& Add(Mat& addition);
+	Mat& Dot(Mat& v);
+	Mat& EltMul(Mat& v);
 	
 	RecurrentBase& GetLayer(int i) {return *layers[i];}
 	int GetCount() const {return layers.GetCount();}
@@ -222,20 +224,20 @@ public:
 	~GraphTree();
 	
 	void Clear();
-	Volume& Forward();
+	Mat& Forward();
 	void Backward();
 	
-	Volume& RowPluck(int* row, Volume& in);
-	Volume& Tanh(Volume& in);
-	Volume& Sigmoid(Volume& in);
-	Volume& Relu(Volume& in);
-	Volume& Mul(Volume& in1, Volume& in2);
-	Volume& Add(Volume& in1, Volume& in2);
-	Volume& Dot(Volume& in1, Volume& in2);
-	Volume& EltMul(Volume& in1, Volume& in2);
-	Volume& Copy(Volume& src, Volume& dst);
-	Volume& AddConstant(double d, Volume& in);
-	Volume& MulConstant(double d, Volume& in);
+	Mat& RowPluck(int* row, Mat& in);
+	Mat& Tanh(Mat& in);
+	Mat& Sigmoid(Mat& in);
+	Mat& Relu(Mat& in);
+	Mat& Mul(Mat& in1, Mat& in2);
+	Mat& Add(Mat& in1, Mat& in2);
+	Mat& Dot(Mat& in1, Mat& in2);
+	Mat& EltMul(Mat& in1, Mat& in2);
+	Mat& Copy(Mat& src, Mat& dst);
+	Mat& AddConstant(double d, Mat& in);
+	Mat& MulConstant(double d, Mat& in);
 	
 	RecurrentBase& GetLayer(int i) {return *layers[i];}
 	int GetCount() const {return layers.GetCount();}
@@ -249,13 +251,13 @@ public:
 
 struct HighwayModel : Moveable<HighwayModel> {
 	
-	Volume noise_i[2];
-	Volume noise_h[2];
-	Volume Wix, Wih;
+	Mat noise_i[2];
+	Mat noise_h[2];
+	Mat Wix, Wih;
 	
 	static int GetCount() {return 6;}
 	
-	Volume& GetVolume(int i) {
+	Mat& GetMat(int i) {
 		ASSERT(i >= 0 && i < 6);
 		switch (i) {
 			case 0: return noise_i[0];
@@ -271,10 +273,10 @@ struct HighwayModel : Moveable<HighwayModel> {
 
 struct LSTMModel : Moveable<LSTMModel> {
 	
-	Volume Wix, Wih, bi, Wfx, Wfh, bf, Wox, Woh, bo, Wcx, Wch, bc;
+	Mat Wix, Wih, bi, Wfx, Wfh, bf, Wox, Woh, bo, Wcx, Wch, bc;
 	
 	static int GetCount() {return 12;}
-	Volume& GetVolume(int i) {
+	Mat& GetMat(int i) {
 		ASSERT(i >= 0 && i < 12);
 		switch (i) {
 			case 0: return Wix;
@@ -296,10 +298,10 @@ struct LSTMModel : Moveable<LSTMModel> {
 
 struct RNNModel : Moveable<RNNModel> {
 	
-	Volume Wxh, Whh, bhh;
+	Mat Wxh, Whh, bhh;
 	
 	static int GetCount() {return 3;}
-	Volume& GetVolume(int i) {
+	Mat& GetMat(int i) {
 		ASSERT(i >= 0 && i < 3);
 		switch (i) {
 			case 0: return Wxh;
@@ -311,7 +313,7 @@ struct RNNModel : Moveable<RNNModel> {
 };
 
 
-void Softmax(const Volume& m, Volume& out);
+void Softmax(const Mat& m, Mat& out);
 
 }
 

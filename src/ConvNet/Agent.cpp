@@ -10,8 +10,8 @@ namespace ConvNet {
 
 
 // return Mat but filled with random numbers from gaussian
-void RandVolume(int n, int d, double mu, double std, Volume& m) {
-	m.Init(d, n, 1, 0);
+void RandMat(int n, int d, double mu, double std, Mat& m) {
+	m.Init(d, n, 0);
 	
 	std::default_random_engine generator;
 	std::normal_distribution<double> distribution(mu, std);
@@ -34,7 +34,7 @@ int SampleWeighted(Vector<double>& p) {
 	return 0;
 }
 
-void UpdateMat(Volume& m, double alpha) {
+void UpdateMat(Mat& m, double alpha) {
 	// updates in place
 	for (int i = 0; i < m.GetLength(); i++) {
 		double d = m.GetGradient(i);
@@ -76,7 +76,6 @@ void UpdateNet(DQNet& net, double alpha) {
 Agent::Agent() {
 	width = 0;
 	height = 0;
-	depth = 0;
 	action_count = 0;
 	start_state = 0;
 	stop_state = -1;
@@ -91,22 +90,20 @@ Agent::~Agent() {
 	Stop();
 }
 
-void Agent::Init(int width, int height, int depth, int action_count) {
-	ASSERT(width > 0 && height > 0 && depth > 0);
+void Agent::Init(int width, int height, int action_count) {
+	ASSERT(width > 0 && height > 0);
 	ASSERT(stopped);
 	
 	if (action_count <= 0) {
 		action_count =
 			(width  > 1 ? 2 : 1) *
-			(height > 1 ? 2 : 1) *
-			(depth  > 1 ? 2 : 1);
+			(height > 1 ? 2 : 1);
 	}
 	
 	// hardcoding one gridworld for now
 	this->width		= width;
 	this->height	= height;
-	this->depth		= depth;
-	length = height * width * depth; // number of states
+	length = height * width; // number of states
 	this->action_count = action_count;
 	
 	// reset the agent's policy and value function
@@ -121,7 +118,7 @@ void Agent::Init(int width, int height, int depth, int action_count) {
 	disable.SetCount(0);
 	disable.SetCount(length, false);
 	
-	SetStopState(width / 2, height / 2, depth / 2);
+	SetStopState(width / 2, height / 2);
 }
 
 bool Agent::LoadInitJSON(const String& json) {
@@ -172,7 +169,7 @@ void Agent::LoadInit(const ValueMap& map) {
 }
 
 void Agent::Reset() {
-	Agent::Init(width, height, depth, action_count);
+	Agent::Init(width, height, action_count);
 	
 }
 
@@ -207,37 +204,33 @@ void Agent::ValueIteration() {
 	Learn();
 }
 
-int Agent::GetPos(int x, int y, int d) const {
-	ASSERT(x >= 0 && y >= 0 && d >= 0 && x < width && y < height && d < depth);
-	return ((width * y) + x) * depth + d;
+int Agent::GetPos(int x, int y) const {
+	ASSERT(x >= 0 && y >= 0 && x < width && y < height);
+	return (width * y) + x;
 }
 
-void Agent::GetXYZ(int state, int& x, int& y, int& d) const {
-	d = state % depth;
-	state /= depth;
+void Agent::GetXY(int state, int& x, int& y) const {
 	x = state % width;
 	state /= width;
 	y = state;
 }
 
-void Agent::AllowedActions(int x, int y, int d, Vector<int>& actions) const {
+void Agent::AllowedActions(int x, int y, Vector<int>& actions) const {
 	actions.SetCount(0);
-	if (IsDisabled(x,y,d)) return;
+	if (IsDisabled(x,y)) return;
 	if (x > 0) { actions.Add(ACT_LEFT); }
 	if (y > 0) { actions.Add(ACT_DOWN); }
-	if (d > 0) { actions.Add(ACT_IN); }
 	if (y < height-1) { actions.Add(ACT_UP); }
 	if (x < width-1) { actions.Add(ACT_RIGHT); }
-	if (d < depth-1) { actions.Add(ACT_OUT); }
 }
 
-void Agent::SetReward(int x, int y, int d, double reward) {
-	int ix = ((width * y) + x) * depth + d;
+void Agent::SetReward(int x, int y, double reward) {
+	int ix = (width * y) + x;
 	this->reward[ix] = reward;
 }
 
-void Agent::SetDisabled(int x, int y, int d, bool disable) {
-	int ix = ((width * y) + x) * depth + d;
+void Agent::SetDisabled(int x, int y, bool disable) {
+	int ix = (width * y) + x;
 	this->disable[ix] = disable;
 	if (disable)
 		this->reward[ix] = 0;
@@ -248,8 +241,8 @@ double Agent::Reward(int s, int a, int ns) {
 	return reward[s];
 }
 
-int Agent::GetNextStateDistribution(int x, int y, int d, int a) {
-	int ns = GetPos(x,y,d);
+int Agent::GetNextStateDistribution(int x, int y, int a) {
+	int ns = GetPos(x,y);
 	
 	// given (s,a) return distribution over s' (in sparse form)
 	if (IsDisabled(ns)) {
@@ -265,14 +258,12 @@ int Agent::GetNextStateDistribution(int x, int y, int d, int a) {
 	}
 	else {
 		// ordinary space
-		double  nx = x, ny = y, nd = d;
+		double  nx = x, ny = y;
 		if      (a == ACT_LEFT)		{nx=x-1;}
 		else if (a == ACT_DOWN)		{ny=y-1;}
 		else if (a == ACT_UP)		{ny=y+1;}
 		else if (a == ACT_RIGHT)	{nx=x+1;}
-		else if (a == ACT_IN)		{nd=d-1;}
-		else if (a == ACT_OUT)		{nd=d+1;}
-		int ns2 = GetPos(nx, ny, nd);
+		int ns2 = GetPos(nx, ny);
 		if (IsDisabled(ns2)) {
 			// actually never mind, this is a wall. reset the agent
 			//ns = state;
@@ -284,10 +275,10 @@ int Agent::GetNextStateDistribution(int x, int y, int d, int a) {
 	return ns;
 }
 
-void Agent::SampleNextState(int x, int y, int d, int action, int& next_state, double& reward, bool& reset_episode) {
-	int state = GetPos(x,y,d);
+void Agent::SampleNextState(int x, int y, int action, int& next_state, double& reward, bool& reset_episode) {
+	int state = GetPos(x,y);
 	// gridworld is deterministic, so this is easy
-	next_state = GetNextStateDistribution(x, y, d, action);
+	next_state = GetNextStateDistribution(x, y, action);
 	reward = this->reward[state]; // observe the raw reward of being in s, taking a, and ending up in ns
 	reward -= 0.01; // every step takes a bit of negative reward
 	reset_episode = (state == stop_state && next_state == start_state); // episode is over
@@ -324,23 +315,21 @@ void DPAgent::Reset() {
 	
 	for (int y = 0; y < height; y++) {
 		for (int x = 0; x < width; x++) {
-			for (int d = 0; d < depth; d++) {
-				AllowedActions(x, y, d, poss);
-				double prob = 1.0 / poss.GetCount();
-				for (int i = 0; i < poss.GetCount(); i++) {
-					poldist[poss[i]][state] = prob;
-				}
-				state++;
+			AllowedActions(x, y, poss);
+			double prob = 1.0 / poss.GetCount();
+			for (int i = 0; i < poss.GetCount(); i++) {
+				poldist[poss[i]][state] = prob;
 			}
+			state++;
 		}
 	}
 }
 
-int DPAgent::Act(int x, int y, int d) {
+int DPAgent::Act(int x, int y) {
 	// behave according to the learned policy
-	int state = GetPos(x,y,d);
+	int state = GetPos(x,y);
 	Vector<int> poss;
-	AllowedActions(x, y, d, poss);
+	AllowedActions(x, y, poss);
 	Vector<double> ps;
 	ps.SetCount(poss.GetCount());
 	for (int i = 0; i < poss.GetCount(); i++) {
@@ -368,24 +357,22 @@ void DPAgent::EvaluatePolicy() {
 	
 	for (int y = 0; y < height; y++) {
 		for (int x = 0; x < width; x++) {
-			for (int d = 0; d < depth; d++) {
-				
-				// integrate over actions in a stochastic policy
-				// note that we assume that policy probability mass over allowed actions sums to one
-				double v = 0.0;
-				AllowedActions(x, y, d, poss);
-				for (int i = 0; i < poss.GetCount(); i++) {
-					int a = poss[i];
-					double prob = poldist[a][state]; // probability of taking action under policy
-					if (prob == 0) { continue; } // no contribution, skip for speed
-					int ns = GetNextStateDistribution(x, y, d, a);
-					double rs = Reward(state, a, ns); // reward for s->a->ns transition
-					v += prob * (rs + gamma * value[ns]);
-				}
-				
-				value[state] = v;
-				state++;
+			
+			// integrate over actions in a stochastic policy
+			// note that we assume that policy probability mass over allowed actions sums to one
+			double v = 0.0;
+			AllowedActions(x, y, poss);
+			for (int i = 0; i < poss.GetCount(); i++) {
+				int a = poss[i];
+				double prob = poldist[a][state]; // probability of taking action under policy
+				if (prob == 0) { continue; } // no contribution, skip for speed
+				int ns = GetNextStateDistribution(x, y, a);
+				double rs = Reward(state, a, ns); // reward for s->a->ns transition
+				v += prob * (rs + gamma * value[ns]);
 			}
+			
+			value[state] = v;
+			state++;
 		}
 	}
 }
@@ -401,43 +388,40 @@ void DPAgent::UpdatePolicy() {
 	
 	for (int y = 0; y < height; y++) {
 		for (int x = 0; x < width; x++) {
-			for (int d = 0; d < depth; d++) {
-				
-				AllowedActions(x, y, d, poss);
-				if (poss.IsEmpty()) {
-					state++;
-					continue;
-				}
-				
-				// compute value of taking each allowed action
-				int nmax = 0;
-				double vmax = -DBL_MAX;
-				
-				vs.SetCount(poss.GetCount());
-				
-				for (int i = 0, n = poss.GetCount(); i < n; i++) {
-					int a = poss[i];
-					int ns = GetNextStateDistribution(x, y, d, a);
-					double rs = Reward(state, a, ns);
-					double v = rs + gamma * value[ns];
-					vs[i] = v;
-					if (v > vmax) { vmax = v; nmax = 1; maxpos.SetCount(1); maxpos[0] = i;}
-					else if (v == vmax) { nmax += 1; maxpos.Add(i);}
-				}
-				
-				// update policy smoothly across all argmaxy actions
-				for (int i = 0; i < poss.GetCount(); i++) {
-					int a = poss[i];
-					poldist[a][state] = 0.0;
-				}
-				
-				for (int i = 0; i < maxpos.GetCount(); i++) {
-					int a = poss[maxpos[i]];
-					poldist[a][state] = 1.0 / nmax;
-				}
-				
+			AllowedActions(x, y, poss);
+			if (poss.IsEmpty()) {
 				state++;
+				continue;
 			}
+			
+			// compute value of taking each allowed action
+			int nmax = 0;
+			double vmax = -DBL_MAX;
+			
+			vs.SetCount(poss.GetCount());
+			
+			for (int i = 0, n = poss.GetCount(); i < n; i++) {
+				int a = poss[i];
+				int ns = GetNextStateDistribution(x, y, a);
+				double rs = Reward(state, a, ns);
+				double v = rs + gamma * value[ns];
+				vs[i] = v;
+				if (v > vmax) { vmax = v; nmax = 1; maxpos.SetCount(1); maxpos[0] = i;}
+				else if (v == vmax) { nmax += 1; maxpos.Add(i);}
+			}
+			
+			// update policy smoothly across all argmaxy actions
+			for (int i = 0; i < poss.GetCount(); i++) {
+				int a = poss[i];
+				poldist[a][state] = 0.0;
+			}
+			
+			for (int i = 0; i < maxpos.GetCount(); i++) {
+				int a = poss[maxpos[i]];
+				poldist[a][state] = 1.0 / nmax;
+			}
+			
+			state++;
 		}
 	}
 }
@@ -546,13 +530,11 @@ void TDAgent::Reset(){
 	int state = 0;
 	for (int y = 0; y < height; y++) {
 		for (int x = 0; x < width; x++) {
-			for (int d = 0; d < depth; d++) {
-				AllowedActions(x, y, d, poss);
-				for (int i = 0; i < poss.GetCount(); i++) {
-					poldist[poss[i]][state] = 1.0 / poss.GetCount();
-				}
-				state++;
+			AllowedActions(x, y, poss);
+			for (int i = 0; i < poss.GetCount(); i++) {
+				poldist[poss[i]][state] = 1.0 / poss.GetCount();
 			}
+			state++;
 		}
 	}
 	
@@ -573,14 +555,14 @@ void TDAgent::ResetEpisode() {
 	// an episode finished
 }
 
-int TDAgent::Act(int x, int y, int d) {
+int TDAgent::Act(int x, int y) {
 	
 	// act according to epsilon greedy policy
 	Vector<int> poss;
-	AllowedActions(x, y, d, poss);
+	AllowedActions(x, y, poss);
 	ASSERT(!poss.IsEmpty());
 	
-	int state = GetPos(x,y,d);
+	int state = GetPos(x,y);
 	
 	Vector<double> probs;
 	
@@ -608,11 +590,11 @@ int TDAgent::Act(int x, int y, int d) {
 	return action;
 }
 
-double TDAgent::GetValue(int x, int y, int d) const {
+double TDAgent::GetValue(int x, int y) const {
 	Vector<int> poss;
-	AllowedActions(x, y, d, poss);
+	AllowedActions(x, y, poss);
 	if (poss.IsEmpty()) return 0.0;
-	int state = GetPos(x,y,d);
+	int state = GetPos(x,y);
 	double r;
 	for(int i = 0; i < poss.GetCount(); i++) {
 		double q = Q[poss[i]][state];
@@ -624,13 +606,13 @@ double TDAgent::GetValue(int x, int y, int d) const {
 
 void TDAgent::Learn() {
 	int x, y, d;
-	GetXYZ(current_state, x, y, d);
+	GetXY(current_state, x, y);
 	
-	int action = Act(x,y,d); // ask agent for an action
+	int action = Act(x,y); // ask agent for an action
 	int next_state;
 	double reward;
 	bool reset_episode = false;
-    SampleNextState(x,y,d, action, next_state, reward, reset_episode); // run it through environment dynamics
+    SampleNextState(x,y, action, next_state, reward, reset_episode); // run it through environment dynamics
     Learn(reward); // allow opportunity for the agent to learn
     current_state = next_state; // evolve environment to next state
     nsteps_counter += 1;
@@ -706,8 +688,8 @@ void TDAgent::Plan() {
 			// generate random action?...
 			Vector<int> poss;
 			int x,y,d;
-			GetXYZ(state1, x, y, d);
-			AllowedActions(x, y, d, poss);
+			GetXY(state1, x, y);
+			AllowedActions(x, y, poss);
 			action1 = poss[Random(poss.GetCount())];
 		}
 		LearnFromTuple(state0, action0, reward0, state1, action1, 0); // note lambda = 0 - shouldnt use eligibility trace here
@@ -715,10 +697,10 @@ void TDAgent::Plan() {
 }
 
 void TDAgent::LearnFromTuple(int state0, int action0, double reward0, int state1, int action1, double lambda) {
-	int s0x, s0y, s0d, s1x, s1y, s1d;
+	int s0x, s0y, s1x, s1y;
 	
-	GetXYZ(state0, s0x, s0y, s0d);
-	GetXYZ(state1, s1x, s1y, s1d);
+	GetXY(state0, s0x, s0y);
+	GetXY(state1, s1x, s1y);
 	
 	Vector<int> poss;
 	
@@ -727,7 +709,7 @@ void TDAgent::LearnFromTuple(int state0, int action0, double reward0, int state1
 	if (update == UPDATE_QLEARN) {
 		
 		// Q learning target is Q(s0,a0) = reward0 + gamma * max_a Q[s1,a]
-		AllowedActions(s1x, s1y, s1d, poss);
+		AllowedActions(s1x, s1y, poss);
 		double qmax = 0.0;
 		for (int i = 0; i < poss.GetCount(); i++) {
 			double qval = Q[poss[i]][state1];
@@ -759,34 +741,31 @@ void TDAgent::LearnFromTuple(int state0, int action0, double reward0, int state1
 		int state = 0;
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
-				for (int d = 0; d < depth; d++) {
-					
-					AllowedActions(x, y, d, poss);
-					
-					for (int i = 0; i < poss.GetCount(); i++) {
-						int action = poss[i];
-						double esa = e[action][state];
-						double update = alpha * esa * (target - Q[action][state]);
-						Q[action][state] += update;
-						UpdatePriority(state, action, update);
-						e[action][state] *= edecay;
-						double u = fabs(update);
-						if (u > state_update[state]) {
-							state_update[state] = u;
-						}
+				AllowedActions(x, y, poss);
+				
+				for (int i = 0; i < poss.GetCount(); i++) {
+					int action = poss[i];
+					double esa = e[action][state];
+					double update = alpha * esa * (target - Q[action][state]);
+					Q[action][state] += update;
+					UpdatePriority(state, action, update);
+					e[action][state] *= edecay;
+					double u = fabs(update);
+					if (u > state_update[state]) {
+						state_update[state] = u;
 					}
-					
-					state++;
 				}
+				
+				state++;
 			}
 		}
 		
 		for (int l = 0; l < length; l++) {
 			// save efficiency here
 			if (state_update[l] > 1e-5) {
-				int x,y,d;
-				GetXYZ(l,x,y,d); // so, this has to be done usually anyway, and better do it pre-emptively
-				UpdatePolicy(x,y,d);
+				int x,y;
+				GetXY(l,x,y); // so, this has to be done usually anyway, and better do it pre-emptively
+				UpdatePolicy(x,y);
 			}
 		}
 		
@@ -806,8 +785,8 @@ void TDAgent::LearnFromTuple(int state0, int action0, double reward0, int state1
 		
 		// update the policy to reflect the change (if appropriate)
 		int x,y,d;
-		GetXYZ(state0, x, y, d);
-		UpdatePolicy(x, y, d);
+		GetXY(state0, x, y);
+		UpdatePolicy(x, y);
 	}
 }
 
@@ -832,10 +811,10 @@ void TDAgent::UpdatePriority(int s, int a, double u) {
 	}
 }
 
-void TDAgent::UpdatePolicy(int x, int y, int d) {
+void TDAgent::UpdatePolicy(int x, int y) {
 	
 	Vector<int> poss;
-	AllowedActions(x, y, d, poss);
+	AllowedActions(x, y, poss);
 	ASSERT(!poss.IsEmpty());
 	
 	// set policy at s to be the action that achieves max_a Q(s,a)
@@ -844,7 +823,7 @@ void TDAgent::UpdatePolicy(int x, int y, int d) {
 	double qmax;
 	Vector<double> qs;
 	
-	int s = GetPos(x,y,d);
+	int s = GetPos(x,y);
 	qs.SetCount(poss.GetCount());
 	
 	for (int i = 0; i < poss.GetCount(); i++) {
@@ -933,12 +912,12 @@ void DQNAgent::Reset() {
 	// not proud of  better solution is to have a whole Net object
 	// on top of Mats, but for now sticking with this
 	
-	RandVolume(nh, ns, 0, 0.01, net.W1);
-	net.b1.Init(1, nh, 1, 0);
-	//net.b1 = RandVolume(nh, 1, 0, 0.01);
-	RandVolume(na, nh, 0, 0.01, net.W2);
-	net.b2.Init(1, na, 1, 0);
-	//net.b2 = RandVolume(na, 1, 0, 0.01);
+	RandMat(nh, ns, 0, 0.01, net.W1);
+	net.b1.Init(1, nh, 0);
+	//net.b1 = RandMat(nh, 1, 0, 0.01);
+	RandMat(na, nh, 0, 0.01, net.W2);
+	net.b2.Init(1, na, 0);
+	//net.b2 = RandMat(na, 1, 0, 0.01);
 	
 	expi = 0; // where to insert
 	
@@ -1005,7 +984,7 @@ void DQNAgent::Store(ValueMap& map) {
 	map.GetAdd("net") = net;
 }
 
-int DQNAgent::Act(int x, int y, int d) {
+int DQNAgent::Act(int x, int y) {
 	Panic("Not useful");
 	return 0;
 }
@@ -1013,7 +992,7 @@ int DQNAgent::Act(int x, int y, int d) {
 int DQNAgent::Act(const Vector<double>& slist) {
 	
 	// convert to a Mat column vector
-	state.Init(width, height, depth, slist);
+	state.Init(width, height, slist);
 	
 	// epsilon greedy policy
 	int action;
@@ -1021,8 +1000,8 @@ int DQNAgent::Act(const Vector<double>& slist) {
 		action = Random(na);
 	} else {
 		// greedy wrt Q function
-		//Volume& amat = ForwardQ(net, state);
-		Volume& amat = G.Forward(state);
+		//Mat& amat = ForwardQ(net, state);
+		Mat& amat = G.Forward(state);
 		action = amat.GetMaxColumn(); // returns index of argmax action
 	}
 	
@@ -1070,17 +1049,17 @@ void DQNAgent::Learn(double reward1) {
 	has_reward = true;
 }
 
-double DQNAgent::LearnFromTuple(Volume& s0, int a0, double reward0, Volume& s1, int a1) {
+double DQNAgent::LearnFromTuple(Mat& s0, int a0, double reward0, Mat& s1, int a1) {
 	ASSERT(s0.GetLength() > 0);
 	ASSERT(s1.GetLength() > 0);
 	// want: Q(s,a) = r + gamma * max_a' Q(s',a')
 	
 	// compute the target Q value
-	Volume& tmat = G.Forward(s1);
+	Mat& tmat = G.Forward(s1);
 	double qmax = reward0 + gamma * tmat.Get(tmat.GetMaxColumn());
 	
 	// now predict
-	Volume& pred = G.Forward(s0);
+	Mat& pred = G.Forward(s0);
 	
 	double tderror = pred.Get(a0) - qmax;
 	double clamp = tderror_clamp;

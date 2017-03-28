@@ -52,5 +52,7 @@ file
 	Agent.h,
 	Agent.cpp,
 	Recurrent.h,
-	Recurrent.cpp;
+	Recurrent.cpp,
+	Mat.h,
+	Mat.cpp;
 

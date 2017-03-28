@@ -67,7 +67,7 @@ WaterWorld::WaterWorld() {
 	PostCallback(THISBACK(Start));
 	RefreshEpsilon();
 	
-	SetTimeCallback(-1, THISBACK(Refresher));
+	SetTimeCallback(-15, THISBACK(Refresher));
 }
 
 WaterWorld::~WaterWorld() {
@@ -120,7 +120,7 @@ void WaterWorld::Reset(bool init_reward, bool start) {
 		int states = 152; // count of eyes
 		int action_count = 4;
 		
-		agent.Init(1, states, 1, action_count);
+		agent.Init(1, states, action_count);
 		agent.Reset();
 	}
 	else {

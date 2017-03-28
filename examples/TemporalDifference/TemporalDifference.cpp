@@ -74,7 +74,7 @@ TemporalDifference::TemporalDifference() {
 	PostCallback(THISBACK2(Reset, true, true));
 	PostCallback(THISBACK(Reload));
 	
-	SetTimeCallback(-1, THISBACK(Refresher));
+	SetTimeCallback(-15, THISBACK(Refresher));
 }
 
 TemporalDifference::~TemporalDifference() {
@@ -106,29 +106,29 @@ void TemporalDifference::Reset(bool init_reward, bool start) {
 	agent.Stop();
 	
 	if (init_reward) {
-		agent.Init(10,10,1);
+		agent.Init(10,10);
 		agent.Reset();
 		
-		agent.SetReward(3, 3, 0, -1.0);
-		agent.SetReward(5, 2, 0, -1.2);
-		agent.SetReward(9, 2, 0, +0.3);
-		agent.SetReward(5, 4, 0, -1.0);
-		agent.SetReward(6, 4, 0, -1.0);
-		agent.SetReward(5, 5, 0, +1.0);
-		agent.SetReward(6, 5, 0, -1.0);
-		agent.SetReward(8, 5, 0, -1.0);
-		agent.SetReward(8, 6, 0, -1.0);
-		agent.SetReward(3, 7, 0, -1.0);
-		agent.SetReward(5, 7, 0, -1.0);
-		agent.SetReward(6, 7, 0, -1.0);
+		agent.SetReward(3, 3, -1.0);
+		agent.SetReward(5, 2, -1.2);
+		agent.SetReward(9, 2, +0.3);
+		agent.SetReward(5, 4, -1.0);
+		agent.SetReward(6, 4, -1.0);
+		agent.SetReward(5, 5, +1.0);
+		agent.SetReward(6, 5, -1.0);
+		agent.SetReward(8, 5, -1.0);
+		agent.SetReward(8, 6, -1.0);
+		agent.SetReward(3, 7, -1.0);
+		agent.SetReward(5, 7, -1.0);
+		agent.SetReward(6, 7, -1.0);
 		
 		// make some cliffs
 		for (int q = 0; q < 8; q++) {
 			if (q == 4) continue; // make a hole
-			agent.SetDisabled(1+q, 2, 0);
+			agent.SetDisabled(1+q, 2);
 		}
 		for (int q = 0; q < 6; q++) {
-			agent.SetDisabled(4, 2+q, 0);
+			agent.SetDisabled(4, 2+q);
 		}
 	}
 	else {

@@ -123,11 +123,6 @@ void Volume::SetData(VolumeDataBase& data) {
 }
 
 Volume& Volume::operator=(const Volume& src) {
-	
-	//if (!owned_weights) {
-	//	this->weights = new VolumeData<double>();
-	//	this->weights->SetCount(src.weights->GetCount());
-	//}
 	width = src.width;
 	height = src.height;
 	depth = src.depth;

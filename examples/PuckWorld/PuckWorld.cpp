@@ -223,7 +223,7 @@ PuckWorld::PuckWorld() {
 	PostCallback(THISBACK(Reload));
 	RefreshEpsilon();
 	
-	SetTimeCallback(-1, THISBACK(Refresher));
+	SetTimeCallback(-15, THISBACK(Refresher));
 }
 
 PuckWorld::~PuckWorld() {
@@ -248,7 +248,7 @@ void PuckWorld::Reset(bool init_reward, bool start) {
 		int states = 8; // x,y,vx,vy, puck dx,dy
 		int action_count = 5; // left, right, up, down, nothing
 		
-		agent.Init(1, states, 1, action_count);
+		agent.Init(1, states, action_count);
 		agent.Reset();
 		
 	}

@@ -102,7 +102,7 @@ void HeatmapView::PaintGraph(Draw& d) {
 		
 		String layer_lbl = lb.GetKey() + "(";
 		for(int j = 0; j < end; j++) {
-			Volume& output = j == 0 ? *lb.input1 : *lb.input2;
+			Mat& output = j == 0 ? *lb.input1 : *lb.input2;
 			int output_length = output.GetLength();
 			if (j) layer_lbl += ",";
 			layer_lbl += IntStr(output_length);
@@ -111,7 +111,7 @@ void HeatmapView::PaintGraph(Draw& d) {
 		id.DrawText(x, y, layer_lbl, fnt, Black());
 		
 		for(int j = 0; j < end; j++) {
-			Volume& output = j == 0 ? *lb.input1 : *lb.input2;
+			Mat& output = j == 0 ? *lb.input1 : *lb.input2;
 			int output_length = output.GetLength();
 			int y2 = y3;
 			tmp.SetCount(output_length);

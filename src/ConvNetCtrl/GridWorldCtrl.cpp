@@ -22,7 +22,7 @@ void GridWorldCtrl::LeftDown(Point p, dword keyflags) {
 		int y = (p.y - yoff) / cs;
 		
 		if (x >= 0 && x < gw && y >= 0 && y < gh) {
-			selected = agent->GetPos(x, y, 0);
+			selected = agent->GetPos(x, y);
 			Refresh();
 			WhenGridFocus();
 		}
@@ -72,9 +72,9 @@ void GridWorldCtrl::Paint(Draw& w) {
 			int x0 = xoff + x * cs;
 			int y0 = yoff + y * cs;
 			int r = 255, g = 255, b = 255;
-			int s = agent->GetPos(x, y, 0);
+			int s = agent->GetPos(x, y);
 			
-			double tv = agent->GetValue(x,y,0);
+			double tv = agent->GetValue(x,y);
 			int ms = 100;
 			int diff = min(+255, max(-255, (int)(tv*ms)));
 			if (diff > 0)	{ g = 255; r = 255 - diff; b = 255 - diff; }

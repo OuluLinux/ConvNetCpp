@@ -27,7 +27,7 @@ RecurrentSession::~RecurrentSession() {
 	
 }
 
-int RecurrentSession::GetVolumeCount() {
+int RecurrentSession::GetMatCount() {
 	int count = 0;
 	if (mode == MODE_RNN)
 		count = rnn_model.GetCount() * RNNModel::GetCount();
@@ -41,7 +41,7 @@ int RecurrentSession::GetVolumeCount() {
 	return count;
 }
 
-Volume& RecurrentSession::GetVolume(int i) {
+Mat& RecurrentSession::GetMat(int i) {
 	int count = 0, cols = 0, rows = 0;
 	if (mode == MODE_RNN) {
 		rows = rnn_model.GetCount();
@@ -69,13 +69,13 @@ Volume& RecurrentSession::GetVolume(int i) {
 	} else {
 		int col = i % cols;
 		if (mode == MODE_RNN) {
-			return rnn_model[row].GetVolume(col);
+			return rnn_model[row].GetMat(col);
 		}
 		else if (mode == MODE_LSTM) {
-			return lstm_model[row].GetVolume(col);
+			return lstm_model[row].GetMat(col);
 		}
 		else if (mode == MODE_HIGHWAY) {
-			return hw_model[row].GetVolume(col);
+			return hw_model[row].GetMat(col);
 		}
 		else Panic("Invalid mode");
 	}
@@ -88,9 +88,9 @@ void RecurrentSession::Init() {
 	ASSERT_(output_size != -1, "Output size must be set");
 	
 	if (mode == MODE_HIGHWAY)
-		RandVolume(input_size, hidden_sizes[0], 0, 0.08, Wil);
+		RandMat(input_size, hidden_sizes[0], 0, 0.08, Wil);
 	else
-		RandVolume(input_size, letter_size, 0, 0.08, Wil);
+		RandMat(input_size, letter_size, 0, 0.08, Wil);
 	     
 	
 	if (mode == MODE_RNN) {
@@ -115,8 +115,8 @@ void RecurrentSession::InitGraphs() {
 	ASSERT_(hidden_count > 0, "Hidden sizes must be set");
 	
 	for (int i = 0; i < hidden_prevs.GetCount(); i++) {
-		Vector<Volume*>& hidden_prevs = this->hidden_prevs[i];
-		Vector<Volume*>& cell_prevs = this->cell_prevs[i];
+		Vector<Mat*>& hidden_prevs = this->hidden_prevs[i];
+		Vector<Mat*>& cell_prevs = this->cell_prevs[i];
 		hidden_prevs.SetCount(hidden_count, NULL);
 		cell_prevs.SetCount(hidden_count, NULL);
 	}
@@ -127,8 +127,8 @@ void RecurrentSession::InitGraphs() {
 	for(int i = 0; i < hidden_count; i++) {
 		hidden_prevs[0][i]	= &first_hidden[i];
 		cell_prevs[0][i]	= &first_cell[i];
-		first_hidden[i]	.Init(1, hidden_sizes[i], 1, 0);
-		first_cell[i]	.Init(1, hidden_sizes[i], 1, 0);
+		first_hidden[i]	.Init(1, hidden_sizes[i], 0);
+		first_cell[i]	.Init(1, hidden_sizes[i], 0);
 	}
 	
 	
@@ -155,14 +155,14 @@ void RecurrentSession::InitRNN() {
 		int prev_size = d == 0 ? letter_size : hidden_sizes[d - 1];
 		hidden_size = hidden_sizes[d];
 		RNNModel& m = rnn_model[d];
-		RandVolume(hidden_size, prev_size,		0, 0.08,	m.Wxh);
-		RandVolume(hidden_size, hidden_size,	0, 0.08,	m.Whh);
-		m.bhh.Init(1, hidden_size, 1, 0);
+		RandMat(hidden_size, prev_size,		0, 0.08,	m.Wxh);
+		RandMat(hidden_size, hidden_size,	0, 0.08,	m.Whh);
+		m.bhh.Init(1, hidden_size, 0);
 	}
 	
 	// decoder params
-	RandVolume(output_size, hidden_size, 0, 0.08,	Whd);
-	bd.Init(1, output_size, 1, 0);
+	RandMat(output_size, hidden_size, 0, 0.08,	Whd);
+	bd.Init(1, output_size, 0);
 }
 
 void RecurrentSession::InitRNN(int i, int j, GraphTree& g) {
@@ -170,19 +170,19 @@ void RecurrentSession::InitRNN(int i, int j, GraphTree& g) {
 	
 	g.Clear();
 	
-	Vector<Volume*>& hidden_prevs = this->hidden_prevs[i];
-	Vector<Volume*>& hidden_nexts = this->hidden_prevs[i+1];
+	Vector<Mat*>& hidden_prevs = this->hidden_prevs[i];
+	Vector<Mat*>& hidden_nexts = this->hidden_prevs[i+1];
 	
 	if (j == 0) {
 		input = &g.RowPluck(&index_sequence[i], Wil);
 	}
 	
-	Volume& input_vector = j == 0 ? *input : *hidden_nexts[j-1];
-	Volume& hidden_prev = *hidden_prevs[j];
+	Mat& input_vector = j == 0 ? *input : *hidden_nexts[j-1];
+	Mat& hidden_prev = *hidden_prevs[j];
 	
-	Volume& h0 = g.Mul(m.Wxh, input_vector);
-	Volume& h1 = g.Mul(m.Whh, hidden_prev);
-	Volume& hidden_d = g.Relu(g.Add(g.Add(h0, h1), m.bhh));
+	Mat& h0 = g.Mul(m.Wxh, input_vector);
+	Mat& h1 = g.Mul(m.Whh, hidden_prev);
+	Mat& hidden_d = g.Relu(g.Add(g.Add(h0, h1), m.bhh));
 	
 	hidden_nexts[j] = &hidden_d;
 	
@@ -206,25 +206,25 @@ void RecurrentSession::InitLSTM() {
 		hidden_size = hidden_sizes[d];
 		
 		// gates parameters
-		RandVolume(hidden_size, prev_size,		0, 0.08,	m.Wix);
-		RandVolume(hidden_size, hidden_size,	0, 0.08,	m.Wih);
-		m.bi	.Init(1, hidden_size, 1, 0);
-		RandVolume(hidden_size, prev_size,		0, 0.08,	m.Wfx);
-		RandVolume(hidden_size, hidden_size,	0, 0.08,	m.Wfh);
-		m.bf	.Init(1, hidden_size, 1, 0);
-		RandVolume(hidden_size, prev_size,		0, 0.08,	m.Wox);
-		RandVolume(hidden_size, hidden_size,	0, 0.08,	m.Woh);
-		m.bo	.Init(1, hidden_size, 1, 0);
+		RandMat(hidden_size, prev_size,		0, 0.08,	m.Wix);
+		RandMat(hidden_size, hidden_size,	0, 0.08,	m.Wih);
+		m.bi	.Init(1, hidden_size, 0);
+		RandMat(hidden_size, prev_size,		0, 0.08,	m.Wfx);
+		RandMat(hidden_size, hidden_size,	0, 0.08,	m.Wfh);
+		m.bf	.Init(1, hidden_size, 0);
+		RandMat(hidden_size, prev_size,		0, 0.08,	m.Wox);
+		RandMat(hidden_size, hidden_size,	0, 0.08,	m.Woh);
+		m.bo	.Init(1, hidden_size, 0);
 		
 		// cell write params
-		RandVolume(hidden_size, prev_size,		0, 0.08,	m.Wcx);
-		RandVolume(hidden_size, hidden_size,	0, 0.08,	m.Wch);
-		m.bc	.Init(1, hidden_size, 1, 0);
+		RandMat(hidden_size, prev_size,		0, 0.08,	m.Wcx);
+		RandMat(hidden_size, hidden_size,	0, 0.08,	m.Wch);
+		m.bc	.Init(1, hidden_size, 0);
 	}
 	
 	// decoder params
-	RandVolume(output_size, hidden_size,	0, 0.08,	Whd);
-	bd.Init(1, output_size, 1, 0);
+	RandMat(output_size, hidden_size,	0, 0.08,	Whd);
+	bd.Init(1, output_size, 0);
 }
 
 void RecurrentSession::InitLSTM(int i, int j, GraphTree& g) {
@@ -232,46 +232,46 @@ void RecurrentSession::InitLSTM(int i, int j, GraphTree& g) {
 	
 	g.Clear();
 	
-	Vector<Volume*>& hidden_prevs = this->hidden_prevs[i];
-	Vector<Volume*>& hidden_nexts = this->hidden_prevs[i+1];
-	Vector<Volume*>& cell_prevs = this->cell_prevs[i];
-	Vector<Volume*>& cell_nexts = this->cell_prevs[i+1];
+	Vector<Mat*>& hidden_prevs = this->hidden_prevs[i];
+	Vector<Mat*>& hidden_nexts = this->hidden_prevs[i+1];
+	Vector<Mat*>& cell_prevs = this->cell_prevs[i];
+	Vector<Mat*>& cell_nexts = this->cell_prevs[i+1];
 	
 	if (j == 0) {
 		input = &g.RowPluck(&index_sequence[i], Wil);
 	}
 	
-	Volume& input_vector = j == 0 ? *input : *hidden_nexts[j-1];
-	Volume& hidden_prev = *hidden_prevs[j];
-	Volume& cell_prev = *cell_prevs[j];
+	Mat& input_vector = j == 0 ? *input : *hidden_nexts[j-1];
+	Mat& hidden_prev = *hidden_prevs[j];
+	Mat& cell_prev = *cell_prevs[j];
 	
 	// input gate
-	Volume& h0 = g.Mul(m.Wix, input_vector);
-	Volume& h1 = g.Mul(m.Wih, hidden_prev);
-	Volume& input_gate = g.Sigmoid(g.Add(g.Add(h0, h1), m.bi));
+	Mat& h0 = g.Mul(m.Wix, input_vector);
+	Mat& h1 = g.Mul(m.Wih, hidden_prev);
+	Mat& input_gate = g.Sigmoid(g.Add(g.Add(h0, h1), m.bi));
 	
 	// forget gate
-	Volume& h2 = g.Mul(m.Wfx, input_vector);
-	Volume& h3 = g.Mul(m.Wfh, hidden_prev);
-	Volume& forget_gate = g.Sigmoid(g.Add(g.Add(h2, h3), m.bf));
+	Mat& h2 = g.Mul(m.Wfx, input_vector);
+	Mat& h3 = g.Mul(m.Wfh, hidden_prev);
+	Mat& forget_gate = g.Sigmoid(g.Add(g.Add(h2, h3), m.bf));
 	
 	// output gate
-	Volume& h4 = g.Mul(m.Wox, input_vector);
-	Volume& h5 = g.Mul(m.Woh, hidden_prev);
-	Volume& output_gate = g.Sigmoid(g.Add(g.Add(h4, h5), m.bo));
+	Mat& h4 = g.Mul(m.Wox, input_vector);
+	Mat& h5 = g.Mul(m.Woh, hidden_prev);
+	Mat& output_gate = g.Sigmoid(g.Add(g.Add(h4, h5), m.bo));
 	
 	// write operation on cells
-	Volume& h6 = g.Mul(m.Wcx, input_vector);
-	Volume& h7 = g.Mul(m.Wch, hidden_prev);
-	Volume& cell_write = g.Tanh(g.Add(g.Add(h6, h7), m.bc));
+	Mat& h6 = g.Mul(m.Wcx, input_vector);
+	Mat& h7 = g.Mul(m.Wch, hidden_prev);
+	Mat& cell_write = g.Tanh(g.Add(g.Add(h6, h7), m.bc));
 	
 	// compute new cell activation
-	Volume& retain_cell = g.EltMul(forget_gate, cell_prev); // what do we keep from cell
-	Volume& write_cell = g.EltMul(input_gate, cell_write); // what do we write to cell
-	Volume& cell_d = g.Add(retain_cell, write_cell); // new cell contents
+	Mat& retain_cell = g.EltMul(forget_gate, cell_prev); // what do we keep from cell
+	Mat& write_cell = g.EltMul(input_gate, cell_write); // what do we write to cell
+	Mat& cell_d = g.Add(retain_cell, write_cell); // new cell contents
 	
 	// compute hidden state as gated, saturated cell activations
-	Volume& hidden_d = g.EltMul(output_gate, g.Tanh(cell_d));
+	Mat& hidden_d = g.EltMul(output_gate, g.Tanh(cell_d));
 	
 	hidden_nexts[j] = &hidden_d;
 	cell_nexts[j] = &cell_d;
@@ -295,17 +295,17 @@ void RecurrentSession::InitHighway() {
 		
 		hidden_size = hidden_sizes[d];
 		
-		RandVolume(1, 1,						0, 0.08,	m.Wix);
-		RandVolume(1, 1,						0, 0.08,	m.Wih);
-		RandVolume(1, hidden_size,				0, 0.08,	m.noise_i[0]);
-		RandVolume(1, 1,						0, 0.08,	m.noise_i[1]);
-		RandVolume(1, hidden_size,				0, 0.08,	m.noise_h[0]);
-		RandVolume(1, 1,						0, 0.08,	m.noise_h[1]);
+		RandMat(1, 1,						0, 0.08,	m.Wix);
+		RandMat(1, 1,						0, 0.08,	m.Wih);
+		RandMat(1, hidden_size,				0, 0.08,	m.noise_i[0]);
+		RandMat(1, 1,						0, 0.08,	m.noise_i[1]);
+		RandMat(1, hidden_size,				0, 0.08,	m.noise_h[0]);
+		RandMat(1, 1,						0, 0.08,	m.noise_h[1]);
 	}
 	
 	// decoder params
-	RandVolume(output_size, hidden_size,	0, 0.08,	Whd);
-	bd.Init(1, output_size, 1, 0);
+	RandMat(output_size, hidden_size,	0, 0.08,	Whd);
+	bd.Init(1, output_size, 0);
 }
 
 void RecurrentSession::InitHighway(int i, int j, GraphTree& g) {
@@ -313,20 +313,20 @@ void RecurrentSession::InitHighway(int i, int j, GraphTree& g) {
 	
 	g.Clear();
 	
-	Vector<Volume*>& hidden_prevs = this->hidden_prevs[i];
-	Vector<Volume*>& hidden_nexts = this->hidden_prevs[i+1];
-	Vector<Volume*>& cell_prevs = this->cell_prevs[i];
-	Vector<Volume*>& cell_nexts = this->cell_prevs[i+1];
+	Vector<Mat*>& hidden_prevs = this->hidden_prevs[i];
+	Vector<Mat*>& hidden_nexts = this->hidden_prevs[i+1];
+	Vector<Mat*>& cell_prevs = this->cell_prevs[i];
+	Vector<Mat*>& cell_nexts = this->cell_prevs[i+1];
 	
 	if (j == 0) {
 		input = &g.RowPluck(&index_sequence[i], Wil);
 	}
 	
-	Volume& input_vector = j == 0 ? *input : *hidden_nexts[j-1];
-	Volume& hidden_prev = *hidden_prevs[j];
+	Mat& input_vector = j == 0 ? *input : *hidden_nexts[j-1];
+	Mat& hidden_prev = *hidden_prevs[j];
 	
-	Volume* i2h[2];
-	Volume* h2h_tab[2];
+	Mat* i2h[2];
+	Mat* h2h_tab[2];
 	
 	
 	// This is not probably the 100% correct highway rnn implementation.
@@ -334,21 +334,21 @@ void RecurrentSession::InitHighway(int i, int j, GraphTree& g) {
 	
 	if (j == 0) {
 		{
-			Volume& dropped_x		= g.Mul(m.noise_i[0], input_vector);
-			Volume& dropped_h_tab	= g.Mul(m.noise_h[0], hidden_prev);
+			Mat& dropped_x		= g.Mul(m.noise_i[0], input_vector);
+			Mat& dropped_h_tab	= g.Mul(m.noise_h[0], hidden_prev);
 			i2h[0]					= &g.Mul(m.Wix, dropped_x);
 			h2h_tab[0]				= &g.Mul(m.Wih, dropped_h_tab);
 		}
 		{
-			Volume& dropped_x		= g.Mul(input_vector, m.noise_i[1]);
-			Volume& dropped_h_tab	= g.Mul(hidden_prev, m.noise_h[1]);
+			Mat& dropped_x		= g.Mul(input_vector, m.noise_i[1]);
+			Mat& dropped_h_tab	= g.Mul(hidden_prev, m.noise_h[1]);
 			i2h[1]					= &g.Mul(dropped_x, m.Wix);
 			h2h_tab[1]				= &g.Mul(dropped_h_tab, m.Wih);
 		}
-		Volume& t_gate_tab			= g.Sigmoid(g.AddConstant(initial_bias, g.Add(*i2h[0], *h2h_tab[0])));
-		Volume& in_transform_tab	= g.Tanh(g.Add(*i2h[1], *h2h_tab[1]));
-		Volume& c_gate_tab			= g.AddConstant(1, g.MulConstant(-1, t_gate_tab));
-		Volume& hidden_d			= g.Add(
+		Mat& t_gate_tab			= g.Sigmoid(g.AddConstant(initial_bias, g.Add(*i2h[0], *h2h_tab[0])));
+		Mat& in_transform_tab	= g.Tanh(g.Add(*i2h[1], *h2h_tab[1]));
+		Mat& c_gate_tab			= g.AddConstant(1, g.MulConstant(-1, t_gate_tab));
+		Mat& hidden_d			= g.Add(
 										g.Mul(hidden_prev, c_gate_tab),
 										g.Mul(in_transform_tab, t_gate_tab));
 		
@@ -357,17 +357,17 @@ void RecurrentSession::InitHighway(int i, int j, GraphTree& g) {
 	else
 	{
 		{
-			Volume& dropped_h_tab	= g.Mul(m.noise_h[0], input_vector);
+			Mat& dropped_h_tab	= g.Mul(m.noise_h[0], input_vector);
 			h2h_tab[0]				= &g.Mul(m.Wix, dropped_h_tab);
 		}
 		{
-			Volume& dropped_h_tab	= g.Mul(input_vector, m.noise_h[1]);
+			Mat& dropped_h_tab	= g.Mul(input_vector, m.noise_h[1]);
 			h2h_tab[1]				= &g.Mul(dropped_h_tab, m.Wix);
 		}
-		Volume& t_gate_tab			= g.Sigmoid(g.AddConstant(initial_bias, *h2h_tab[0]));
-		Volume& in_transform_tab	= g.Tanh(*h2h_tab[1]);
-		Volume& c_gate_tab			= g.AddConstant(1, g.MulConstant(-1, t_gate_tab));
-		Volume& hidden_d			= g.Add(
+		Mat& t_gate_tab			= g.Sigmoid(g.AddConstant(initial_bias, *h2h_tab[0]));
+		Mat& in_transform_tab	= g.Tanh(*h2h_tab[1]);
+		Mat& c_gate_tab			= g.AddConstant(1, g.MulConstant(-1, t_gate_tab));
+		Mat& hidden_d			= g.Add(
 										g.Mul(input_vector, c_gate_tab),
 										g.Mul(in_transform_tab, t_gate_tab));
 		
@@ -408,7 +408,7 @@ void RecurrentSession::Learn(const Vector<int>& input_sequence) {
 			list[j].Forward();
 		}
 		
-		Volume& logprobs = list.Top().Top().output;
+		Mat& logprobs = list.Top().Top().output;
 		Softmax(logprobs, probs); // compute the softmax probabilities
 		
 		double p = probs.Get(ix_target);
@@ -443,17 +443,17 @@ void RecurrentSession::SolverStep() {
 	// perform parameter update
 	int num_clipped = 0;
 	int num_tot = 0;
-	int n = GetVolumeCount();
+	int n = GetMatCount();
 	
 	int step_cache_count = step_cache.GetCount();
 	step_cache.SetCount(n);
 	
 	for (int k = 0; k < n; k++) {
-		Volume& m = GetVolume(k);
-		Volume& s = step_cache[k];
+		Mat& m = GetMat(k);
+		Mat& s = step_cache[k];
 		
 		if (k >= step_cache_count) {
-			s.Init(m.GetWidth(), m.GetHeight(), m.GetDepth(), 0);
+			s.Init(m.GetWidth(), m.GetHeight(), 0);
 		}
 		
 		for (int i = 0; i < m.GetLength(); i++) {
@@ -486,12 +486,12 @@ void RecurrentSession::ResetPrevs() {
 	
 	first_hidden.SetCount(hidden_count);
 	for (int d = 0; d < hidden_count; d++) {
-		first_hidden[d].Init(1, hidden_sizes[d], 1, 0);
+		first_hidden[d].Init(1, hidden_sizes[d], 0);
 	}
 	
 	first_cell.SetCount(hidden_count);
 	for (int d = 0; d < hidden_count; d++) {
-		first_cell[d].Init(1, hidden_sizes[d], 1, 0);
+		first_cell[d].Init(1, hidden_sizes[d], 0);
 	}
 }
 
@@ -513,7 +513,7 @@ void RecurrentSession::Predict(Vector<int>& output_sequence, bool samplei, doubl
 		}
 		
 		// sample predicted letter
-		Volume& logprobs = list.Top().Top().output;
+		Mat& logprobs = list.Top().Top().output;
 		
 		if (temperature != 1.0 && samplei) {
 			// scale log probabilities by temperature and renormalize
