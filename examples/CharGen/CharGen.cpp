@@ -31,7 +31,7 @@ CharGen::CharGen() {
 	resume <<= THISBACK(Resume);
 	set_rnn <<= THISBACK1(SetPreset, 0);
 	set_lstm <<= THISBACK1(SetPreset, 1);
-	set_hrn <<= THISBACK1(SetPreset, 2);
+	set_rhn <<= THISBACK1(SetPreset, 2);
 	
 	CtrlLayout(*this);
 	
@@ -88,7 +88,7 @@ void CharGen::SetPreset(int i) {
 	
 			// model parameters
 			"\t\"generator\":\"highway\",\n" // can be 'rnn' or 'lstm' or 'highway'
-			"\t\"hidden_sizes\":[100,100,100,100,100],\n" // list of sizes of hidden layers
+			"\t\"hidden_sizes\":[20,20,20,20,20,20,20,20],\n" // list of sizes of hidden layers
 			
 			// optimization
 			"\t\"regc\":0.000001,\n" // L2 regularization strength

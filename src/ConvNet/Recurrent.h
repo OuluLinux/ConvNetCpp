@@ -251,22 +251,16 @@ public:
 
 struct HighwayModel : Moveable<HighwayModel> {
 	
-	Mat noise_i[2];
 	Mat noise_h[2];
-	Mat Wix, Wih;
 	
-	static int GetCount() {return 6;}
+	static int GetCount() {return 2;}
 	
 	Mat& GetMat(int i) {
 		ASSERT(i >= 0 && i < 6);
 		switch (i) {
-			case 0: return noise_i[0];
-			case 1: return noise_i[1];
-			case 2: return noise_h[0];
-			case 3: return noise_h[1];
-			case 4: return Wix;
-			case 5: return Wih;
-			default: return Wih;
+			case 0: return noise_h[0];
+			case 1: return noise_h[1];
+			default: return noise_h[1];
 		}
 	}
 };

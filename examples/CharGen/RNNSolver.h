@@ -362,7 +362,7 @@ public:
 		input_sz = NULL;
 		
 		hidden_sizes.Add(10);
-		hidden_sizes.Add(10);
+		//hidden_sizes.Add(10);
 		
 		letter_size		= hidden_sizes[0];
 	}
@@ -378,12 +378,10 @@ public:
 			//int prev_size = d == 0 ? hidden_sizes[d] : 1;
 			hidden_size = hidden_sizes[d];
 			
-			model.GetAdd("Wix_" + is, Size(1,1));
-			model.GetAdd("Wih_" + is, Size(1,1));
-			model.GetAdd("noise_i_" + is + "_0", Size(grid,1));
-			model.GetAdd("noise_i_" + is + "_1", Size(1,1));
-			model.GetAdd("noise_h_" + is + "_0", Size(grid,1));
-			model.GetAdd("noise_h_" + is + "_1", Size(1,1));
+			model.GetAdd("noise_i_" + is + "_0", Size(grid,grid));
+			model.GetAdd("noise_i_" + is + "_1", Size(grid,grid));
+			model.GetAdd("noise_h_" + is + "_0", Size(grid,grid));
+			model.GetAdd("noise_h_" + is + "_1", Size(grid,grid));
 		}
 		
 		// decoder params
@@ -410,43 +408,33 @@ public:
 		Size* h2h_tab[2];
 		
 		if (j == 0) {
-			{
-				Size& dropped_x			= g.Mul(input_vector, model.Get("noise_i_" + js + "_0"));
-				Size& dropped_h_tab		= g.Mul(hidden_prev, model.Get("noise_h_" + js + "_0"));
-				i2h[0]					= &g.Mul(model.Get("Wix_" + js), dropped_x);
-				h2h_tab[0]				= &g.Mul(model.Get("Wih_" + js), dropped_h_tab);
-			}
-			{
-				Size& dropped_x			= g.Mul(input_vector, model.Get("noise_i_" + js + "_1"));
-				Size& dropped_h_tab		= g.Mul(hidden_prev, model.Get("noise_h_" + js + "_1"));
-				i2h[1]					= &g.Mul(model.Get("Wix_" + js), dropped_x);
-				h2h_tab[1]				= &g.Mul(model.Get("Wih_" + js), dropped_h_tab);
-			}
-			Size& t_gate_tab			= g.Sigmoid(g.AddConstant(initial_bias, g.Add(*i2h[0], *h2h_tab[0])));
-			Size& in_transform_tab		= g.Tanh(g.Add(*i2h[1], *h2h_tab[1]));
+			Size& dropped_x0			= g.Mul(model.Get("noise_i_" + js + "_0"), input_vector);
+			Size& dropped_h_tab0		= g.Mul(model.Get("noise_h_" + js + "_0"), hidden_prev);
+			
+			Size& dropped_x1			= g.Mul(model.Get("noise_i_" + js + "_1"), input_vector);
+			Size& dropped_h_tab1		= g.Mul(model.Get("noise_h_" + js + "_1"), hidden_prev);
+			
+			Size& t_gate_tab			= g.Sigmoid(g.AddConstant(initial_bias, g.Add(dropped_x0, dropped_h_tab0)));
+			Size& in_transform_tab		= g.Tanh(g.Add(dropped_x1, dropped_h_tab1));
 			Size& c_gate_tab			= g.AddConstant(1, g.MulConstant(-1, t_gate_tab));
 			Size& hidden_d				= g.Add(
-											g.Mul(c_gate_tab, hidden_prev),
-											g.Mul(t_gate_tab, in_transform_tab));
+											g.EltMul(hidden_prev, c_gate_tab),
+											g.EltMul(in_transform_tab, t_gate_tab));
 			
 			hidden_nexts[j] = &hidden_d;
 		}
 		else
 		{
-			{
-				Size& dropped_h_tab		= g.Mul(input_vector, model.Get("noise_h_" + js + "_0"));
-				h2h_tab[0]				= &g.Mul(model.Get("Wix_" + js), dropped_h_tab);
-			}
-			{
-				Size& dropped_h_tab		= g.Mul(input_vector, model.Get("noise_h_" + js + "_1"));
-				h2h_tab[1]				= &g.Mul(model.Get("Wix_" + js), dropped_h_tab);
-			}
-			Size& t_gate_tab			= g.Sigmoid(g.AddConstant(initial_bias, *h2h_tab[0]));
-			Size& in_transform_tab		= g.Tanh(*h2h_tab[1]);
+			Size& dropped_h_tab0		= g.Mul(model.Get("noise_h_" + js + "_0"), input_vector);
+			
+			Size& dropped_h_tab1		= g.Mul(model.Get("noise_h_" + js + "_1"), input_vector);
+			
+			Size& t_gate_tab			= g.Sigmoid(g.AddConstant(initial_bias, dropped_h_tab0));
+			Size& in_transform_tab		= g.Tanh(dropped_h_tab1);
 			Size& c_gate_tab			= g.AddConstant(1, g.MulConstant(-1, t_gate_tab));
 			Size& hidden_d				= g.Add(
-											g.Mul(c_gate_tab, input_vector),
-											g.Mul(t_gate_tab, in_transform_tab));
+											g.EltMul(input_vector, c_gate_tab),
+											g.EltMul(in_transform_tab, t_gate_tab));
 			
 			hidden_nexts[j] = &hidden_d;
 		}

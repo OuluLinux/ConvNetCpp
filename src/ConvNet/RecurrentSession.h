@@ -24,6 +24,7 @@ protected:
 	Vector<LSTMModel> lstm_model;
 	Vector<RNNModel> rnn_model;
 	Mat Whd, bd, Wil;
+	Mat noise_i[2];
 	
 	// Solver
 	Vector<Mat> step_cache;

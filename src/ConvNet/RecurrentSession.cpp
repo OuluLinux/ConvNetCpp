@@ -34,7 +34,7 @@ int RecurrentSession::GetMatCount() {
 	else if (mode == MODE_LSTM)
 		count = lstm_model.GetCount() * LSTMModel::GetCount();
 	else if (mode == MODE_HIGHWAY)
-		count = hw_model.GetCount() * HighwayModel::GetCount();
+		count = hw_model.GetCount() * HighwayModel::GetCount() + 2;
 	else
 		Panic("Invalid mode");
 	count += 3;
@@ -64,6 +64,8 @@ Mat& RecurrentSession::GetMat(int i) {
 			case 0: return Whd;
 			case 1: return bd;
 			case 2: return Wil;
+			case 3: return noise_i[0];
+			case 4: return noise_i[1];
 			default: Panic("Invalid id " + IntStr(i));
 		}
 	} else {
@@ -295,12 +297,12 @@ void RecurrentSession::InitHighway() {
 		
 		hidden_size = hidden_sizes[d];
 		
-		RandMat(1, 1,						0, 0.08,	m.Wix);
-		RandMat(1, 1,						0, 0.08,	m.Wih);
-		RandMat(1, hidden_size,				0, 0.08,	m.noise_i[0]);
-		RandMat(1, 1,						0, 0.08,	m.noise_i[1]);
-		RandMat(1, hidden_size,				0, 0.08,	m.noise_h[0]);
-		RandMat(1, 1,						0, 0.08,	m.noise_h[1]);
+		if (d == 0) {
+			RandMat(hidden_size, hidden_size,			0, 0.08,	noise_i[0]);
+			RandMat(hidden_size, hidden_size,			0, 0.08,	noise_i[1]);
+		}
+		RandMat(hidden_size, hidden_size,				0, 0.08,	m.noise_h[0]);
+		RandMat(hidden_size, hidden_size,				0, 0.08,	m.noise_h[1]);
 	}
 	
 	// decoder params
@@ -325,51 +327,33 @@ void RecurrentSession::InitHighway(int i, int j, GraphTree& g) {
 	Mat& input_vector = j == 0 ? *input : *hidden_nexts[j-1];
 	Mat& hidden_prev = *hidden_prevs[j];
 	
-	Mat* i2h[2];
-	Mat* h2h_tab[2];
-	
-	
-	// This is not probably the 100% correct highway rnn implementation.
-	// It works and has similar characteristics, however.
-	
 	if (j == 0) {
-		{
-			Mat& dropped_x		= g.Mul(m.noise_i[0], input_vector);
-			Mat& dropped_h_tab	= g.Mul(m.noise_h[0], hidden_prev);
-			i2h[0]					= &g.Mul(m.Wix, dropped_x);
-			h2h_tab[0]				= &g.Mul(m.Wih, dropped_h_tab);
-		}
-		{
-			Mat& dropped_x		= g.Mul(input_vector, m.noise_i[1]);
-			Mat& dropped_h_tab	= g.Mul(hidden_prev, m.noise_h[1]);
-			i2h[1]					= &g.Mul(dropped_x, m.Wix);
-			h2h_tab[1]				= &g.Mul(dropped_h_tab, m.Wih);
-		}
-		Mat& t_gate_tab			= g.Sigmoid(g.AddConstant(initial_bias, g.Add(*i2h[0], *h2h_tab[0])));
-		Mat& in_transform_tab	= g.Tanh(g.Add(*i2h[1], *h2h_tab[1]));
+		Mat& dropped_x0			= g.Mul(noise_i[0], input_vector);
+		Mat& dropped_h_tab0		= g.Mul(m.noise_h[0], hidden_prev);
+		
+		Mat& dropped_x1			= g.Mul(noise_i[1], input_vector);
+		Mat& dropped_h_tab1		= g.Mul(m.noise_h[1], hidden_prev);
+		
+		Mat& t_gate_tab			= g.Sigmoid(g.AddConstant(initial_bias, g.Add(dropped_x0, dropped_h_tab0)));
+		Mat& in_transform_tab	= g.Tanh(g.Add(dropped_x1, dropped_h_tab1));
 		Mat& c_gate_tab			= g.AddConstant(1, g.MulConstant(-1, t_gate_tab));
 		Mat& hidden_d			= g.Add(
-										g.Mul(hidden_prev, c_gate_tab),
-										g.Mul(in_transform_tab, t_gate_tab));
+										g.EltMul(hidden_prev, c_gate_tab),
+										g.EltMul(in_transform_tab, t_gate_tab));
 		
 		hidden_nexts[j] = &hidden_d;
 	}
 	else
 	{
-		{
-			Mat& dropped_h_tab	= g.Mul(m.noise_h[0], input_vector);
-			h2h_tab[0]				= &g.Mul(m.Wix, dropped_h_tab);
-		}
-		{
-			Mat& dropped_h_tab	= g.Mul(input_vector, m.noise_h[1]);
-			h2h_tab[1]				= &g.Mul(dropped_h_tab, m.Wix);
-		}
-		Mat& t_gate_tab			= g.Sigmoid(g.AddConstant(initial_bias, *h2h_tab[0]));
-		Mat& in_transform_tab	= g.Tanh(*h2h_tab[1]);
+		Mat& dropped_h_tab0	= g.Mul(m.noise_h[0], input_vector);
+		Mat& dropped_h_tab1	= g.Mul(m.noise_h[1], input_vector);
+		
+		Mat& t_gate_tab			= g.Sigmoid(g.AddConstant(initial_bias, dropped_h_tab0));
+		Mat& in_transform_tab	= g.Tanh(dropped_h_tab1);
 		Mat& c_gate_tab			= g.AddConstant(1, g.MulConstant(-1, t_gate_tab));
 		Mat& hidden_d			= g.Add(
-										g.Mul(input_vector, c_gate_tab),
-										g.Mul(in_transform_tab, t_gate_tab));
+										g.EltMul(input_vector, c_gate_tab),
+										g.EltMul(in_transform_tab, t_gate_tab));
 		
 		hidden_nexts[j] = &hidden_d;
 	}
