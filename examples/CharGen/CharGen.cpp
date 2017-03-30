@@ -88,11 +88,11 @@ void CharGen::SetPreset(int i) {
 	
 			// model parameters
 			"\t\"generator\":\"highway\",\n" // can be 'rnn' or 'lstm' or 'highway'
-			"\t\"hidden_sizes\":[20,20,20,20,20,20,20,20],\n" // list of sizes of hidden layers
+			"\t\"hidden_sizes\":[20,20],\n" // list of sizes of hidden layers
 			
 			// optimization
 			"\t\"regc\":0.000001,\n" // L2 regularization strength
-			"\t\"learning_rate\":0.01,\n" // learning rate
+			"\t\"learning_rate\":0.001,\n" // learning rate
 			"\t\"clipval\":5.0\n" // clip gradients at this value
 			"}";
 	}

@@ -285,6 +285,17 @@ void RecurrentSession::InitLSTM(int i, int j, GraphTree& g) {
 	}
 }
 
+
+/*
+	Recurrent Highway Networks (Zilly and Srivastava et al., 2016)
+		- References:
+		- Zilly, J, Srivastava, R, Koutnik, J, Schmidhuber, J., "Recurrent Highway Networks", 2016
+		- Gal, Y, "A Theoretically Grounded Application of Dropout in Recurrent Neural Networks", 2015.
+		- Zaremba, W, Sutskever, I, Vinyals, O, "Recurrent neural network regularization", 2014.
+	
+	Also helpful: https://github.com/julian121266/RecurrentHighwayNetworks/blob/master/torch_rhn_ptb.lua
+*/
+
 void RecurrentSession::InitHighway() {
 	ASSERT(input_size == output_size);
 	int hidden_size = 0;
@@ -298,11 +309,11 @@ void RecurrentSession::InitHighway() {
 		hidden_size = hidden_sizes[d];
 		
 		if (d == 0) {
-			RandMat(hidden_size, hidden_size,			0, 0.08,	noise_i[0]);
-			RandMat(hidden_size, hidden_size,			0, 0.08,	noise_i[1]);
+			RandMat(hidden_size, 1,			0, 0.08,	noise_i[0]);
+			RandMat(hidden_size, 1,			0, 0.08,	noise_i[1]);
 		}
-		RandMat(hidden_size, hidden_size,				0, 0.08,	m.noise_h[0]);
-		RandMat(hidden_size, hidden_size,				0, 0.08,	m.noise_h[1]);
+		RandMat(hidden_size, 1,				0, 0.08,	m.noise_h[0]);
+		RandMat(hidden_size, 1,				0, 0.08,	m.noise_h[1]);
 	}
 	
 	// decoder params
@@ -328,11 +339,11 @@ void RecurrentSession::InitHighway(int i, int j, GraphTree& g) {
 	Mat& hidden_prev = *hidden_prevs[j];
 	
 	if (j == 0) {
-		Mat& dropped_x0			= g.Mul(noise_i[0], input_vector);
-		Mat& dropped_h_tab0		= g.Mul(m.noise_h[0], hidden_prev);
+		Mat& dropped_x0			= g.EltMul(input_vector, noise_i[0]);
+		Mat& dropped_h_tab0		= g.EltMul(hidden_prev, m.noise_h[0]);
 		
-		Mat& dropped_x1			= g.Mul(noise_i[1], input_vector);
-		Mat& dropped_h_tab1		= g.Mul(m.noise_h[1], hidden_prev);
+		Mat& dropped_x1			= g.EltMul(input_vector, noise_i[1]);
+		Mat& dropped_h_tab1		= g.EltMul(hidden_prev, m.noise_h[1]);
 		
 		Mat& t_gate_tab			= g.Sigmoid(g.AddConstant(initial_bias, g.Add(dropped_x0, dropped_h_tab0)));
 		Mat& in_transform_tab	= g.Tanh(g.Add(dropped_x1, dropped_h_tab1));
@@ -345,8 +356,8 @@ void RecurrentSession::InitHighway(int i, int j, GraphTree& g) {
 	}
 	else
 	{
-		Mat& dropped_h_tab0	= g.Mul(m.noise_h[0], input_vector);
-		Mat& dropped_h_tab1	= g.Mul(m.noise_h[1], input_vector);
+		Mat& dropped_h_tab0		= g.EltMul(input_vector, m.noise_h[0]);
+		Mat& dropped_h_tab1		= g.EltMul(input_vector, m.noise_h[1]);
 		
 		Mat& t_gate_tab			= g.Sigmoid(g.AddConstant(initial_bias, dropped_h_tab0));
 		Mat& in_transform_tab	= g.Tanh(dropped_h_tab1);
