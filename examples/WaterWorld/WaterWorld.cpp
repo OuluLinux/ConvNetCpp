@@ -95,7 +95,7 @@ void WaterWorld::DockInit() {
 	DockLeft(Dockable(agent_ctrl, "Edit Agent").SizeHint(Size(320, 240)));
 	DockLeft(Dockable(statusctrl, "Status").SizeHint(Size(320, 240)));
 	DockLeft(Dockable(reward, "Reward graph").SizeHint(Size(320, 240)));
-	DockBottom(Dockable(network_view, "Network View").SizeHint(Size(640, 120)));
+	DockRight(Dockable(network_view, "Network View").SizeHint(Size(320, 480)));
 }
 
 void WaterWorld::Refresher() {

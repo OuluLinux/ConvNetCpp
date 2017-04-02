@@ -112,6 +112,7 @@ public:
 	Vector<Eye> eyes;
 	Vector<double> smooth_reward_history;
 	Vector<int> actions;
+	Vector<Pointf> tail;
 	Pointf p;		// positional information
 	Pointf v;		// velocity
 	Pointf op;		// old position
@@ -120,6 +121,7 @@ public:
 	double rad, digestion_signal;
 	int nflot, iter;
 	int action;
+	int max_tail;
 	bool do_training;
 	
 };
@@ -149,7 +151,7 @@ class WaterWorld : public DockWindow {
 protected:
 	friend class WaterWorldAgent;
 	
-	HeatmapView network_view;
+	HeatmapTimeView network_view;
 	World world;
 	Label lbl_eps;
 	SliderCtrl eps;

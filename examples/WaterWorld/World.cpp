@@ -111,6 +111,9 @@ void World::Tick() {
 	for (int i = 0, n = agents.GetCount(); i < n; i++) {
 		WaterWorldAgent& a = agents[i];
 		a.op = a.p; // back up old position
+		a.tail.Add(a.p);
+		while (a.tail.GetCount() > a.max_tail)
+			a.tail.Remove(0);
 		
 		// execute agent's desired action
 		double speed = 1;
@@ -222,6 +225,16 @@ void World::Paint(Draw& d) {
 		int r = min(255, max(0, (int)(a.reward * 200.0)));
 		Color fill_clr(r, 150, 150);
 		
+		// draw tail (not in original);
+		Pointf* prev = &a.op;
+		for(int j = 0; j < a.tail.GetCount(); j++) {
+			double radius = a.rad * ((double)(j + 1) / a.tail.GetCount() + 1.0)  / 2.0;
+			double radius2 = radius * 2.0;
+			Pointf& p = a.tail[j];
+			id.DrawEllipse(p.x - radius, p.y - radius, radius2, radius2, fill_clr, 0);
+			prev = &p;
+		}
+		
 		// draw agents sight
 		for(int j = 0; j < a.eyes.GetCount(); j++) {
 			Eye& e = a.eyes[j];
@@ -243,7 +256,7 @@ void World::Paint(Draw& d) {
 		// draw agents body
 		double radius = a.rad;
 		double radius2 = radius * 2.0;
-		id.DrawEllipse(a.op.x - radius, a.op.y - radius, radius2, radius2, fill_clr, 1, Black());
+		id.DrawEllipse(a.op.x - radius, a.op.y - radius, radius2, radius2, fill_clr, 0);
 		
 	}
 	
