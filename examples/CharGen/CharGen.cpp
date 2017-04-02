@@ -35,7 +35,9 @@ CharGen::CharGen() {
 	
 	CtrlLayout(*this);
 	
-	Size sz = Zsz(880, 430);
+	network_view.SetRecurrentSession(ses);
+	
+	Size sz = Zsz(880, 544);
 	SetRect(0,0,sz.cx,sz.cy);
 	
 	tick_iter = 0;
@@ -48,10 +50,16 @@ CharGen::CharGen() {
 	PostCallback(THISBACK1(SetPreset, 1));
 	PostCallback(THISBACK(Reload));
 	PostCallback(THISBACK(Start));
+	
+	SetTimeCallback(-40, THISBACK(Refresher));
 }
 
 CharGen::~CharGen() {
 	Stop();
+}
+
+void CharGen::Refresher() {
+	network_view.Refresh();
 }
 
 void CharGen::SetPreset(int i) {
@@ -65,7 +73,7 @@ void CharGen::SetPreset(int i) {
 			
 			// optimization
 			"\t\"regc\":0.000001,\n" // L2 regularization strength
-			"\t\"learning_rate\":0.001,\n" // learning rate
+			"\t\"learning_rate\":0.01,\n" // learning rate
 			"\t\"clipval\":5.0\n" // clip gradients at this value
 			"}";
 	}
@@ -79,7 +87,7 @@ void CharGen::SetPreset(int i) {
 			
 			// optimization
 			"\t\"regc\":0.000001,\n" // L2 regularization strength
-			"\t\"learning_rate\":0.001,\n" // learning rate
+			"\t\"learning_rate\":0.01,\n" // learning rate
 			"\t\"clipval\":5.0\n" // clip gradients at this value
 			"}";
 	}
@@ -92,7 +100,7 @@ void CharGen::SetPreset(int i) {
 			
 			// optimization
 			"\t\"regc\":0.000001,\n" // L2 regularization strength
-			"\t\"learning_rate\":0.001,\n" // learning rate
+			"\t\"learning_rate\":0.01,\n" // learning rate
 			"\t\"clipval\":5.0\n" // clip gradients at this value
 			"}";
 	}

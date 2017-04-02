@@ -49,7 +49,9 @@ RegressionPainter::RegressionPainter() {
 	slider.SetData(1000);
 	slider <<= THISBACK(RefreshLearningRate);
 	
-	ses.WhenStepInterval << THISBACK(StepInterval);
+	network_view.SetSession(ses);
+	
+	//ses.WhenStepInterval << THISBACK(StepInterval);
 	
 	PostCallback(THISBACK(SetImage));
 	
@@ -61,6 +63,7 @@ void RegressionPainter::DockInit() {
 	DockLeft(Dockable(img_list, "Image List").SizeHint(Size(128, 320)));
 	DockBottom(Dockable(status, "Status").SizeHint(Size(320, 200)));
 	DockBottom(Dockable(slider_ctrl, "Learning rate").SizeHint(Size(320, 200)));
+	DockRight(Dockable(network_view, "Network View").SizeHint(Size(320, 480)));
 }
 
 void RegressionPainter::RefreshStatus() {
@@ -80,6 +83,7 @@ void RegressionPainter::RefreshLearningRate() {
 
 void RegressionPainter::Refresher() {
 	RefreshStatus();
+	network_view.Refresh();
 }
 
 void RegressionPainter::Reload() {

@@ -66,6 +66,7 @@ public:
 	void StoreJSON(String& json);
 	void Pause();
 	void Resume();
+	void Refresher();
 	void InitVocab(Vector<WString>& sents, int count_threshold);
 	WString PredictSentence(bool samplei=false, double temperature=1.0);
 	double Median(Vector<double>& values);

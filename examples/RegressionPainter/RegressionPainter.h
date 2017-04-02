@@ -54,6 +54,7 @@ class RegressionPainter : public DockWindow {
 	
 	ArrayCtrl img_list;
 	ConvNet::ImageRegression img_ctrl;
+	HeatmapTimeView network_view;
 	
 	Button reload_btn;
 	ParentCtrl net_ctrl;

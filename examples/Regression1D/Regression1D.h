@@ -14,6 +14,7 @@ using namespace ConvNet;
 
 class Regression1D : public DockWindow {
 	
+	HeatmapTimeView network_view;
 	Button reload_btn;
 	ParentCtrl net_ctrl;
 	DocEdit net_edit;

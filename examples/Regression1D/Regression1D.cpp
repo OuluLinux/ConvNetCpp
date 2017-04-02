@@ -42,22 +42,26 @@ Regression1D::Regression1D() {
 	regen <<= THISBACK(Regenerate);
 	funcs <<= THISBACK(Regenerate);
 	
-	pointcount.SetData(10);
+	pointcount.SetData(100);
 	
 	layer_ctrl.SetSession(ses);
 	
 	Regenerate();
 	Reload();
 	
+	network_view.SetSession(ses);
+	
 	SetTimeCallback(-40, THISBACK(Refresher));
 }
 
 void Regression1D::DockInit() {
 	AutoHide(DOCK_LEFT, Dockable(net_ctrl, "Edit Network").SizeHint(Size(640, 320)));
+	DockRight(Dockable(network_view, "Network View").SizeHint(Size(320, 480)));
 }
 
 void Regression1D::Refresher() {
 	layer_ctrl.Refresh();
+	network_view.Refresh();
 }
 
 void Regression1D::Reload() {

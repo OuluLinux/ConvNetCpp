@@ -62,8 +62,6 @@ protected:
 	void Backward(int seq_end_cursor);
 	void SolverStep();
 	void ResetPrevs();
-	int GetMatCount();
-	Mat& GetMat(int i);
 public:
 	typedef RecurrentSession CLASSNAME;
 	RecurrentSession();
@@ -79,6 +77,8 @@ public:
 	double GetPerplexity() const {return ppl;}
 	double GetCost() const {return cost;}
 	double GetLearningRate() const {return learning_rate;}
+	int GetMatCount();
+	Mat& GetMat(int i);
 	
 	void SetInputSize(int i) {input_size = i;}
 	void SetOutputSize(int i) {output_size = i;}

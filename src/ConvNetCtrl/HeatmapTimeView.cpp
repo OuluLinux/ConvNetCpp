@@ -13,6 +13,8 @@ void HeatmapTimeView::Paint(Draw& d) {
 		PaintSession(d);
 	else if (mode == MODE_GRAPH)
 		PaintGraph(d);
+	else if (mode == MODE_RECURRENTSESSION)
+		PaintRecurrentSession(d);
 	else
 		d.DrawRect(GetSize(), White());
 }
@@ -58,13 +60,13 @@ void HeatmapTimeView::PaintSession(Draw& d) {
 				it->r = 0;
 				it->g = 0;
 				it->b = b;
-				it->a = 0;
+				it->a = 255;
 			}
 			else {
 				it->r = b;
 				it->g = 0;
 				it->b = 0;
-				it->a = 0;
+				it->a = 255;
 			}
 			it++;
 		}
@@ -76,6 +78,7 @@ void HeatmapTimeView::PaintSession(Draw& d) {
 	
 	
 	ImageDraw id(sz);
+	id.DrawRect(sz, Black());
 	for(int i = 0; i < lines.GetCount(); i++) {
 		Image& ib = lines[i];
 		id.DrawImage(0, i, sz.cx, 1, ib);
@@ -122,13 +125,13 @@ void HeatmapTimeView::PaintGraph(Draw& d) {
 				it->r = 0;
 				it->g = 0;
 				it->b = b;
-				it->a = 0;
+				it->a = 255;
 			}
 			else {
 				it->r = b;
 				it->g = 0;
 				it->b = 0;
-				it->a = 0;
+				it->a = 255;
 			}
 			it++;
 		}
@@ -139,6 +142,7 @@ void HeatmapTimeView::PaintGraph(Draw& d) {
 	
 	
 	ImageDraw id(sz);
+	id.DrawRect(sz, Black());
 	for(int i = 0; i < lines.GetCount(); i++) {
 		Image& ib = lines[i];
 		id.DrawImage(0, i, sz.cx, 1, ib);
@@ -148,5 +152,69 @@ void HeatmapTimeView::PaintGraph(Draw& d) {
 	d.DrawImage(0, 0, id);
 }
 
+void HeatmapTimeView::PaintRecurrentSession(Draw& d) {
+	Size sz = GetSize();
+	
+	int layer_count = rses->GetMatCount();
+	int total_output = 0;
+	
+	for(int i = 0; i < layer_count; i++) {
+		Mat& lb = rses->GetMat(i);
+		total_output += lb.GetLength();
+	}
+	
+	ImageBuffer ib(total_output, 1);
+	RGBA* it = ib.Begin();
+	
+	
+	for(int i = 0; i < layer_count; i++) {
+		
+		Mat& lb = rses->GetMat(i);
+		int output_count = lb.GetLength();
+		
+		double max = 0.0;
+		
+		tmp.SetCount(output_count);
+		
+		for(int j = 0; j < output_count; j++) {
+			double d = lb.Get(j);
+			tmp[j] = d;
+			double fd = fabs(d);
+			if (fd > max) max = fd;
+		}
+		
+		for(int j = 0; j < output_count; j++) {
+			double d = tmp[j];
+			byte b = fabs(d) / max * 255;
+			if (d >= 0)	{
+				it->r = 0;
+				it->g = 0;
+				it->b = b;
+				it->a = 255;
+			}
+			else {
+				it->r = b;
+				it->g = 0;
+				it->b = 0;
+				it->a = 255;
+			}
+			it++;
+		}
+	}
+	
+	lines.Add(ib);
+	while (lines.GetCount() > sz.cy) lines.Remove(0);
+	
+	
+	ImageDraw id(sz);
+	id.DrawRect(sz, Black());
+	for(int i = 0; i < lines.GetCount(); i++) {
+		Image& ib = lines[i];
+		id.DrawImage(0, i, sz.cx, 1, ib);
+	}
+	
+	
+	d.DrawImage(0, 0, id);
+}
 
 }

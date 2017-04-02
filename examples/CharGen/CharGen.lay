@@ -1,4 +1,4 @@
-LAYOUT(MainLayout, 876, 416)
+LAYOUT(MainLayout, 876, 544)
 	ITEM(Label, dv___0, SetLabel(t_("I/O save/load model JSON")).SetFont(StdFont().Bold()).LeftPosZ(440, 168).TopPosZ(372, 19))
 	ITEM(Button, pause, SetLabel(t_("Pause")).LeftPosZ(296, 136).TopPosZ(264, 20))
 	ITEM(Button, resume, SetLabel(t_("Resume")).LeftPosZ(156, 136).TopPosZ(264, 20))
@@ -30,5 +30,6 @@ LAYOUT(MainLayout, 876, 416)
 	ITEM(Label, dv___28, SetLabel(t_("protip: if your perplexity is exploding with Infinity try lowering the initial learning rate ")).LeftPosZ(16, 416).TopPosZ(372, 19))
 	ITEM(DocEdit, input, LeftPosZ(16, 412).TopPosZ(20, 200))
 	ITEM(Label, input_stats, SetLabel(t_("Input stats")).SetAlign(ALIGN_CENTER).SetFrame(ThinInsetFrame()).LeftPosZ(16, 412).TopPosZ(224, 19))
+	ITEM(HeatmapTimeView, network_view, LeftPosZ(0, 876).VCenterPosZ(128, 208))
 END_LAYOUT
 
