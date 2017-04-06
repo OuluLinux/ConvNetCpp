@@ -15,7 +15,10 @@ It currently supports:
 
 ## Example code
 
-For screenshots of examples, see [the gallery](https://github.com/sppp/ConvNetCpp/blob/master/GALLERY.md).
+Screenshot of [WaterWorld: Deep Q Learning Demo](http://cs.stanford.edu/people/karpathy/reinforcejs/waterworld.html) translated to ConvNetC++.
+![WaterWorld: Deep Q Learning Demo](https://github.com/sppp/ConvNetCpp/raw/master/docs/waterworld.jpg)
+
+##### For screenshots of examples, see [the gallery](https://github.com/sppp/ConvNetCpp/blob/master/GALLERY.md).
 
 ConvNetC++ includes all original examples from ConvNetJS and also examples from RecurrentJS and ReinforceJS, even tough they were separate libraries originally.
 
