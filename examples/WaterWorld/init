@@ -1,0 +1,7 @@
+#ifndef _WaterWorld_icpp_init_stub
+#define _WaterWorld_icpp_init_stub
+#include "CtrlLib/init"
+#include "plugin/bz2/init"
+#include "ConvNetCtrl/init"
+#include "Docking/init"
+#endif

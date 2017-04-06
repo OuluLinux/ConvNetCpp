@@ -231,7 +231,7 @@ void World::Paint(Draw& d) {
 			double radius = a.rad * ((double)(j + 1) / a.tail.GetCount() + 1.0)  / 2.0;
 			double radius2 = radius * 2.0;
 			Pointf& p = a.tail[j];
-			id.DrawEllipse(p.x - radius, p.y - radius, radius2, radius2, fill_clr, 0);
+			id.DrawEllipse(p.x - radius, p.y - radius, radius2, radius2, fill_clr, 1, fill_clr);
 			prev = &p;
 		}
 		
