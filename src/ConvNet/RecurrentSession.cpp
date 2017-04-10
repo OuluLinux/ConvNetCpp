@@ -490,14 +490,21 @@ void RecurrentSession::ResetPrevs() {
 	}
 }
 
-void RecurrentSession::Predict(Vector<int>& output_sequence, bool samplei, double temperature) {
-	output_sequence.SetCount(0);
+void RecurrentSession::Predict(Vector<int>& output_sequence, bool samplei, double temperature, bool continue_sentence, int max_predictions) {
+	int begin_write = 0;
+	if (continue_sentence) {
+		begin_write = output_sequence.GetCount();
+	}
+	else {
+		output_sequence.SetCount(0);
+	}
 	
 	index_sequence[0] = 0;
 	for(int i = 1; i < index_sequence.GetCount(); i++)
 		index_sequence[i] = -1; // for debugging
 	
 	ResetPrevs();
+	int predictions = 0;
 	
 	for (int i = 0; ; i++) {
 		
@@ -507,35 +514,48 @@ void RecurrentSession::Predict(Vector<int>& output_sequence, bool samplei, doubl
 			g.Forward();
 		}
 		
-		// sample predicted letter
-		Mat& logprobs = list.Top().Top().output;
+		// Use given beginning if set
+		if (continue_sentence && i < begin_write) {
+			
+			// Set index to variable what was given
+			int ix = output_sequence[i];
+			index_sequence[i+1] = ix;
+		}
 		
-		if (temperature != 1.0 && samplei) {
-			// scale log probabilities by temperature and renormalize
-			// if temperature is high, logprobs will go towards zero
-			// and the softmax outputs will be more diffuse. if temperature is
-			// very low, the softmax outputs will be more peaky
-			for (int q = 0; q < logprobs.GetLength(); q++) {
-				logprobs.Set(q, logprobs.Get(q) / temperature);
+		// By default, predict from START token and previous input value
+		else {
+			// sample predicted letter
+			Mat& logprobs = list.Top().Top().output;
+			
+			if (temperature != 1.0 && samplei) {
+				// scale log probabilities by temperature and renormalize
+				// if temperature is high, logprobs will go towards zero
+				// and the softmax outputs will be more diffuse. if temperature is
+				// very low, the softmax outputs will be more peaky
+				for (int q = 0; q < logprobs.GetLength(); q++) {
+					logprobs.Set(q, logprobs.Get(q) / temperature);
+				}
 			}
+			
+			Softmax(logprobs, probs);
+			
+			int ix = 0;
+			if (samplei) {
+				ix = probs.GetSampledColumn();
+			} else {
+				ix = probs.GetMaxColumn();
+			}
+			
+			if (ix == 0) break; // END token predicted, break out
+			if (i+1 >= max_graphs) break; // something is wrong
+			
+			output_sequence.Add(ix);
+			predictions++;
+			if (predictions == max_predictions) break;
+			
+			// Set index to variable what RowPluck reads
+			index_sequence[i+1] = ix;
 		}
-		
-		Softmax(logprobs, probs);
-		
-		int ix = 0;
-		if (samplei) {
-			ix = probs.GetSampledColumn();
-		} else {
-			ix = probs.GetMaxColumn();
-		}
-		
-		if (ix == 0) break; // END token predicted, break out
-		if (i+1 >= max_graphs) break; // something is wrong
-		
-		output_sequence.Add(ix);
-		
-		// Set index to variable what RowPluck reads
-		index_sequence[i+1] = ix;
 	}
 }
 
@@ -589,11 +609,17 @@ void RecurrentSession::Load(const ValueMap& js) {
 				LOADMODVOL(bc);
 				#undef LOADMODVOL
 			}
-			else {
+			else if (mode == MODE_RNN) {
 				#define LOADMODVOL(x) {ValueMap map = model.GetValue(model.Find(#x + IntStr(i))); rnn_model[i].x.Load(map);}
 				LOADMODVOL(Wxh);
 				LOADMODVOL(Whh);
 				LOADMODVOL(bhh);
+				#undef LOADMODVOL
+			}
+			else if (mode == MODE_HIGHWAY) {
+				#define LOADMODVOL(x) {ValueMap map = model.GetValue(model.Find(#x + IntStr(i))); hw_model[i].x.Load(map);}
+				LOADMODVOL(noise_h[0]);
+				LOADMODVOL(noise_h[1]);
 				#undef LOADMODVOL
 			}
 		}
@@ -641,11 +667,17 @@ void RecurrentSession::Store(ValueMap& js) {
 			SAVEMODVOL(bc);
 			#undef SAVEMODVOL
 		}
-		else {
+		else if (mode == MODE_RNN) {
 			#define SAVEMODVOL(x) {ValueMap map; rnn_model[i].x.Store(map); model.GetAdd(#x + IntStr(i)) = map;}
 			SAVEMODVOL(Wxh);
 			SAVEMODVOL(Whh);
 			SAVEMODVOL(bhh);
+			#undef SAVEMODVOL
+		}
+		else if (mode == MODE_HIGHWAY) {
+			#define SAVEMODVOL(x) {ValueMap map; hw_model[i].x.Store(map); model.GetAdd(#x + IntStr(i)) = map;}
+			SAVEMODVOL(noise_h[0]);
+			SAVEMODVOL(noise_h[1]);
 			#undef SAVEMODVOL
 		}
 	}
