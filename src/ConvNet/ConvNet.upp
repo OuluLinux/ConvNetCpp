@@ -5,6 +5,7 @@ uses
 	plugin/z;
 
 file
+	Copying,
 	ConvNet.h,
 	MagicNet.h,
 	MagicNet.cpp,
