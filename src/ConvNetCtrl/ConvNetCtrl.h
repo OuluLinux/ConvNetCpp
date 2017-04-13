@@ -2,6 +2,7 @@
 #define _ConvNetCtrl_ConvNetCtrl_h_
 
 #include <CtrlLib/CtrlLib.h>
+#include <PlotCtrl/PlotCtrl.h>
 
 #include "LayerCtrl.h"
 #include "PointCtrl.h"

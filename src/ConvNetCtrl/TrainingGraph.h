@@ -3,6 +3,8 @@
 
 #include <ConvNet/ConvNet.h>
 #include <CtrlLib/CtrlLib.h>
+
+using Upp::max;
 #include <PlotCtrl/PlotCtrl.h>
 
 namespace ConvNet {
