@@ -1031,7 +1031,6 @@ void DQNAgent::Learn(double reward1) {
 			if (exp.GetCount() == expi)
 				exp.Add();
 			ASSERT(state1.GetLength() > 0);
-			ASSERT(action0 >= 0 && action0 < 5);
 			exp[expi].Set(state0, action0, reward0, state1, action1);
 			expi += 1;
 			if (expi >= experience_size) { expi = 0; } // roll over when we run out

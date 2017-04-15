@@ -75,11 +75,12 @@ public:
 	int GetExperienceCount() const {return experience.GetCount();}
 	double GetEpsilon() const {return epsilon;}
 	int GetAge() const {return age;}
-	
+	bool IsStartTrainingTreshold() const {return experience.GetCount() > start_learn_threshold;}
 	virtual double GetLossAverage() const {return average_loss_window.GetAverage();}
 	virtual double GetRewardAverage() const {return average_reward_window.GetAverage();}
 	
 	void SetLearning(bool b) {learning = b;}
+	void SetStartTrainingTreshold(int i) {start_learn_threshold = i;}
 	
 	int experience_size;
 	double start_learn_threshold;
