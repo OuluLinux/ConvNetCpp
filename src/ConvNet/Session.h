@@ -56,6 +56,7 @@ public:
 	void TrainBegin();
 	void TrainIteration();
 	void TrainEnd();
+	void TrainOnce(Volume& x, const VolumeDataBase& y);
 	void Enter() {lock.Enter();}
 	void Leave() {lock.Leave();}
 	void ClearOwnedLayers();

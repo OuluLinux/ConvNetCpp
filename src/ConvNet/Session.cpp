@@ -137,9 +137,6 @@ void Session::TrainIteration() {
 	const Vector<LayerBasePtr>& layers = net.GetLayers();
 	bool train_regression = d.is_data_result ? false : dynamic_cast<RegressionLayer*>(layers[layers.GetCount()-1]) != NULL;
 	
-	if (d.is_data_result)
-		test_predict = false;
-	
 	try {
 	
 		for(int i = 0; i < d.GetDataCount() && is_training; i++) {
@@ -155,11 +152,25 @@ void Session::TrainIteration() {
 			// use x to build our estimate of validation error
 			if (test_predict && (step_num % predict_interval) == 0) {
 				TimeStop ts;
-				net.Forward(x);
+				Volume& v = net.Forward(x);
 				forward_time = ts.Elapsed();
 				
-				int cls = net.GetPrediction();
-				accuracy_window.Add(cls == d.GetLabel(i) ? 1.0 : 0.0);
+				if (train_regression || d.is_data_result) {
+					// Mean squared error
+					const VolumeDataBase& correct = train_regression ? x.GetWeights() : d.GetResult(i);
+					double mse = 0.0;
+					for (int i = 0; i < v.GetLength(); i++) {
+						double diff = correct.Get(i) - v.Get(i);
+						mse += diff * diff;
+					}
+					mse /= v.GetLength();
+					accuracy_window.Add(-mse);
+				}
+				else {
+					// Is correct prediction or not?
+					int cls = net.GetPrediction();
+					accuracy_window.Add(cls == d.GetLabel(i) ? 1.0 : 0.0);
+				}
 			}
 			
 			TimeStop ts;
@@ -181,8 +192,23 @@ void Session::TrainIteration() {
 			// keep track of stats such as the average training error and loss
 			// if last layer is softmax, then add prediction value to the average
 			if (test_predict) {
-				int cls = net.GetPrediction();
-				train_window.Add(cls == d.GetLabel(i) ? 1.0 : 0.0); // add 1 when label is correct
+				if (train_regression || d.is_data_result) {
+					// Mean squared error
+					Volume& v = net.GetOutput();
+					const VolumeDataBase& correct = train_regression ? x.GetWeights() : d.GetResult(i);
+					double mse = 0.0;
+					for (int i = 0; i < v.GetLength(); i++) {
+						double diff = correct.Get(i) - v.Get(i);
+						mse += diff * diff;
+					}
+					mse /= v.GetLength();
+					train_window.Add(-mse);
+				}
+				else {
+					// Is correct prediction or not?
+					int cls = net.GetPrediction();
+					train_window.Add(cls == d.GetLabel(i) ? 1.0 : 0.0); // add 1 when label is correct
+				}
 			}
 			
 			reward_window.Add(reward);
@@ -220,6 +246,63 @@ void Session::TrainEnd() {
 	LOG("loss = " << loss_window.GetAverage() << ", " << iter << " cycles through data in " << ts.ToString() << "ms");
 	is_training_stopped = true;
 	is_training = false;
+}
+
+void Session::TrainOnce(Volume& x, const VolumeDataBase& y) {
+	TrainerBase& trainer = *this->trainer;
+	
+	lock.Enter();
+	
+	// use x to build our estimate of validation error
+	if (test_predict && (step_num % predict_interval) == 0) {
+		TimeStop ts;
+		Volume& v = net.Forward(x);
+		forward_time = ts.Elapsed();
+		
+		// Mean squared error
+		double mse = 0.0;
+		for (int i = 0; i < v.GetLength(); i++) {
+			double diff = y.Get(i) - v.Get(i);
+			mse += diff * diff;
+		}
+		mse /= v.GetLength();
+		accuracy_window.Add(-mse);
+	}
+	
+	TimeStop ts;
+	trainer.Train(x, y);
+	backward_time = ts.Elapsed();
+	
+	double reward = trainer.GetReward();
+	double loss = trainer.GetLoss();
+	double loss_l1d = trainer.GetL1DecayLoss();
+	double loss_l2d = trainer.GetL2DecayLoss();
+	step_num++;
+	lock.Leave();
+	
+	// keep track of stats such as the average training error and loss
+	// if last layer is softmax, then add prediction value to the average
+	if (test_predict) {
+		// Mean squared error
+		Volume& v = net.GetOutput();
+		double mse = 0.0;
+		for (int i = 0; i < v.GetLength(); i++) {
+			double diff = y.Get(i) - v.Get(i);
+			mse += diff * diff;
+		}
+		mse /= v.GetLength();
+		train_window.Add(-mse);
+	}
+	
+	reward_window.Add(reward);
+	loss_window.Add(loss);
+	l1_loss_window.Add(loss_l1d);
+	l2_loss_window.Add(loss_l2d);
+	
+	
+	if ((step_num % step_cb_interal) == 0)
+		WhenStepInterval(step_num);
+	
 }
 
 Net& Session::GetNetwork() {

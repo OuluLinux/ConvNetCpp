@@ -21,6 +21,7 @@ public:
 	Net() {}
 	
 	const Vector<LayerBasePtr>& GetLayers() const {return layers;}
+	Volume& GetOutput() {return layers.Top()->output_activation;}
 	
 	virtual void AddLayer(LayerBase& layer);
 	virtual Volume& Forward(const Vector<VolumePtr>& inputs, bool is_training = false);
