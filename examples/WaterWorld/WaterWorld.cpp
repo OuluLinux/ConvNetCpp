@@ -67,7 +67,7 @@ WaterWorld::WaterWorld() {
 	PostCallback(THISBACK(Start));
 	RefreshEpsilon();
 	
-	SetTimeCallback(-40, THISBACK(Refresher));
+	PostCallback(THISBACK(Refresher));
 }
 
 WaterWorld::~WaterWorld() {
@@ -102,6 +102,8 @@ void WaterWorld::Refresher() {
 	world.Refresh();
 	RefreshStatus();
 	network_view.Refresh();
+	
+	PostCallback(THISBACK(Refresher));
 }
 
 void WaterWorld::Start() {

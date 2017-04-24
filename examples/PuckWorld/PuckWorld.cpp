@@ -223,7 +223,7 @@ PuckWorld::PuckWorld() {
 	PostCallback(THISBACK(Reload));
 	RefreshEpsilon();
 	
-	SetTimeCallback(-40, THISBACK(Refresher));
+	PostCallback(THISBACK(Refresher));
 }
 
 PuckWorld::~PuckWorld() {
@@ -239,6 +239,8 @@ void PuckWorld::DockInit() {
 void PuckWorld::Refresher() {
 	pworld.Refresh();
 	RefreshStatus();
+	
+	PostCallback(THISBACK(Refresher));
 }
 
 void PuckWorld::Reset(bool init_reward, bool start) {

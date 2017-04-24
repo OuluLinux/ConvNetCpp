@@ -19,6 +19,8 @@ Regression1D::Regression1D() {
 			"\t{\"type\":\"adadelta\", \"learning_rate\":0.01, \"momentum\":0, \"batch_size\":1, \"l2_decay\":0.001}\n"
 			"]\n";
 	
+	ses.SetTestPredict(true);
+	ses.SetPredictInterval(10);
 	
 	net_edit.SetData(t);
 	net_ctrl.Add(net_edit.HSizePos().VSizePos(0,30));
@@ -51,7 +53,7 @@ Regression1D::Regression1D() {
 	
 	network_view.SetSession(ses);
 	
-	SetTimeCallback(-40, THISBACK(Refresher));
+	PostCallback(THISBACK(Refresher));
 }
 
 void Regression1D::DockInit() {
@@ -62,6 +64,8 @@ void Regression1D::DockInit() {
 void Regression1D::Refresher() {
 	layer_ctrl.Refresh();
 	network_view.Refresh();
+	
+	PostCallback(THISBACK(Refresher));
 }
 
 void Regression1D::Reload() {

@@ -74,7 +74,7 @@ TemporalDifference::TemporalDifference() {
 	PostCallback(THISBACK2(Reset, true, true));
 	PostCallback(THISBACK(Reload));
 	
-	SetTimeCallback(-40, THISBACK(Refresher));
+	PostCallback(THISBACK(Refresher));
 }
 
 TemporalDifference::~TemporalDifference() {
@@ -88,6 +88,8 @@ void TemporalDifference::DockInit() {
 
 void TemporalDifference::Refresher() {
 	gworld.Refresh();
+	
+	PostCallback(THISBACK(Refresher));
 }
 
 void TemporalDifference::Reload() {

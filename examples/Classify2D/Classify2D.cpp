@@ -48,7 +48,7 @@ Classify2D::Classify2D() {
     
     PostCallback(THISBACK(OriginalData));
 	
-	SetTimeCallback(-40, THISBACK(Refresher));
+	PostCallback(THISBACK(Refresher));
 }
 
 Classify2D::~Classify2D() {
@@ -168,6 +168,7 @@ void Classify2D::Refresher() {
 		pctrl.Refresh();
 		lctrl.Refresh();
 	}
+	PostCallback(THISBACK(Refresher));
 }
 
 

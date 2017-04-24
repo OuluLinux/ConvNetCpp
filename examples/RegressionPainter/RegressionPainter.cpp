@@ -55,7 +55,7 @@ RegressionPainter::RegressionPainter() {
 	
 	PostCallback(THISBACK(SetImage));
 	
-	SetTimeCallback(-40, THISBACK(Refresher));
+	PostCallback(THISBACK(Refresher));
 }
 
 void RegressionPainter::DockInit() {
@@ -84,6 +84,7 @@ void RegressionPainter::RefreshLearningRate() {
 void RegressionPainter::Refresher() {
 	RefreshStatus();
 	network_view.Refresh();
+	PostCallback(THISBACK(Refresher));
 }
 
 void RegressionPainter::Reload() {

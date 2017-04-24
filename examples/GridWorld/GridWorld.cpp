@@ -33,7 +33,7 @@ GridWorld::GridWorld() {
 	
 	PostCallback(THISBACK1(Reset, true));
 	
-	SetTimeCallback(-40, THISBACK(Refresher));
+	PostCallback(THISBACK(Refresher));
 }
 
 GridWorld::~GridWorld() {
@@ -42,6 +42,8 @@ GridWorld::~GridWorld() {
 
 void GridWorld::Refresher() {
 	gworld.Refresh();
+	
+	PostCallback(THISBACK(Refresher));
 }
 
 void GridWorld::Reset(bool init_reward) {

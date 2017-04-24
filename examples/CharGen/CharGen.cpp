@@ -51,7 +51,7 @@ CharGen::CharGen() {
 	PostCallback(THISBACK(Reload));
 	PostCallback(THISBACK(Start));
 	
-	SetTimeCallback(-40, THISBACK(Refresher));
+	PostCallback(THISBACK(Refresher));
 }
 
 CharGen::~CharGen() {
@@ -60,6 +60,8 @@ CharGen::~CharGen() {
 
 void CharGen::Refresher() {
 	network_view.Refresh();
+	
+	PostCallback(THISBACK(Refresher));
 }
 
 void CharGen::SetPreset(int i) {
