@@ -73,6 +73,7 @@ public:
 	void Predict(Vector<int>& index_sequence, bool samplei=false, double temperature=1.0, bool continue_sentence=false, int max_predictions=-1);
 	void Load(const ValueMap& js);
 	void Store(ValueMap& js);
+	void Serialize(Stream& s);
 	
 	double GetPerplexity() const {return ppl;}
 	double GetCost() const {return cost;}

@@ -189,7 +189,7 @@ struct DQNet {
 	
 	void Load(const ValueMap& map);
 	void Store(ValueMap& map);
-	
+	void Serialize(Stream& s) {s % W1 % b1 % W2 % b2;}
 };
 
 
@@ -206,6 +206,7 @@ struct DQExperience : Moveable<DQExperience> {
 		this->state1 = state1;
 		this->action1 = action1;
 	}
+	void Serialize(Stream& s) {s % state0 % state1 % action0 % action1 % reward0;}
 };
 
 class DQNAgent : public Agent {
@@ -251,6 +252,18 @@ public:
 	void Learn(double reward1);
 	double LearnFromTuple(Mat& s0, int a0, double reward0, Mat& s1, int a1);
 	
+	void Serialize(Stream& s) {
+		if (s.IsLoading()) {
+			ValueMap map;
+			s % map;
+			Load(map);
+		}
+		else if (s.IsStoring()) {
+			ValueMap map;
+			Store(map);
+			s % map;
+		}
+	}
 };
 
 

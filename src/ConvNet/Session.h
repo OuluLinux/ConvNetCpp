@@ -114,6 +114,7 @@ public:
 	bool MakeLayers(const String& json);
 	bool LoadJSON(const String& json);
 	bool StoreJSON(String& json);
+	void Serialize(Stream& s);
 	void SetMaxTrainIters(int count) {train_iter_limit = count;}
 	void SetPredictInterval(int i) {predict_interval = i;}
 	void SetTestPredict(bool b) {test_predict = b;}

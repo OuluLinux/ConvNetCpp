@@ -685,4 +685,17 @@ void RecurrentSession::Store(ValueMap& js) {
 	js.Add("model", model);
 }
 
+void RecurrentSession::Serialize(Stream& s) {
+	if (s.IsLoading()) {
+		ValueMap map;
+		s % map;
+		Load(map);
+	}
+	else if (s.IsStoring()) {
+		ValueMap map;
+		Store(map);
+		s % map;
+	}
+}
+
 }

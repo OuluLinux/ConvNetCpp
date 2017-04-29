@@ -31,6 +31,8 @@ public:
 	
 	~Mat();
 	
+	void Serialize(Stream& s) {s % weight_gradients % weights % width % height % length;}
+	
 	Mat& operator=(const Mat& src);
 	
 	const Vector<double>& GetWeights() const {return weights;}

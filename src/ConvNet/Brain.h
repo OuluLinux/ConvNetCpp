@@ -13,6 +13,7 @@ public:
 	Experience(const Experience& src) {*this = src;}
 	Experience& operator=(const Experience& src);
 	Experience& Set(const Vector<double>& state0, int action0, double reward0, const Vector<double>& state1);
+	void Serialize(Stream& s) {s % state0 % action0 % reward0 % state1;}
 	
 	Vector<double> state0;
     int action0;
@@ -57,6 +58,14 @@ public:
 	
 	void Init(int num_states, int num_actions, Vector<double>* random_action_distribution=NULL);
 	void Reset() {Init(num_states, num_actions);}
+	void Serialize(Stream& s) {
+		s % random_action_distribution % temporal_window % net_inputs % num_states % num_actions %
+			window_size % state_window % action_window % reward_window % net_window %
+			experience % learning % age % forward_passes % epsilon % latest_reward % last_input_array %
+			average_reward_window % average_loss_window % net_input % action1ofk %
+			experience_size % start_learn_threshold % gamma % learning_steps_total % learning_steps_burnin %
+			epsilon_min % epsilon_test_time;
+	}
 	
 	virtual const Vector<double>& GetLastInput() const {return last_input_array;}
 	

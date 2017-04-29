@@ -569,6 +569,19 @@ bool Session::StoreJSON(String& json) {
 	return true;
 }
 
+void Session::Serialize(Stream& s) {
+	if (s.IsLoading()) {
+		String json;
+		s % json;
+		LoadJSON(json);
+	}
+	else if (s.IsStoring()) {
+		String json;
+		StoreJSON(json);
+		s % json;
+	}
+}
+
 void Session::ClearData() {
 	Enter();
 	Data().ClearData();

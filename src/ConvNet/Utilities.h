@@ -221,6 +221,7 @@ public:
 		return *this;
 	}
 	
+	void Serialize(Stream& s) {s % v % sum % size % minsize;}
 	
 	void Add(double x) {
 		v.Add(x);
