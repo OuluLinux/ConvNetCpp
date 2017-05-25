@@ -15,8 +15,8 @@ It currently supports:
 
 ## Example code
 
-Screenshot of [WaterWorld: Deep Q Learning Demo](http://cs.stanford.edu/people/karpathy/reinforcejs/waterworld.html) translated to ConvNetC++.
-![WaterWorld: Deep Q Learning Demo](https://github.com/sppp/ConvNetCpp/raw/master/docs/waterworld.jpg)
+Screenshot of [a CIFAR-10 classification example](http://cs.stanford.edu/people/karpathy/convnetjs/demo/cifar10.html) translated to ConvNetC++. 
+![Classify CIFAR-10 example](https://github.com/sppp/ConvNetCpp/raw/master/docs/classifycifar10.jpg)
 
 ##### For screenshots of examples, see [the gallery](https://github.com/sppp/ConvNetCpp/blob/master/GALLERY.md).
 
