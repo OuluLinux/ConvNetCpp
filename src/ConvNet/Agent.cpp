@@ -908,10 +908,6 @@ void DQNAgent::Reset() {
 	ns = GetNumStates();
 	na = GetMaxNumActions();
 	
-	// nets are hardcoded for now as key (str) -> Mat
-	// not proud of  better solution is to have a whole Net object
-	// on top of Mats, but for now sticking with this
-	
 	RandMat(nh, ns, 0, 0.01, net.W1);
 	net.b1.Init(1, nh, 0);
 	//net.b1 = RandMat(nh, 1, 0, 0.01);
@@ -1074,6 +1070,211 @@ double DQNAgent::LearnFromTuple(Mat& s0, int a0, double reward0, Mat& s1, int a1
 	// update net
 	UpdateNet(net, alpha);
 	return tderror;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SDQNAgent::SDQNAgent() {
+	gamma = 0.75; // future reward discount factor
+	epsilon = 0.1; // for epsilon-greedy policy
+	alpha = 0.01; // value function learning rate
+	
+	experience_add_every = 25; // number of time steps before we add another experience to replay memory
+	experience_size = 5000; // size of experience replay
+	learning_steps_per_iteration = 10;
+	tderror_clamp = 1.0;
+	
+	num_hidden_units = 100;
+	
+	G.Mul(net.W1);
+	G.Add(net.b1);
+	G.Tanh();
+	G.Mul(net.W2);
+	G.Add(net.b2);
+	
+	has_reward = false;
+}
+
+void SDQNAgent::Reset() {
+	Agent::Reset();
+	
+	nh = num_hidden_units; // number of hidden units
+	ns = GetNumStates();
+	na = GetMaxNumActions();
+	
+	RandMat(nh, ns, 0, 0.01, net.W1);
+	net.b1.Init(1, nh, 0);
+	RandMat(na, nh, 0, 0.01, net.W2);
+	net.b2.Init(1, na, 0);
+	
+	expi = 0; // where to insert
+	t = 0;
+	selected_exp = -1;
+	/*reward0 = 0;
+	action0 = 0;
+	action1 = 0;*/
+	has_reward = false;
+	
+	tderror = 0; // for visualization only...
+}
+
+void SDQNAgent::LoadInit(const ValueMap& map) {
+	LOADVARDEF(gamma, gamma, 0.75); // future reward discount factor
+	LOADVARDEF(epsilon, epsilon, 0.1); // for epsilon-greedy policy
+	LOADVARDEF(alpha, alpha, 0.01); // value function learning rate
+	LOADVARDEF(experience_add_every, experience_add_every, 25); // number of time steps before we add another experience to replay memory
+	LOADVARDEF(experience_size, experience_size, 5000); // size of experience replay
+	LOADVARDEF(learning_steps_per_iteration, learning_steps_per_iteration, 10);
+	LOADVARDEF(tderror_clamp, tderror_clamp, 1.0);
+	LOADVARDEF(num_hidden_units, num_hidden_units, 100);
+}
+
+void SDQNAgent::Load(const ValueMap& map) {
+	LOADVAR(nh, nh);
+	LOADVAR(ns, ns);
+	LOADVAR(na, na);
+	ValueMap net = map.GetValue(map.Find("net"));
+	this->net.Load(net);
+}
+
+void SDQNAgent::Store(ValueMap& map) {
+	STOREVAR(nh, nh);
+	STOREVAR(ns, ns);
+	STOREVAR(na, na);
+	ValueMap net;
+	this->net.Store(net);
+	map.GetAdd("net") = net;
+}
+
+int SDQNAgent::Act(int x, int y) {
+	Panic("Not useful");
+	return 0;
+}
+
+int SDQNAgent::Act(const Vector<double>& slist) {
+	SDQExperienceItem& se = tmp_exp[selected_exp].exp.Add();
+	
+	// convert to a Mat column vector
+	se.state.Init(width, height, slist);
+	
+	// epsilon greedy policy
+	if (Randomf() < epsilon) {
+		se.action = Random(na);
+	} else {
+		// greedy wrt Q function
+		Mat& amat = G.Forward(se.state);
+		se.action = amat.GetMaxColumn(); // returns index of argmax action
+	}
+	
+	return se.action;
+}
+
+void SDQNAgent::Learn() {
+	Panic("Not available");
+}
+
+void SDQNAgent::Learn(int seq_id, double reward) {
+	
+	// perform an update on Q function
+	if (alpha > 0) {
+		
+		// learn from this tuple to get a sense of how "surprising" it is to the agent
+		double tderror = 0.0; // a measure of surprise
+		int tderror_div = 0;
+		SDQExperience& se = tmp_exp[seq_id];
+		se.reward = reward;
+		for(int i = 1; i < se.exp.GetCount(); i++) {
+			SDQExperienceItem& e0 = se.exp[i-1];
+			SDQExperienceItem& e1 = se.exp[i];
+			tderror += LearnFromTuple(e0.state, e0.action, se.reward, e1.state, e1.action);
+			tderror_div++;
+		}
+		this->tderror = tderror / tderror_div;
+		
+		// decide if we should keep this experience in the replay
+		if (t % experience_add_every == 0) {
+			if (exp.GetCount() == expi)
+				exp.Add();
+			exp[expi] = tmp_exp[seq_id];
+			expi += 1;
+			if (expi >= experience_size) { expi = 0; } // roll over when we run out
+		}
+		t += 1;
+		
+		// sample some additional experience from replay memory and learn from it
+		for (int i = 0; i < learning_steps_per_iteration; i++) {
+			int ri = Random(exp.GetCount()); // TODO: priority sweeps?
+			SDQExperience& e = exp[ri];
+			for(int j = 1; j < e.exp.GetCount(); j++) {
+				SDQExperienceItem& e0 = e.exp[j-1];
+				SDQExperienceItem& e1 = e.exp[j];
+				LearnFromTuple(e0.state, e0.action, se.reward, e1.state, e1.action);
+			}
+		}
+	}
+}
+
+double SDQNAgent::LearnFromTuple(Mat& s0, int a0, double reward0, Mat& s1, int a1) {
+	ASSERT(s0.GetLength() > 0);
+	ASSERT(s1.GetLength() > 0);
+	// want: Q(s,a) = r + gamma * max_a' Q(s',a')
+	
+	// compute the target Q value
+	Mat& tmat = G.Forward(s1);
+	double qmax = reward0 + gamma * tmat.Get(tmat.GetMaxColumn());
+	
+	// now predict
+	Mat& pred = G.Forward(s0);
+	
+	double tderror = pred.Get(a0) - qmax;
+	double clamp = tderror_clamp;
+	if (fabs(tderror) > clamp) {  // huber loss to robustify
+		if (tderror > clamp)
+			tderror = +clamp;
+		else
+			tderror = -clamp;
+	}
+	pred.SetGradient(a0, tderror);
+	G.Backward(); // compute gradients on net params
+	
+	// update net
+	UpdateNet(net, alpha);
+	return tderror;
+}
+
+void SDQNAgent::SetSequenceCount(int i) {
+	tmp_exp.SetCount(i);
+}
+
+void SDQNAgent::BeginSequence(int i) {
+	selected_exp = i;
+	tmp_exp[i].exp.SetCount(0);
 }
 
 }

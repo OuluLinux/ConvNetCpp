@@ -273,6 +273,95 @@ public:
 
 
 
+struct SDQExperienceItem : Moveable<SDQExperienceItem> {
+	Mat state;
+	int action;
+	
+	void Set(Mat& state, int action) {
+		this->state = state;
+		this->action = action;
+	}
+	void Serialize(Stream& s) {s % state % state;}
+};
+
+struct SDQExperience : Moveable<SDQExperience> {
+	Vector<SDQExperienceItem> exp; // experience sequence
+	double reward;
+	
+	void operator=(const SDQExperience& se) {
+		exp <<= se.exp;
+		reward = se.reward;
+	}
+};
+
+
+class SDQNAgent : public Agent {
+	
+	DQNet net;
+	Graph G;
+	Vector<SDQExperience> exp, tmp_exp; // experience
+	double gamma, epsilon, alpha, tderror_clamp;
+	double tderror;
+	int selected_exp;
+	int experience_add_every, experience_size;
+	int learning_steps_per_iteration;
+	int num_hidden_units;
+	int expi;
+	int nh;
+	int ns;
+	int na;
+	int t;
+	bool has_reward;
+	
+	/*Mat state;
+	Mat state0, state1;
+	int action0, action1;
+	double reward0;*/
+	
+public:
+
+	SDQNAgent();
+	
+	virtual void Learn();
+	virtual int Act(int x, int y);
+	virtual void Load(const ValueMap& map);
+	virtual void Store(ValueMap& map);
+	virtual void LoadInit(const ValueMap& map);
+	virtual void Reset();
+	
+	int GetExperienceWritePointer() const {return expi;}
+	double GetTDError() const {return tderror;}
+	Graph& GetGraph() {return G;}
+	
+	void SetEpsilon(double e) {epsilon = e;}
+	void SetSequenceCount(int i);
+	
+	int Act(const Vector<double>& slist);
+	void Learn(int seq_id, double reward);
+	double LearnFromTuple(Mat& s0, int a0, double reward0, Mat& s1, int a1);
+	void BeginSequence(int i);
+	
+	void Serialize(Stream& s) {
+		if (s.IsLoading()) {
+			ValueMap map;
+			s % map;
+			Load(map);
+		}
+		else if (s.IsStoring()) {
+			ValueMap map;
+			Store(map);
+			s % map;
+		}
+	}
+};
+
+
+
+
+
+
+
+
 
 
 
