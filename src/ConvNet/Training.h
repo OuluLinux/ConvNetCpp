@@ -39,9 +39,6 @@ protected:
 public:
 	virtual ~TrainerBase() {}
 	
-	// TODO: make these protected
-	
-	
 	int GetIteration() const {return iter_count;}
 	int GetBatchSize() const {return batch_size;}
 	double GetCostLoss() const {return cost_loss;}
@@ -81,7 +78,6 @@ public:
 	void Train(const VolumeDataBase& y, const Vector<VolumePtr>& x);
 	void Forward(const Vector<VolumePtr>& x);
 	
-protected:
 	virtual void TrainImplem() = 0;
 	virtual void Backward(int pos, double y);
 	virtual void Backward(const VolumeDataBase& y);
