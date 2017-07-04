@@ -232,6 +232,7 @@ public:
 		}
 	}
 	
+	double Get(int i) const {return v[i];}
 	double GetLatest() const {return v.Top();}
 	
 	double GetAverage() const {
@@ -242,7 +243,7 @@ public:
 	}
 	
 	int GetCount() const {return size;}
-	int GetBufferCount() const {return v.GetCount();}
+	int GetBufferCount() const {return Upp::min(size, v.GetCount());}
 	
 	void Clear() {
 		v.Clear();
