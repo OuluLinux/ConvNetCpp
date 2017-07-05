@@ -180,14 +180,25 @@ public:
 	
 };
 
+template <class T> // Workaround for GCC bug - specialization needed...
+T& SingleRandomGaussianLock() {
+	static T o;
+	return o;
+}
+
 inline RandomGaussian& GetRandomGaussian(int length) {
+	SpinLock& lock = SingleRandomGaussianLock<SpinLock>(); // workaround
 	ArrayMap<int, RandomGaussian>& rands = Single<ArrayMap<int, RandomGaussian> >();
+	lock.Enter();
 	int i = rands.Find(length);
+	RandomGaussian* r;
 	if (i == -1) {
-		return rands.Add(length, new RandomGaussian(length));
+		r = &rands.Add(length, new RandomGaussian(length));
 	} else {
-		return rands[i];
+		r = &rands[i];
 	}
+	lock.Leave();
+	return *r;
 }
 
 struct MaxMin : Moveable<MaxMin> {
