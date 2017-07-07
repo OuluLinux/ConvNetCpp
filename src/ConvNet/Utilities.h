@@ -137,6 +137,7 @@ public:
 	int GetLength() const {return length;}
 	int GetMaxColumn() const;
 	int GetSampledColumn() const;
+	int GetCount() const {return weights->GetCount();}
 	
 };
 

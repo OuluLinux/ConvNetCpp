@@ -25,7 +25,12 @@ void ConvLayerCtrl::Paint(Draw& d) {
 	
 	ImageDraw id(sz);
 	
-	PaintSize(id, sz);
+	try {
+		PaintSize(id, sz);
+	}
+	catch (...) {
+		
+	}
 	
 	//ses->Leave();
 	
@@ -36,6 +41,8 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 	
 	// print some stats on left of the layer
 	Net& net = ses->GetNetwork();
+	net.Enter();
+	if (layer_id >= net.GetLayers().GetCount()) {net.Leave(); return;}
 	LayerBase& l = *net.GetLayers()[layer_id];
 	int xoff = sz.cx * 0.4;
 	int y = 0;
@@ -225,6 +232,9 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 	
 	// Set require height for ctrl
 	height = max(left_height, pt.y) + 3;
+	
+	
+	net.Leave();
 }
 
 // elt is the element to add all the canvas activation drawings into
@@ -239,6 +249,7 @@ void ConvLayerCtrl::DrawActivations(Draw& draw, Size& sz, Point& pt, Volume& v, 
 	// get max and min activation to scale the maps automatically
 	double min = +DBL_MAX;
 	double max = -DBL_MAX;
+	if (!v.GetCount()) return;
 	for(int i = 0; i < v.GetLength(); i++) {
 		double d = draw_grads ? v.GetGradient(i) : v.Get(i);
 		if (d > max) max = d;
@@ -263,6 +274,7 @@ void ConvLayerCtrl::DrawActivations(Draw& draw, Size& sz, Point& pt, Volume& v, 
 		
 		for(int y = 0; y < v.GetHeight(); y++) {
 			for (int x = 0; x < v.GetWidth(); x++) {
+				if (!v.GetCount()) break;
 				
 				// Grayscale image
 				if (!is_color) {
@@ -390,6 +402,13 @@ SessionConvLayers::SessionConvLayers() {
 	is_color = false;
 }
 
+void SessionConvLayers::Clear() {
+	for(int i = 0; i < layer_ctrls.GetCount(); i++) {
+		RemoveChild(&layer_ctrls[i]);
+	}
+	layer_ctrls.Clear();
+}
+
 void SessionConvLayers::SetSession(Session& ses) {
 	this->ses = &ses;
 	ses.WhenSessionLoaded << THISBACK(RefreshLayers);
@@ -450,13 +469,11 @@ void SessionConvLayers::Scroll() {
 }
 
 void SessionConvLayers::RefreshLayers() {
-	for(int i = 0; i < layer_ctrls.GetCount(); i++) {
-		RemoveChild(&layer_ctrls[i]);
-	}
-	layer_ctrls.Clear();
+	Clear();
 	
 	ses->Enter();
 	Net& net = ses->GetNetwork();
+	net.Enter();
 	
 	int layer_count = net.GetLayers().GetCount();
 	layer_ctrls.SetCount(layer_count);
@@ -469,6 +486,7 @@ void SessionConvLayers::RefreshLayers() {
 		Add(ctrl);
 	}
 	
+	net.Leave();
 	ses->Leave();
 	
 	PostCallback(THISBACK(Layout));

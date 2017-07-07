@@ -143,7 +143,7 @@ void FullyConnLayer::Load(const ValueMap& map) {
 }
 
 String FullyConnLayer::ToString() const {
-	return Format("Fully Connected: w:%d, h:%d, d:%d, bias-pref:%2!,n, neurons%d, l1-decay:%2!,n, l2-decay:%2!,n",
+	return Format("Fully Connected: w:%d, h:%d, d:%d, bias-pref:%2!,n, neurons:%d, l1-decay:%2!,n, l2-decay:%2!,n",
 		output_width, output_height, output_depth, bias_pref, neuron_count, l1_decay_mul, l2_decay_mul);
 }
 

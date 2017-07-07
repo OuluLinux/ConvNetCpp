@@ -11,7 +11,8 @@ class Net {
 private:
 	Vector<LayerBasePtr> layers;
 	Vector<ParametersAndGradients> response;
-
+	SpinLock lock;
+	
 protected:
 	friend class Session;
 	Net(const Net& iv) {}
@@ -34,6 +35,8 @@ public:
 	virtual Vector<ParametersAndGradients>& GetParametersAndGradients();
 	
 	void Clear() {layers.Clear();}
+	void Enter() {lock.Enter();}
+	void Leave() {lock.Leave();}
 	
 	String ToString() const;
 	

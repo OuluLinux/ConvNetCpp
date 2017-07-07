@@ -53,7 +53,7 @@ public:
 	virtual bool Key(dword key, int);
 	virtual void MouseWheel(Point, int zdelta, dword);
 	virtual void Layout();
-	
+	void Clear();
 };
 
 }

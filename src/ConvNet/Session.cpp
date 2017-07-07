@@ -25,6 +25,8 @@ Session::Session() {
 
 Session::~Session() {
 	StopTraining();
+	net.Enter();
+	net.Leave();
 	ClearOwnedLayers();
 	ClearOwnedTrainer();
 }
