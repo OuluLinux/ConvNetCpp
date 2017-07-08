@@ -31,6 +31,15 @@ Session::~Session() {
 	ClearOwnedTrainer();
 }
 
+void Session::CopyFrom(Session& session) {
+	StringStream ss;
+	ss.SetStoring();
+	ss % session;
+	ss.Seek(0);
+	ss.SetLoading();
+	ss % *this;
+}
+
 Session& Session::SetWindowSize(int size, int min_size) {
 	loss_window.Init(size, min_size);
 	reward_window.Init(size, min_size);

@@ -49,6 +49,8 @@ public:
 	Session();
 	~Session();
 	
+	void CopyFrom(Session& session);
+	
 	virtual const Vector<double>& GetLastInput() const {return session_last_input_array;}
 	
 	void StartTraining();
