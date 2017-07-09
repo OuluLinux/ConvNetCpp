@@ -126,6 +126,7 @@ public:
 	void ZeroGradients();
 	void Store(ValueMap& map) const;
 	void Load(const ValueMap& map);
+	void Serialize(Stream& s);
 	void Augment(int crop, int dx=-1, int dy=-1, bool fliplr=false);
 	void SetData(VolumeDataBase& data);
 	void SwapData(Volume& vol);

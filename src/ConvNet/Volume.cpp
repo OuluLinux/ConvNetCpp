@@ -87,6 +87,19 @@ Volume::~Volume() {
 	weights = NULL;
 }
 
+void Volume::Serialize(Stream& s) {
+	if (s.IsLoading()) {
+		ValueMap map;
+		s % map;
+		Load(map);
+	}
+	else if (s.IsStoring()) {
+		ValueMap map;
+		Store(map);
+		s % map;
+	}
+}
+
 int Volume::GetMaxColumn() const {
 	double max = -DBL_MAX;
 	int pos = -1;
