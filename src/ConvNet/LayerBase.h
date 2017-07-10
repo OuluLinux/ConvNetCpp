@@ -55,6 +55,7 @@ public:
 	
 	virtual double Backward(int pos, double y) = 0;
 	virtual double Backward(const VolumeDataBase& y) = 0;
+	virtual double Backward(int cols, const Vector<int>& pos, const Vector<double>& y) = 0;
 	virtual String GetKey() const {return "lastlayerbase";}
 	
 };

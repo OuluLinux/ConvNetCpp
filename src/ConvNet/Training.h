@@ -71,16 +71,17 @@ public:
 	TrainerBase& SetL1DecayLoss(double d) {l1_decay_loss = d; return *this;}
 	TrainerBase& SetL2DecayLoss(double d) {l2_decay_loss = d; return *this;}
 	
-	//void Train(Volume& x, double y) {Train(x, 0, y);}
 	void Train(Volume& x, int pos, double y);
 	void Train(double y, const Vector<VolumePtr>& x);
 	void Train(Volume& x, const VolumeDataBase& y);
 	void Train(const VolumeDataBase& y, const Vector<VolumePtr>& x);
+	void Train(Volume& x, int cols, const Vector<int>& pos, const Vector<double>& y);
 	void Forward(const Vector<VolumePtr>& x);
 	
 	virtual void TrainImplem() = 0;
 	virtual void Backward(int pos, double y);
 	virtual void Backward(const VolumeDataBase& y);
+	virtual void Backward(int cols, const Vector<int>& pos, const Vector<double>& y);
 	virtual void Reset();
 	
 };
@@ -102,6 +103,7 @@ protected:
 	virtual void TrainImplem();
 	virtual void Backward(int pos, double y);
 	virtual void Backward(const VolumeDataBase& y);
+	virtual void Backward(int cols, const Vector<int>& pos, const Vector<double>& y);
 	virtual void Reset();
 	virtual String ToString() const;
 	virtual String GetKey() const {return "adadelta";}
@@ -123,6 +125,7 @@ protected:
 	virtual void TrainImplem();
 	virtual void Backward(int pos, double y);
 	virtual void Backward(const VolumeDataBase& y);
+	virtual void Backward(int cols, const Vector<int>& pos, const Vector<double>& y);
 	virtual void Reset();
 	virtual String ToString() const;
 	virtual String GetKey() const {return "adagrad";}
@@ -146,6 +149,7 @@ protected:
 	virtual void TrainImplem();
 	virtual void Backward(int pos, double y);
 	virtual void Backward(const VolumeDataBase& y);
+	virtual void Backward(int cols, const Vector<int>& pos, const Vector<double>& y);
 	virtual void Reset();
 	virtual String ToString() const;
 	virtual String GetKey() const {return "adam";}
@@ -167,6 +171,7 @@ protected:
 	virtual void TrainImplem();
 	virtual void Backward(int pos, double y);
 	virtual void Backward(const VolumeDataBase& y);
+	virtual void Backward(int cols, const Vector<int>& pos, const Vector<double>& y);
 	virtual void Reset();
 	virtual String ToString() const;
 	virtual String GetKey() const {return "netsterov";}
@@ -190,6 +195,7 @@ protected:
 	virtual void TrainImplem();
 	virtual void Backward(int pos, double y);
 	virtual void Backward(const VolumeDataBase& y);
+	virtual void Backward(int cols, const Vector<int>& pos, const Vector<double>& y);
 	virtual void Reset();
 	virtual String ToString() const;
 	virtual String GetKey() const {return "sgd";}
@@ -215,6 +221,7 @@ protected:
 	virtual void TrainImplem();
 	virtual void Backward(int pos, double y);
 	virtual void Backward(const VolumeDataBase& y);
+	virtual void Backward(int cols, const Vector<int>& pos, const Vector<double>& y);
 	virtual void Reset();
 	virtual String ToString() const;
 	virtual String GetKey() const {return "windowgrad";}

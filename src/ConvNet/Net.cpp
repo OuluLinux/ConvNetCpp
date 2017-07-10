@@ -124,6 +124,21 @@ double Net::Backward(const VolumeDataBase& y) {
 	throw Exception("Last layer doesnt implement ILastLayer interface");
 }
 
+double Net::Backward(int cols, const Vector<int>& pos, const Vector<double>& y) {
+	int n = layers.GetCount();
+	LastLayerBase* last_layer = dynamic_cast<LastLayerBase*>(&*layers[n - 1]);
+	if (last_layer != NULL) {
+		double loss = last_layer->Backward(cols, pos, y); // last layer assumed to be loss layer
+		for (int i = n - 2; i >= 0; i--) {
+			// first layer assumed input
+			layers[i]->Backward();
+		}
+		return loss;
+	}
+	
+	throw Exception("Last layer doesnt implement ILastLayer interface");
+}
+
 int Net::GetPrediction() {
 	// this is a convenience function for returning the argmax
 	// prediction, assuming the last layer of the net is a softmax

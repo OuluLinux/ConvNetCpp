@@ -57,6 +57,28 @@ double RegressionLayer::Backward(int pos, double y) {
 }
 
 
+double RegressionLayer::Backward(int cols, const Vector<int>& posv, const Vector<double>& yv) {
+	// compute and accumulate gradient wrt weights and bias of this layer
+	Volume& input = *input_activation;
+	input.ZeroGradients(); // zero out the gradient of input Vol
+	double loss = 0.0;
+	
+	ASSERT(posv.GetCount() == yv.GetCount());
+	for(int i = 0; i < posv.GetCount(); i++) {
+		int p = posv[i];
+		ASSERT(p >= 0 && p < cols);
+		int pos = i * cols + p;
+		double y = yv[i];
+		
+		double dy = input.Get(pos) - y;
+		input.SetGradient(pos, dy);
+		loss += 0.5 * dy * dy;
+	}
+	
+	return loss;
+}
+
+
 #define STOREVAR(json, field) map.GetAdd(#json) = this->field;
 #define LOADVAR(field, json) this->field = map.GetValue(map.Find(#json));
 #define LOADVARDEF(field, json, def) {Value tmp = map.GetValue(map.Find(#json)); if (tmp.IsNull()) this->field = def; else this->field = tmp;}

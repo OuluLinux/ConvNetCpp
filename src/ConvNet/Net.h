@@ -31,6 +31,7 @@ public:
 	virtual double GetCostLoss(Volume& input, const VolumeDataBase& y);
 	virtual double Backward(int pos, double y);
 	virtual double Backward(const VolumeDataBase& y);
+	virtual double Backward(int cols, const Vector<int>& pos, const Vector<double>& y);
 	virtual int GetPrediction();
 	virtual Vector<ParametersAndGradients>& GetParametersAndGradients();
 	

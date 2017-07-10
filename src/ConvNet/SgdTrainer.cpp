@@ -84,6 +84,13 @@ void SgdTrainer::Backward(const VolumeDataBase& y) {
 	l1_decay_loss = 0.0;
 }
 
+void SgdTrainer::Backward(int cols, const Vector<int>& pos, const Vector<double>& y) {
+	TrainerBase::Backward(cols, pos, y);
+	
+	l2_decay_loss = 0.0;
+	l1_decay_loss = 0.0;
+}
+
 void SgdTrainer::Reset() {
 	TrainerBase::Reset();
 	gsum.Clear();

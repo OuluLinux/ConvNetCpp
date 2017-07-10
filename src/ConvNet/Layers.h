@@ -202,6 +202,7 @@ public:
 	
 	virtual double Backward(int pos, double y);
 	virtual double Backward(const VolumeDataBase& y);
+	virtual double Backward(int cols, const Vector<int>& pos, const Vector<double>& y);
 	virtual Volume& Forward(Volume& input, bool is_training = false);
 	virtual void Backward();
 	virtual void Init(int input_width, int input_height, int input_depth);
@@ -271,6 +272,7 @@ public:
 	
 	virtual double Backward(int pos, double y);
 	virtual double Backward(const VolumeDataBase& y);
+	virtual double Backward(int cols, const Vector<int>& pos, const Vector<double>& y) {Panic("Not implemented"); return 0;}
 	virtual Volume& Forward(Volume& input, bool is_training = false);
 	virtual void Backward();
 	virtual void Init(int input_width, int input_height, int input_depth);
@@ -292,6 +294,7 @@ public:
 	
 	virtual double Backward(int pos, double y);
 	virtual double Backward(const VolumeDataBase& y);
+	virtual double Backward(int cols, const Vector<int>& pos, const Vector<double>& y) {Panic("Not implemented"); return 0;}
 	virtual Volume& Forward(Volume& input, bool is_training = false);
 	virtual void Backward();
 	virtual void Init(int input_width, int input_height, int input_depth);

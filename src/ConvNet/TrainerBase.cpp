@@ -51,9 +51,28 @@ void TrainerBase::Train(const VolumeDataBase& y, const Vector<VolumePtr>& x) {
 	TrainImplem();
 }
 
+void TrainerBase::Train(Volume& x, int cols, const Vector<int>& pos, const Vector<double>& y) {
+	vec.SetCount(1);
+	vec[0] = &x;
+	Forward(vec);
+	
+	Backward(cols, pos, y);
+	
+	TrainImplem();
+}
+
 void TrainerBase::Backward(int pos, double y) {
-	cost_reward = y; // not perfect, because position varies, but this is essentially what was in the JS example.
+	cost_reward = y;
 	cost_loss = net->Backward(pos, y);
+}
+
+void TrainerBase::Backward(int cols, const Vector<int>& pos, const Vector<double>& y) {
+	double sum = 0;
+	for(int i = 0; i < y.GetCount(); i++)
+		sum += y[i];
+	cost_reward = sum;
+	
+	cost_loss = net->Backward(cols, pos, y);
 }
 
 void TrainerBase::Backward(const VolumeDataBase& y) {
