@@ -8,20 +8,20 @@ Volume::Volume() {
 	depth = 0;
 	length = 0;
 	owned_weights = true;
-	weights = new VolumeData<double>();
+	weights = new VolumeDataBase();
 }
 
 Volume::Volume(int width, int height, int depth) {
 	ASSERT(width > 0 && height > 0 && depth > 0);
 	owned_weights = true;
-	weights = new VolumeData<double>();
+	weights = new VolumeDataBase();
 	Init(width, height, depth);
 }
 
 Volume::Volume(int width, int height, int depth, double c) {
 	ASSERT(width > 0 && height > 0 && depth > 0);
 	owned_weights = true;
-	weights = new VolumeData<double>();
+	weights = new VolumeDataBase();
 	Init(width, height, depth, c);
 }
 
@@ -33,7 +33,7 @@ Volume::Volume(const Vector<double>& weights) {
 	length = depth;
 	
 	owned_weights = true;
-	this->weights = new VolumeData<double>(weights);
+	this->weights = new VolumeDataBase(weights);
 	
 	weight_gradients.SetCount(depth, 0.0);
 }
@@ -61,7 +61,7 @@ Volume::Volume(int width, int height, int depth, const Vector<double>& weights) 
 	ASSERT(length == weights.GetCount());
 	
 	owned_weights = true;
-	this->weights = new VolumeData<double>(weights);
+	this->weights = new VolumeDataBase(weights);
 	
 	weight_gradients.SetCount(length, 0.0);
 }
@@ -142,16 +142,13 @@ Volume& Volume::operator=(const Volume& src) {
 	length = src.length;
 	if (owned_weights) {
 		ASSERT(weights);
-		weights->SetCount(src.weights->GetCount());
-		for(int i = 0; i < weights->GetCount(); i++)
-			weights->Set(i, src.weights->Get(i));
+		ASSERT(src.weights);
+		weights->weights <<= src.weights->weights;
 	} else {
 		if (src.owned_weights) {
 			owned_weights = true;
-			this->weights = new VolumeData<double>(src.weights->GetCount());
-			weights->SetCount(src.weights->GetCount());
-			for(int i = 0; i < weights->GetCount(); i++)
-				weights->Set(i, src.weights->Get(i));
+			this->weights = new VolumeDataBase(src.weights->GetCount());
+			weights->weights <<= src.weights->weights;
 		} else{
 			weights = src.weights;
 		}
@@ -166,7 +163,7 @@ Volume& Volume::Init(int width, int height, int depth) {
 	ASSERT(width > 0 && height > 0 && depth > 0);
 	if (!owned_weights) {
 		owned_weights = true;
-		weights = new VolumeData<double>();
+		weights = new VolumeDataBase();
 	}
 	
 	// we were given dimensions of the vol
@@ -194,7 +191,7 @@ Volume& Volume::Init(int width, int height, int depth, double default_value) {
 	ASSERT(width > 0 && height > 0 && depth > 0);
 	if (!owned_weights) {
 		owned_weights = true;
-		weights = new VolumeData<double>();
+		weights = new VolumeDataBase();
 	}
 	
 	// we were given dimensions of the vol
@@ -221,7 +218,7 @@ Volume& Volume::Init(int width, int height, int depth, const Vector<double>& w) 
 	ASSERT(width > 0 && height > 0 && depth > 0);
 	if (!owned_weights) {
 		owned_weights = true;
-		weights = new VolumeData<double>();
+		weights = new VolumeDataBase();
 	}
 	
 	// we were given dimensions of the vol

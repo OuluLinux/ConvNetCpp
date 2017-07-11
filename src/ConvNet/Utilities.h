@@ -8,59 +8,24 @@
 namespace ConvNet {
 using namespace Upp;
 
-class VolumeDataBase {
+
+
+struct VolumeDataBase {
+	Vector<double> weights;
 	
-protected:
-	bool protect;
-	
-public:
-	VolumeDataBase() : protect(false) {}
-	virtual ~VolumeDataBase() {ASSERT(!protect);}
-	virtual double operator[](int i) const = 0;
-	virtual double Get(int i) const = 0;
-	virtual int GetCount() const = 0;
-	virtual void Set(int i, double d) = 0;
-	virtual void SetCount(int i) = 0;
-	virtual void SetCount(int i, double d) = 0;
-	
-	inline double Get(int x, int y, int d, int width, int depth) const {return Get(((width * y) + x) * depth + d);}
-	inline void   Set(int x, int y, int d, int width, int depth, double value) {Set(((width * y) + x) * depth + d, value);}
-	
-	void Protect(bool b) {protect = b;}
-	bool IsProtected() const {return protect;}
-	
+	VolumeDataBase() {}
+	VolumeDataBase(int count, double value=0) {weights.SetCount(count, value);}
+	VolumeDataBase(const Vector<double>& data) {weights <<= data;}
+	inline double operator[](int i) const {return weights[i];}
+	inline double Get(int i) const {return weights[i];}
+	inline double Get(int x, int y, int z, int w, int d) const {return weights[((w * y) + x) * d + z];}
+	inline int GetCount() const {return weights.GetCount();}
+	inline void Set(int i, double d) {weights[i] = d;}
+	inline void SetCount(int i) {ASSERT(i >= weights.GetCount()); weights.SetCount(i);}
+	inline void SetCount(int i, double d) {ASSERT(i >= weights.GetCount()); weights.SetCount(i, d);}
 };
 
-template <class T>
-struct VolumeData : public VolumeDataBase {
-	Vector<T> weights;
-	
-	VolumeData() {}
-	VolumeData(int count, T value=0) {weights.SetCount(count, value);}
-	VolumeData(const Vector<T>& data) {weights <<= data;}
-	virtual double operator[](int i) const {return weights[i];}
-	virtual double Get(int i) const {return weights[i];}
-	virtual int GetCount() const {return weights.GetCount();}
-	virtual void Set(int i, double d) {weights[i] = d;}
-	virtual void SetCount(int i) {ASSERT(i >= weights.GetCount() || !protect); weights.SetCount(i);}
-	virtual void SetCount(int i, double d) {ASSERT(i >= weights.GetCount() || !protect); weights.SetCount(i, d);}
-};
 
-template <class T, int DIV>
-struct VolumeDataDivider : public VolumeDataBase {
-	Vector<T> weights;
-	double div;
-	
-	VolumeDataDivider() : div(DIV) {}
-	VolumeDataDivider(int count, T value=0) : div(DIV) {weights.SetCount(count, value);}
-	void SetDivider(double d) {div = d;}
-	virtual double operator[](int i) const {return weights[i] / div;}
-	virtual double Get(int i) const {return weights[i] / div;}
-	virtual int GetCount() const {return weights.GetCount();}
-	virtual void Set(int i, double d) {weights[i] = d * div;}
-	virtual void SetCount(int i) {weights.SetCount(i);}
-	virtual void SetCount(int i, double d) {weights.SetCount(i, d * div);}
-};
 
 
 // Volume is the basic building block of all data in a net.
@@ -103,8 +68,6 @@ public:
 	
 	const VolumeDataBase& GetWeights() const {return *weights;}
 	const Vector<double>& GetGradients() const {return weight_gradients;}
-	
-	void Protect(bool b=true) {weights->Protect(b);}
 	
 	void Add(int i, double v);
 	void Add(int x, int y, int d, double v);

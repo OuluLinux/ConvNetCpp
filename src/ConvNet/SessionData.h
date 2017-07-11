@@ -23,9 +23,9 @@ public:
 	SessionData();
 	~SessionData();
 	
-	void BeginData(int cls_count, int count, int column_count, int test_count=0) {BeginDataClass<VolumeData<double> >(cls_count, count, 1, 1, column_count, test_count);}
-	void BeginData(int cls_count, int count, int width, int height, int depth, int test_count=0) {BeginDataClass<VolumeData<double> >(cls_count, count, width, height, depth, test_count);}
-	void BeginDataResult(int result_length, int count, int column_count, int test_count=0) {BeginDataResult<VolumeData<double> >(result_length, count, 1, 1, column_count, test_count);}
+	void BeginData(int cls_count, int count, int column_count, int test_count=0) {BeginDataClass<VolumeDataBase>(cls_count, count, 1, 1, column_count, test_count);}
+	void BeginData(int cls_count, int count, int width, int height, int depth, int test_count=0) {BeginDataClass<VolumeDataBase>(cls_count, count, width, height, depth, test_count);}
+	void BeginDataResult(int result_length, int count, int column_count, int test_count=0) {BeginDataResult<VolumeDataBase>(result_length, count, 1, 1, column_count, test_count);}
 	void EndData();
 	void ClearData();
 	

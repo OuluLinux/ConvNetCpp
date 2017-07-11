@@ -8,6 +8,13 @@ namespace ConvNet {
 
 class Session {
 	
+public:
+	// Statistical variables for values during training
+	Window loss_window, reward_window, l1_loss_window, l2_loss_window, train_window, accuracy_window, test_window;
+	
+	// Statistical variables for values for training results
+	Window accuracy_result_window;
+	
 protected:
 	friend class MagicNet;
 	friend class MetaSession;
@@ -16,12 +23,6 @@ protected:
 	
 	SessionData owned_data;
 	SessionData* used_data;
-	
-	// Statistical variables for values during training
-	Window loss_window, reward_window, l1_loss_window, l2_loss_window, train_window, accuracy_window, test_window;
-	
-	// Statistical variables for values for training results
-	Window accuracy_result_window;
 	
 	TrainerBasePtr owned_trainer, trainer;
 	SpinLock lock;
