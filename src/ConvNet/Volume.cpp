@@ -343,8 +343,11 @@ void Volume::Set(int i, double v) {
 }
 
 #define STOREVAR(json, field) map.GetAdd(#json) = this->field;
+#define STOREVAR_(field) map.GetAdd(#field) = this->field;
 #define LOADVAR(field, json) this->field = map.GetValue(map.Find(#json));
+#define LOADVAR_(field) this->field = map.GetValue(map.Find(#field));
 #define LOADVARDEF(field, json, def) {Value tmp = map.GetValue(map.Find(#json)); if (tmp.IsNull()) this->field = def; else this->field = tmp;}
+#define LOADVARDEF_(field, def) {Value tmp = map.GetValue(map.Find(#field)); if (tmp.IsNull()) this->field = def; else this->field = tmp;}
 
 void Volume::Store(ValueMap& map) const {
 	STOREVAR(sx, width);

@@ -3,11 +3,12 @@
 namespace ConvNet {
 
 #define STOREVAR(json, field) map.GetAdd(#json) = this->field;
+#define STOREVAR_(field) map.GetAdd(#field) = this->field;
 #define LOADVAR(field, json) this->field = map.GetValue(map.Find(#json));
+#define LOADVAR_(field) this->field = map.GetValue(map.Find(#field));
 #define LOADVARDEF(field, json, def) {Value tmp = map.GetValue(map.Find(#json)); if (tmp.IsNull()) this->field = def; else this->field = tmp;}
+#define LOADVARDEF_(field, def) {Value tmp = map.GetValue(map.Find(#field)); if (tmp.IsNull()) this->field = def; else this->field = tmp;}
 #define LOADVARDEFTEMP(field, json, def) {Value tmp = map.GetValue(map.Find(#json)); if (tmp.IsNull()) field = def; else field = tmp;}
-
-
 
 // return Mat but filled with random numbers from gaussian
 void RandMat(int n, int d, double mu, double std, Mat& m) {
@@ -157,11 +158,19 @@ bool Agent::StoreJSON(String& json) {
 }
 
 void Agent::Load(const ValueMap& map) {
-	
+	LOADVARDEF_(width, 0);
+	LOADVARDEF_(height, 0);
+	LOADVARDEF_(action_count, 0);
+	LOADVARDEF_(start_state, 0);
+	LOADVARDEF_(stop_state, -1);
 }
 
 void Agent::Store(ValueMap& map) {
-	
+	STOREVAR_(width);
+	STOREVAR_(height);
+	STOREVAR_(action_count);
+	STOREVAR_(start_state);
+	STOREVAR_(stop_state);
 }
 
 void Agent::LoadInit(const ValueMap& map) {
@@ -938,7 +947,20 @@ void DQNAgent::LoadInit(const ValueMap& map) {
 	LOADVARDEF(num_hidden_units, num_hidden_units, 100);
 }
 
+void DQNAgent::StoreInit(ValueMap& map) {
+	STOREVAR_(gamma);
+	STOREVAR_(epsilon);
+	STOREVAR_(alpha);
+	STOREVAR_(experience_add_every);
+	STOREVAR_(experience_size);
+	STOREVAR_(learning_steps_per_iteration);
+	STOREVAR_(tderror_clamp);
+	STOREVAR_(num_hidden_units);
+}
+
 void DQNAgent::Load(const ValueMap& map) {
+	Agent::Load(map);
+	LoadInit(map);
 	LOADVAR(nh, nh);
 	LOADVAR(ns, ns);
 	LOADVAR(na, na);
@@ -972,6 +994,8 @@ void DQNet::Store(ValueMap& map) {
 }
 
 void DQNAgent::Store(ValueMap& map) {
+	Agent::Store(map);
+	StoreInit(map);
 	STOREVAR(nh, nh);
 	STOREVAR(ns, ns);
 	STOREVAR(na, na);
@@ -1155,18 +1179,33 @@ void SDQNAgent::LoadInit(const ValueMap& map) {
 	LOADVARDEF(num_hidden_units, num_hidden_units, 100);
 }
 
+void SDQNAgent::StoreInit(ValueMap& map) {
+	STOREVAR_(gamma);
+	STOREVAR_(epsilon);
+	STOREVAR_(alpha);
+	STOREVAR_(experience_add_every);
+	STOREVAR_(experience_size);
+	STOREVAR_(learning_steps_per_iteration);
+	STOREVAR_(tderror_clamp);
+	STOREVAR_(num_hidden_units);
+}
+
 void SDQNAgent::Load(const ValueMap& map) {
-	LOADVAR(nh, nh);
-	LOADVAR(ns, ns);
-	LOADVAR(na, na);
+	Agent::Load(map);
+	LoadInit(map);
+	LOADVAR_(nh);
+	LOADVAR_(ns);
+	LOADVAR_(na);
 	ValueMap net = map.GetValue(map.Find("net"));
 	this->net.Load(net);
 }
 
 void SDQNAgent::Store(ValueMap& map) {
-	STOREVAR(nh, nh);
-	STOREVAR(ns, ns);
-	STOREVAR(na, na);
+	Agent::Store(map);
+	StoreInit(map);
+	STOREVAR_(nh);
+	STOREVAR_(ns);
+	STOREVAR_(na);
 	ValueMap net;
 	this->net.Store(net);
 	map.GetAdd("net") = net;

@@ -240,6 +240,7 @@ public:
 	virtual void Load(const ValueMap& map);
 	virtual void Store(ValueMap& map);
 	virtual void LoadInit(const ValueMap& map);
+	virtual void StoreInit(ValueMap& map);
 	virtual void Reset();
 	
 	int GetExperienceWritePointer() const {return expi;}
@@ -327,6 +328,7 @@ public:
 	virtual void Load(const ValueMap& map);
 	virtual void Store(ValueMap& map);
 	virtual void LoadInit(const ValueMap& map);
+	virtual void StoreInit(ValueMap& map);
 	virtual void Reset();
 	
 	int GetExperienceWritePointer() const {return expi;}
