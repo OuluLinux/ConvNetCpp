@@ -907,7 +907,13 @@ DQNAgent::DQNAgent() {
 	G.Mul(net.W2);
 	G.Add(net.b2);
 	
+	expi = 0;
+	t = 0;
+	reward0 = 0;
+	action0 = 0;
+	action1 = 0;
 	has_reward = false;
+	tderror = 0;
 }
 
 void DQNAgent::Reset() {
@@ -1057,11 +1063,13 @@ void DQNAgent::Learn(double reward1) {
 		}
 		t += 1;
 		
-		// sample some additional experience from replay memory and learn from it
-		for (int k = 0; k < learning_steps_per_iteration; k++) {
-			int ri = Random(exp.GetCount()); // TODO: priority sweeps?
-			DQExperience& e = exp[ri];
-			LearnFromTuple(e.state0, e.action0, e.reward0, e.state1, e.action1);
+		if (!exp.IsEmpty()) {
+			// sample some additional experience from replay memory and learn from it
+			for (int k = 0; k < learning_steps_per_iteration; k++) {
+				int ri = Random(exp.GetCount()); // TODO: priority sweeps?
+				DQExperience& e = exp[ri];
+				LearnFromTuple(e.state0, e.action0, e.reward0, e.state1, e.action1);
+			}
 		}
 	}
 	reward0 = reward1; // store for next update
