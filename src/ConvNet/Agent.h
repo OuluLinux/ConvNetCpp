@@ -245,6 +245,7 @@ public:
 	
 	int GetExperienceWritePointer() const {return expi;}
 	double GetTDError() const {return tderror;}
+	double GetEpsilon() const {return epsilon;}
 	Graph& GetGraph() {return G;}
 	
 	void SetEpsilon(double e) {epsilon = e;}
