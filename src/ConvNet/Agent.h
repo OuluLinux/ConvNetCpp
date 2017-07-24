@@ -247,6 +247,7 @@ public:
 	double GetTDError() const {return tderror;}
 	double GetEpsilon() const {return epsilon;}
 	Graph& GetGraph() {return G;}
+	int GetExperienceCount() const {return exp.GetCount();}
 	
 	void SetEpsilon(double e) {epsilon = e;}
 	
@@ -265,6 +266,7 @@ public:
 			Store(map);
 			s % map;
 		}
+		s % exp % gamma % epsilon % alpha % tderror_clamp % tderror % expi % t;
 	}
 };
 
