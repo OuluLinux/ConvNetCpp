@@ -248,6 +248,7 @@ public:
 	double GetEpsilon() const {return epsilon;}
 	Graph& GetGraph() {return G;}
 	int GetExperienceCount() const {return exp.GetCount();}
+	void ClearExperience() {exp.Clear();}
 	
 	void SetEpsilon(double e) {epsilon = e;}
 	
