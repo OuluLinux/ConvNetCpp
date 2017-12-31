@@ -55,5 +55,6 @@ file
 	Recurrent.h,
 	Recurrent.cpp,
 	Mat.h,
-	Mat.cpp;
+	Mat.cpp,
+	DQN.h;
 
