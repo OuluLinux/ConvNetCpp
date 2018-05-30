@@ -2,17 +2,7 @@
 
 namespace ConvNet {
 
-WindowgradTrainer::WindowgradTrainer(Net& net) : TrainerBase(net) {
-	l1_decay = 0;
-	l2_decay = 0;
-	l2_decay_loss = 0;
-	l1_decay_loss = 0;
-	learning_rate = 0.01;
-	ro = 0.95;
-	eps = 1e-6;
-}
-
-void WindowgradTrainer::TrainImplem() {
+void TrainerBase::TrainImplemWindowgrad() {
 	
 	iter_count++;
 	
@@ -70,33 +60,7 @@ void WindowgradTrainer::TrainImplem() {
 	// and it should all be computed correctly and automatically.
 }
 
-void WindowgradTrainer::Backward(int pos, double y) {
-	TrainerBase::Backward(pos, y);
-	
-	l2_decay_loss = 0.0;
-	l1_decay_loss = 0.0;
-}
-
-void WindowgradTrainer::Backward(const VolumeDataBase& y) {
-	TrainerBase::Backward(y);
-	
-	l2_decay_loss = 0.0;
-	l1_decay_loss = 0.0;
-}
-
-void WindowgradTrainer::Backward(int cols, const Vector<int>& pos, const Vector<double>& y) {
-	TrainerBase::Backward(cols, pos, y);
-	
-	l2_decay_loss = 0.0;
-	l1_decay_loss = 0.0;
-}
-
-void WindowgradTrainer::Reset() {
-	TrainerBase::Reset();
-	gsum.Clear();
-}
-
-String WindowgradTrainer::ToString() const {
+String TrainerBase::ToStringWindowgrad() const {
 	return Format("Windowgrad: batch_size:%d, cost_loss:%2!,n, cost_reward:%2!,n, Beta1:%2!,n, Beta2:%2!,n,"
 		"l1_decay:%2!,n, l2_decay:%2!,n, l1_decay_loss:%2!,n, l2_decay_loss:%2!,n, learning_rate:%2!,n, momentum:%2!,n, eps:%2!,n, ro:%2!,n",
 		batch_size, cost_loss, cost_reward, Beta1, Beta2,

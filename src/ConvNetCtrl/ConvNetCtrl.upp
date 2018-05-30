@@ -10,8 +10,6 @@ file
 	ConvNetCtrl.h,
 	TrainingGraph.h,
 	TrainingGraph.cpp,
-	MetaSessionGraph.h,
-	MetaSessionGraph.cpp,
 	BarView.h,
 	BarView.cpp,
 	HeatmapView.h,
@@ -28,6 +26,8 @@ file
 	ImageRegression.cpp,
 	ImagePrediction.h,
 	ImagePrediction.cpp,
+	MetaSessionGraph.h,
+	MetaSessionGraph.cpp,
 	GridWorldCtrl.h,
 	GridWorldCtrl.cpp;
 

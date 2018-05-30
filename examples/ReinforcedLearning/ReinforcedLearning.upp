@@ -8,11 +8,11 @@ uses
 
 file
 	ReinforcedLearning.h,
+	pretrained.bin,
 	ReinforcedLearning.cpp,
 	ReinforcedLearning.rc,
 	ReinforcedLearning.iml,
 	pretrained.brc,
-	pretrained.json,
 	Agent.cpp,
 	World.cpp;
 

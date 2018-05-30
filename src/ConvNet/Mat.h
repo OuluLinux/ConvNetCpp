@@ -4,6 +4,14 @@
 
 namespace ConvNet {
 
+struct MatId : Moveable<MatId> {
+	int value = -1;
+	
+	void Serialize(Stream& s) {s % value;}
+	MatId& operator=(const MatId& src) {value = src.value; return *this;}
+	
+};
+
 class Mat : Moveable<Mat> {
 	Vector<double> weight_gradients;
 	Vector<double> weights;
@@ -67,6 +75,32 @@ public:
 	int GetMaxColumn() const;
 	int GetSampledColumn() const;
 	
+};
+
+
+class MatPool {
+	
+protected:
+	Vector<Mat> mats;
+	
+	Vector<Mat*> tmp_mat;
+	Vector<int> index_sequence;
+	SpinLock lock;
+	
+public:
+	void InitMat(MatId& id, int width, int height, double default_value);
+	void InitMat(MatId& id);
+	void RandMat(int n, int d, double mu, double std, MatId& out);
+	MatId AddTempMat(Mat& mat);
+	void ClearTempMat();
+	void ClearPool() {mats.Clear();}
+	
+	Mat& Get(const MatId& id);
+	int GetInput(int pos);
+	
+	void Serialize(Stream& s) {
+		s % mats;
+	}
 };
 
 }

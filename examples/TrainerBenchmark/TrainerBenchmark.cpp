@@ -102,54 +102,54 @@ void TrainerBenchmark::Reload() {
 		//{learning_rate:LR, method: 'nesterov', momentum: 0.9, batch_size:BS, l2_decay:L2});\n\
 		
 		if (i == 0) {
-			SgdTrainer* t = new SgdTrainer(net);
-			t->SetLearningRate(10 * LR);
-			t->SetMomentum(0.0);
-			t->SetBatchSize(BS);
-			t->SetL2Decay(L2);
-			s.AttachTrainer(t);
+			TrainerBase& t = s.GetTrainer();
+			t.SetType(TRAINER_SGD);
+			t.SetLearningRate(10 * LR);
+			t.SetMomentum(0.0);
+			t.SetBatchSize(BS);
+			t.SetL2Decay(L2);
 		}
 		else if (i == 1) {
-			SgdTrainer* t = new SgdTrainer(net);
-			t->SetLearningRate(LR);
-			t->SetMomentum(0.9);
-			t->SetBatchSize(BS);
-			t->SetL2Decay(L2);
-			s.AttachTrainer(t);
+			TrainerBase& t = s.GetTrainer();
+			t.SetType(TRAINER_SGD);
+			t.SetLearningRate(LR);
+			t.SetMomentum(0.9);
+			t.SetBatchSize(BS);
+			t.SetL2Decay(L2);
 		}
 		else if (i == 2) {
-			AdagradTrainer* t = new AdagradTrainer(net);
-			t->SetLearningRate(LR);
-			t->SetEps(1e-6);
-			t->SetBatchSize(BS);
-			t->SetL2Decay(L2);
-			s.AttachTrainer(t);
+			TrainerBase& t = s.GetTrainer();
+			t.SetType(TRAINER_ADAGRAD);
+			t.SetLearningRate(LR);
+			t.SetEps(1e-6);
+			t.SetBatchSize(BS);
+			t.SetL2Decay(L2);
 		}
 		else if (i == 3) {
-			WindowgradTrainer* t = new WindowgradTrainer(net);
-			t->SetLearningRate(LR);
-			t->SetEps(1e-6);
-			t->SetRo(0.95);
-			t->SetBatchSize(BS);
-			t->SetL2Decay(L2);
-			s.AttachTrainer(t);
+			TrainerBase& t = s.GetTrainer();
+			t.SetType(TRAINER_WINDOWGRAD);
+			t.SetLearningRate(LR);
+			t.SetEps(1e-6);
+			t.SetRo(0.95);
+			t.SetBatchSize(BS);
+			t.SetL2Decay(L2);
 		}
 		else if (i == 4) {
-			AdadeltaTrainer* t = new AdadeltaTrainer(net);
-			t->SetLearningRate(1.0);
-			t->SetEps(1e-6);
-			t->SetRo(0.95);
-			t->SetBatchSize(BS);
-			t->SetL2Decay(L2);
-			s.AttachTrainer(t);
+			TrainerBase& t = s.GetTrainer();
+			t.SetType(TRAINER_ADADELTA);
+			t.SetLearningRate(1.0);
+			t.SetEps(1e-6);
+			t.SetRo(0.95);
+			t.SetBatchSize(BS);
+			t.SetL2Decay(L2);
 		}
 		else if (i == 5) {
-			NetsterovTrainer* t = new NetsterovTrainer(net);
-			t->SetLearningRate(LR);
-			t->SetMomentum(0.9);
-			t->SetBatchSize(BS);
-			t->SetL2Decay(L2);
-			s.AttachTrainer(t);
+			TrainerBase& t = s.GetTrainer();
+			t.SetType(TRAINER_NETSTEROV);
+			t.SetLearningRate(LR);
+			t.SetMomentum(0.9);
+			t.SetBatchSize(BS);
+			t.SetL2Decay(L2);
 		}
 		else Panic("Invalid trainer id");
 	}

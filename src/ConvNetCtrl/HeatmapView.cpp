@@ -39,7 +39,7 @@ void HeatmapView::PaintSession(Draw& d) {
 	//double dy = (sz.cy - 50) / layer_count;
 	
 	for(int i = 0; i < layer_count; i++) {
-		LayerBase& lb = *net.GetLayers()[i];
+		LayerBase& lb = net.GetLayers()[i];
 		int output_length = lb.output_activation.GetLength();
 		String layer_lbl = lb.GetKey() + "(" + IntStr(output_length) + ")";
 		id.DrawText(x, y, layer_lbl, fnt, Black());
@@ -94,7 +94,7 @@ void HeatmapView::PaintGraph(Draw& d) {
 	
 	for(int i = 1; i < layer_count; i++) {
 		RecurrentBase& lb = graph->GetLayer(i);
-		if (!lb.input1) continue;
+		if (lb.input1.value == -1) continue;
 		
 		// Last volume in first layer is input, which might be invalid pointer
 		int arg_count = lb.GetArgCount();
@@ -102,7 +102,7 @@ void HeatmapView::PaintGraph(Draw& d) {
 		
 		String layer_lbl = lb.GetKey() + "(";
 		for(int j = 0; j < end; j++) {
-			Mat& output = j == 0 ? *lb.input1 : *lb.input2;
+			Mat& output = graph->GetPool().Get(j == 0 ? lb.input1 : lb.input2);
 			int output_length = output.GetLength();
 			if (j) layer_lbl += ",";
 			layer_lbl += IntStr(output_length);
@@ -111,7 +111,7 @@ void HeatmapView::PaintGraph(Draw& d) {
 		id.DrawText(x, y, layer_lbl, fnt, Black());
 		
 		for(int j = 0; j < end; j++) {
-			Mat& output = j == 0 ? *lb.input1 : *lb.input2;
+			Mat& output = graph->GetPool().Get(j == 0 ? lb.input1 : lb.input2);
 			int output_length = output.GetLength();
 			int y2 = y3;
 			tmp.SetCount(output_length);

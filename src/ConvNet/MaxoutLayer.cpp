@@ -1,15 +1,9 @@
-﻿#include "Layers.h"
+#include "LayerBase.h"
 
 
 namespace ConvNet {
 
-MaxoutLayer::MaxoutLayer(int group_size) : group_size(group_size) {
-	
-}
-
-void MaxoutLayer::Init(int input_width, int input_height, int input_depth) {
-	LayerBase::Init(input_width, input_height, input_depth);
-	
+void LayerBase::InitMaxout(int input_width, int input_height, int input_depth) {
 	output_depth = (int)floor(input_depth / (double)group_size);
 	output_width = input_width;
 	output_height = input_height;
@@ -17,7 +11,7 @@ void MaxoutLayer::Init(int input_width, int input_height, int input_depth) {
 	switches.SetCount(output_width * output_height * output_depth, 0); // useful for backprop
 }
 
-Volume& MaxoutLayer::Forward(Volume& input, bool is_training) {
+Volume& LayerBase::ForwardMaxout(Volume& input, bool is_training) {
 	input_activation = &input;
 	int depth = output_depth;
 	output_activation.Init(output_width, output_height, output_depth, 0.0);
@@ -71,7 +65,7 @@ Volume& MaxoutLayer::Forward(Volume& input, bool is_training) {
 	return output_activation;
 }
 
-void MaxoutLayer::Backward() {
+void LayerBase::BackwardMaxout() {
 	Volume& input = *input_activation; // we need to set dw of this
 	Volume& output = output_activation;
 	int depth = output_depth;
@@ -100,28 +94,7 @@ void MaxoutLayer::Backward() {
 	}
 }
 
-#define STOREVAR(json, field) map.GetAdd(#json) = this->field;
-#define LOADVAR(field, json) this->field = map.GetValue(map.Find(#json));
-#define LOADVARDEF(field, json, def) {Value tmp = map.GetValue(map.Find(#json)); if (tmp.IsNull()) this->field = def; else this->field = tmp;}
-
-void MaxoutLayer::Store(ValueMap& map) const {
-	STOREVAR(out_depth, output_depth);
-	STOREVAR(out_sx, output_width);
-	STOREVAR(out_sy, output_height);
-	STOREVAR(layer_type, GetKey());
-	STOREVAR(group_size, group_size);
-}
-
-void MaxoutLayer::Load(const ValueMap& map) {
-	LOADVAR(output_depth, out_depth);
-	LOADVAR(output_width, out_sx);
-	LOADVAR(output_height, out_sy);
-	LOADVAR(group_size, group_size);
-	switches.SetCount(0);
-	switches.SetCount(output_width * output_height * output_depth, 0);
-}
-
-String MaxoutLayer::ToString() const {
+String LayerBase::ToStringMaxout() const {
 	return Format("Maxout: w:%d, h:%d, d:%d, groups:%d",
 		output_width, output_height, output_depth, group_size);
 }

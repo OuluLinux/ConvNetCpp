@@ -10,21 +10,6 @@ using namespace Upp;
 
 
 
-struct VolumeDataBase {
-	Vector<double> weights;
-	
-	VolumeDataBase() {}
-	VolumeDataBase(int count, double value=0) {weights.SetCount(count, value);}
-	VolumeDataBase(const Vector<double>& data) {weights <<= data;}
-	inline double operator[](int i) const {return weights[i];}
-	inline double Get(int i) const {return weights[i];}
-	inline double Get(int x, int y, int z, int w, int d) const {return weights[((w * y) + x) * d + z];}
-	inline int GetCount() const {return weights.GetCount();}
-	inline void Set(int i, double d) {weights[i] = d;}
-	inline void SetCount(int i) {ASSERT(i >= weights.GetCount()); weights.SetCount(i);}
-	inline void SetCount(int i, double d) {ASSERT(i >= weights.GetCount()); weights.SetCount(i, d);}
-};
-
 
 
 
@@ -36,8 +21,7 @@ struct VolumeDataBase {
 // the data.
 class Volume : Moveable<Volume> {
 	Vector<double> weight_gradients;
-	VolumeDataBase* weights;
-	bool owned_weights;
+	Vector<double> weights;
 
 protected:
 	
@@ -51,9 +35,8 @@ public:
 	
 	Volume();
 	Volume(int width, int height, int depth, Volume& vol);
-	Volume(int width, int height, int depth, VolumeDataBase& weights);
 	Volume(int width, int height, int depth, const Vector<double>& weights);
-	Volume(const Volume& o) {owned_weights = false; weights = NULL; *this = o;}
+	Volume(const Volume& o) {*this = o;}
 	Volume(int width, int height, int depth); // Volume will be filled with random numbers
 	Volume(int width, int height, int depth, double default_value);
 	Volume(const Vector<double>& weights);
@@ -65,8 +48,10 @@ public:
 	~Volume();
 	
 	Volume& operator=(const Volume& src);
+	Volume& Set(const Volume& src);
+	Volume& Set(const Vector<double>& src);
 	
-	const VolumeDataBase& GetWeights() const {return *weights;}
+	const Vector<double>& GetWeights() const {return weights;}
 	const Vector<double>& GetGradients() const {return weight_gradients;}
 	
 	void Add(int i, double v);
@@ -87,11 +72,9 @@ public:
 	double GetGradient(int i) const;
 	void SetGradient(int i, double v);
 	void ZeroGradients();
-	void Store(ValueMap& map) const;
-	void Load(const ValueMap& map);
 	void Serialize(Stream& s);
 	void Augment(int crop, int dx=-1, int dy=-1, bool fliplr=false);
-	void SetData(VolumeDataBase& data);
+	void SetData(Vector<double>& data);
 	void SwapData(Volume& vol);
 	
 	int GetPos(int x, int y, int d) const;
@@ -101,8 +84,19 @@ public:
 	int GetLength() const {return length;}
 	int GetMaxColumn() const;
 	int GetSampledColumn() const;
-	int GetCount() const {return weights->GetCount();}
+	int GetCount() const {return weights.GetCount();}
 	
+	static double Get(const Vector<double>& in, int x, int y, int d, int width, int depth) {
+		ASSERT(x >= 0 && y >= 0 && d >= 0 && x < width && d < depth);
+		int pos = ((width * y) + x) * depth + d;
+		return in[pos];
+	}
+	
+	static void Set(Vector<double>& in, int x, int y, int d, int width, int depth, double v) {
+		ASSERT(x >= 0 && y >= 0 && d >= 0 && x < width && d < depth);
+		int pos = ((width * y) + x) * depth + d;
+		in[pos] = v;
+	}
 };
 
   
@@ -287,6 +281,13 @@ inline String FixJsonComma(const String& json) {
 		return fix_tmp;
 	}
 	return json;
+}
+
+inline void HeaplessCopy(Vector<double>& dest, const Vector<double>& src) {
+	int count = src.GetCount();
+	dest.SetCount(count);
+	for(int i = 0; i < count; i++)
+		dest[i] = src[i];
 }
 
 }

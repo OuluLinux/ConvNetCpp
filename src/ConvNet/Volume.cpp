@@ -7,21 +7,15 @@ Volume::Volume() {
 	height = 0;
 	depth = 0;
 	length = 0;
-	owned_weights = true;
-	weights = new VolumeDataBase();
 }
 
 Volume::Volume(int width, int height, int depth) {
 	ASSERT(width > 0 && height > 0 && depth > 0);
-	owned_weights = true;
-	weights = new VolumeDataBase();
 	Init(width, height, depth);
 }
 
 Volume::Volume(int width, int height, int depth, double c) {
 	ASSERT(width > 0 && height > 0 && depth > 0);
-	owned_weights = true;
-	weights = new VolumeDataBase();
 	Init(width, height, depth, c);
 }
 
@@ -32,23 +26,9 @@ Volume::Volume(const Vector<double>& weights) {
 	depth = weights.GetCount();
 	length = depth;
 	
-	owned_weights = true;
-	this->weights = new VolumeDataBase(weights);
+	HeaplessCopy(this->weights, weights);
 	
 	weight_gradients.SetCount(depth, 0.0);
-}
-
-Volume::Volume(int width, int height, int depth, VolumeDataBase& weights) {
-	ASSERT(width > 0 && height > 0 && depth > 0);
-	this->width = width;
-	this->height = height;
-	this->depth = depth;
-	length = width * height * depth;
-	
-	owned_weights = false;
-	this->weights = &weights;
-	
-	weight_gradients.SetCount(length, 0.0);
 }
 
 Volume::Volume(int width, int height, int depth, const Vector<double>& weights) {
@@ -60,8 +40,7 @@ Volume::Volume(int width, int height, int depth, const Vector<double>& weights) 
 	
 	ASSERT(length == weights.GetCount());
 	
-	owned_weights = true;
-	this->weights = new VolumeDataBase(weights);
+	HeaplessCopy(this->weights, weights);
 	
 	weight_gradients.SetCount(length, 0.0);
 }
@@ -73,38 +52,26 @@ Volume::Volume(int width, int height, int depth, Volume& vol) {
 	this->depth = depth;
 	length = width * height * depth;
 	
-	owned_weights = false;
-	this->weights = vol.weights;
+	HeaplessCopy(this->weights, vol.weights);
 	
-	ASSERT(this->weights->GetCount() == length);
+	ASSERT(this->weights.GetCount() == length);
 	
 	weight_gradients.SetCount(length, 0.0);
 }
 
 Volume::~Volume() {
-	if (owned_weights && weights)
-		delete weights;
-	weights = NULL;
+	
 }
 
 void Volume::Serialize(Stream& s) {
-	if (s.IsLoading()) {
-		ValueMap map;
-		s % map;
-		Load(map);
-	}
-	else if (s.IsStoring()) {
-		ValueMap map;
-		Store(map);
-		s % map;
-	}
+	s % weight_gradients % weights % width % height % depth % length;
 }
 
 int Volume::GetMaxColumn() const {
 	double max = -DBL_MAX;
 	int pos = -1;
-	for(int i = 0; i < weights->GetCount(); i++) {
-		double d = weights->Get(i);
+	for(int i = 0; i < weights.GetCount(); i++) {
+		double d = weights[i];
 		if (i == 0 || d > max) {
 			max = d;
 			pos = i;
@@ -118,20 +85,19 @@ int Volume::GetSampledColumn() const {
 	// probabilities that sum to one
 	double r = Randomf();
 	double x = 0.0;
-	for(int i = 0; i < weights->GetCount(); i++) {
-		x += weights->Get(i);
+	for(int i = 0; i < weights.GetCount(); i++) {
+		x += weights[i];
 		if (x > r) {
 			return i;
 		}
 	}
-	return weights->GetCount() - 1; // pretty sure we should never get here?
+	return weights.GetCount() - 1; // pretty sure we should never get here?
 }
 
-void Volume::SetData(VolumeDataBase& data) {
-	if (owned_weights && weights)
-		delete weights;
-	owned_weights = false;
-	weights = &data;
+void Volume::SetData(Vector<double>& data) {
+	weights.SetCount(data.GetCount());
+	for(int i = 0; i < weights.GetCount(); i++)
+		weights[i] = data[i];
 	weight_gradients.SetCount(data.GetCount(), 0);
 }
 
@@ -140,31 +106,35 @@ Volume& Volume::operator=(const Volume& src) {
 	height = src.height;
 	depth = src.depth;
 	length = src.length;
-	if (owned_weights) {
-		ASSERT(weights);
-		ASSERT(src.weights);
-		weights->weights <<= src.weights->weights;
-	} else {
-		if (src.owned_weights) {
-			owned_weights = true;
-			this->weights = new VolumeDataBase(src.weights->GetCount());
-			weights->weights <<= src.weights->weights;
-		} else{
-			weights = src.weights;
-		}
-	}
-	weight_gradients.SetCount(src.weight_gradients.GetCount());
-	for(int i = 0; i < weight_gradients.GetCount(); i++)
-		weight_gradients[i] = src.weight_gradients[i];
+	HeaplessCopy(weights, src.weights);
+	HeaplessCopy(weight_gradients, src.weight_gradients);
+	return *this;
+}
+
+Volume& Volume::Set(const Volume& src) {
+	width = src.width;
+	height = src.height;
+	depth = src.depth;
+	length = src.length;
+	HeaplessCopy(weights, src.weights);
+	HeaplessCopy(weight_gradients, src.weight_gradients);
+	return *this;
+}
+
+Volume& Volume::Set(const Vector<double>& src) {
+	width = 1;
+	height = 1;
+	depth = src.GetCount();
+	length = depth;
+	HeaplessCopy(weights, src);
+	weight_gradients.SetCount(length);
+	for(int i = 0; i < length; i++)
+		weight_gradients[i] = 0;
 	return *this;
 }
 
 Volume& Volume::Init(int width, int height, int depth) {
 	ASSERT(width > 0 && height > 0 && depth > 0);
-	if (!owned_weights) {
-		owned_weights = true;
-		weights = new VolumeDataBase();
-	}
 	
 	// we were given dimensions of the vol
 	this->width = width;
@@ -174,13 +144,13 @@ Volume& Volume::Init(int width, int height, int depth) {
 	int n = width * height * depth;
 	
 	length = n;
-	weights->SetCount(n, 0.0);
+	weights.SetCount(n, 0.0);
 	weight_gradients.SetCount(n, 0.0);
 	
 	RandomGaussian& rand = GetRandomGaussian(length);
 
 	for (int i = 0; i < n; i++) {
-		weights->Set(i, rand);
+		weights[i] = rand;
 	}
 	
 	return *this;
@@ -189,10 +159,6 @@ Volume& Volume::Init(int width, int height, int depth) {
 
 Volume& Volume::Init(int width, int height, int depth, double default_value) {
 	ASSERT(width > 0 && height > 0 && depth > 0);
-	if (!owned_weights) {
-		owned_weights = true;
-		weights = new VolumeDataBase();
-	}
 	
 	// we were given dimensions of the vol
 	this->width = width;
@@ -203,11 +169,11 @@ Volume& Volume::Init(int width, int height, int depth, double default_value) {
 	int prev_length = length;
 	
 	length = n;
-	weights->SetCount(n);
+	weights.SetCount(n);
 	weight_gradients.SetCount(n);
 	
 	for (int i = 0; i < n; i++) {
-		weights->Set(i, default_value);
+		weights[i] = default_value;
 		weight_gradients[i] = 0.0;
 	}
 	
@@ -216,10 +182,6 @@ Volume& Volume::Init(int width, int height, int depth, double default_value) {
 
 Volume& Volume::Init(int width, int height, int depth, const Vector<double>& w) {
 	ASSERT(width > 0 && height > 0 && depth > 0);
-	if (!owned_weights) {
-		owned_weights = true;
-		weights = new VolumeDataBase();
-	}
 	
 	// we were given dimensions of the vol
 	this->width = width;
@@ -230,11 +192,11 @@ Volume& Volume::Init(int width, int height, int depth, const Vector<double>& w) 
 	ASSERT(n == w.GetCount());
 	
 	length = n;
-	weights->SetCount(n);
+	weights.SetCount(n);
 	weight_gradients.SetCount(n);
 	
 	for (int i = 0; i < n; i++) {
-		weights->Set(i, w[i]);
+		weights[i] = w[i];
 		weight_gradients[i] = 0.0;
 	}
 	
@@ -248,24 +210,21 @@ int Volume::GetPos(int x, int y, int d) const {
 
 double Volume::Get(int x, int y, int d) const {
 	int ix = GetPos(x,y,d);
-	return weights->Get(ix);
+	return weights[ix];
 }
 
 void Volume::Set(int x, int y, int d, double v) {
-	ASSERT(owned_weights);
 	int ix = GetPos(x,y,d);
-	weights->Set(ix, v);
+	weights[ix] = v;
 }
 
 void Volume::Add(int x, int y, int d, double v) {
-	ASSERT(owned_weights);
 	int ix = GetPos(x,y,d);
-	weights->Set(ix, weights->Get(ix) + v);
+	weights[ix] = weights[ix] + v;
 }
 
 void Volume::Add(int i, double v) {
-	ASSERT(owned_weights);
-	weights->Set(i, weights->Get(i) + v);
+	weights[i] = weights[i] + v;
 }
 
 double Volume::GetGradient(int x, int y, int d) const {
@@ -289,9 +248,8 @@ void Volume::ZeroGradients() {
 }
 
 void Volume::AddFrom(const Volume& volume) {
-	ASSERT(owned_weights);
-	for (int i = 0; i < weights->GetCount(); i++) {
-		weights->Set(i, weights->Get(i) + volume.Get(i));
+	for (int i = 0; i < weights.GetCount(); i++) {
+		weights[i] = weights[i] + volume.Get(i);
 	}
 }
 
@@ -302,16 +260,14 @@ void Volume::AddGradientFrom(const Volume& volume) {
 }
 
 void Volume::AddFromScaled(const Volume& volume, double a) {
-	ASSERT(owned_weights);
-	for (int i = 0; i < weights->GetCount(); i++) {
-		weights->Set(i, weights->Get(i) + a * volume.Get(i));
+	for (int i = 0; i < weights.GetCount(); i++) {
+		weights[i] = weights[i] + a * volume.Get(i);
 	}
 }
 
 void Volume::SetConst(double c) {
-	ASSERT(owned_weights);
-	for (int i = 0; i < weights->GetCount(); i++) {
-		weights->Set(i, c);
+	for (int i = 0; i < weights.GetCount(); i++) {
+		weights[i] = c;
 	}
 }
 
@@ -322,7 +278,7 @@ void Volume::SetConstGradient(double c) {
 }
 
 double Volume::Get(int i) const {
-	return weights->Get(i);
+	return weights[i];
 }
 
 double Volume::GetGradient(int i) const {
@@ -338,71 +294,11 @@ void Volume::AddGradient(int i, double v) {
 }
 
 void Volume::Set(int i, double v) {
-	ASSERT(owned_weights);
-	weights->Set(i, v);
+	weights[i] = v;
 }
 
-#define STOREVAR(json, field) map.GetAdd(#json) = this->field;
-#define STOREVAR_(field) map.GetAdd(#field) = this->field;
-#define LOADVAR(field, json) this->field = map.GetValue(map.Find(#json));
-#define LOADVAR_(field) this->field = map.GetValue(map.Find(#field));
-#define LOADVARDEF(field, json, def) {Value tmp = map.GetValue(map.Find(#json)); if (tmp.IsNull()) this->field = def; else this->field = tmp;}
-#define LOADVARDEF_(field, def) {Value tmp = map.GetValue(map.Find(#field)); if (tmp.IsNull()) this->field = def; else this->field = tmp;}
-
-void Volume::Store(ValueMap& map) const {
-	STOREVAR(sx, width);
-	STOREVAR(sy, height);
-	STOREVAR(depth, depth);
-	
-	Value w;
-	for(int i = 0; i < weights->GetCount(); i++) {
-		double value = weights->Get(i);
-		w.Add(value);
-	}
-	map.GetAdd("w") = w;
-	
-	Value dw;
-	for(int i = 0; i < weight_gradients.GetCount(); i++) {
-		double value = weight_gradients[i];
-		dw.Add(value);
-	}
-	map.GetAdd("dw") = dw;
-}
-
-void Volume::Load(const ValueMap& map) {
-	ASSERT(owned_weights);
-	
-	LOADVAR(width, sx);
-	LOADVAR(height, sy);
-	LOADVAR(depth, depth);
-	
-	length = width * height * depth;
-	
-	weights->SetCount(0);
-	weights->SetCount(length, 0);
-	weight_gradients.SetCount(0);
-	weight_gradients.SetCount(length, 0);
-	
-	// copy over the elements.
-	Value w = map.GetValue(map.Find("w"));
-	
-	for (int i = 0; i < length; i++) {
-		double value = w[i];
-		weights->Set(i, value);
-	}
-	
-	int i = map.Find("dw");
-	if (i != -1) {
-		Value dw = map.GetValue(i);
-		for (int i = 0; i < length; i++) {
-			double value = dw[i];
-			weight_gradients[i] = value;
-		}
-	}
-}
 
 void Volume::Augment(int crop, int dx, int dy, bool fliplr) {
-	ASSERT(owned_weights);
 	
 	// note assumes square outputs of size crop x crop
 	if (dx == -1) dx = Random(width - crop);
@@ -442,7 +338,6 @@ void Volume::Augment(int crop, int dx, int dy, bool fliplr) {
 void Volume::SwapData(Volume& vol) {
 	Swap(vol.weight_gradients, weight_gradients);
 	Swap(vol.weights, weights);
-	Swap(vol.owned_weights, owned_weights);
 	Swap(vol.width, width);
 	Swap(vol.height, height);
 	Swap(vol.depth, depth);

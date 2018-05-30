@@ -43,7 +43,7 @@ void LayerView::Paint(Draw& d) {
 	Net& net = ses.GetNetwork();
 	
 	
-	InputLayer* input = ses.GetInput();
+	LayerBase* input = ses.GetInput();
 	if (!input) {
 		d.DrawRect(sz, White());
 		ses.Leave();
@@ -76,7 +76,7 @@ void LayerView::PaintInputX(Draw& id) {
 	Session& ses = *lc->ses;
 	SessionData& d = ses.Data();
 	Net& net = ses.GetNetwork();
-	LayerBase& layer = *net.GetLayers()[lix];
+	LayerBase& layer = net.GetLayers()[lix];
 	
 	Size sz = GetSize();
 	Volume netx(1,1,1,0);
@@ -92,7 +92,7 @@ void LayerView::PaintInputX(Draw& id) {
 	int data_count = d.GetDataCount();
 	for (int i = 0; i < data_count; i++) {
 		double x = d.GetData(i, 0);
-		double y = d.GetResult(i).Get(0);
+		double y = d.GetResult(i)[0];
 		min_x = min(min_x, x);
 		min_y = min(min_y, y);
 		max_x = max(max_x, x);
@@ -110,7 +110,7 @@ void LayerView::PaintInputX(Draw& id) {
 	bool draw_neuron_outputs = true;
 	
 	// draw final decision
-	Vector<VolumeDataBase*> neurons;
+	Vector<Vector<double>*> neurons;
 	tmp_pts1.SetCount(0);
 	
 	int neuron_count = layer.output_activation.GetLength();
@@ -145,7 +145,7 @@ void LayerView::PaintInputX(Draw& id) {
 	int radius_2 = radius / 2;
 	for (int i = 0; i < data_count; i++) {
 		double x = X(d.GetData(i, 0))			- radius_2;
-		double y = Y(d.GetResult(i).Get(0))	- radius_2;
+		double y = Y(d.GetResult(i)[0])			- radius_2;
 		id.DrawEllipse(x, y, radius, radius, Black());
 	}
 	
@@ -177,10 +177,10 @@ void LayerView::PaintInputXY(Draw& id) {
 	double diff = offset * 2;
 	double step = diff / (count - 1);
 	
-	const Vector<LayerBasePtr>& layers = net.GetLayers();
+	const Vector<LayerBase>& layers = net.GetLayers();
 	if (lix < 0 || lix >= layers.GetCount()) {return;}
-	LayerBase& lb = *layers[lix];
-	Volume& output = lb.output_activation;
+	const LayerBase& lb = layers[lix];
+	const Volume& output = lb.output_activation;
 	
 	Volume netx(1,1,2,0);
 	Color clr_a(250, 150, 150);
@@ -301,16 +301,16 @@ void LayerView::PaintInputImage(Draw& id) {
 		d.GetUniformClassData(16, volumes, labels);
 		tmp_imgs.SetCount(volumes.GetCount());
 		for(int i = 0; i < volumes.GetCount(); i++) {
-			VolumeDataBase& data = *volumes[i];
+			Vector<double>& data = volumes[i];
 			Image& img = tmp_imgs[i];
 			ImageBuffer ib(data_w, data_h);
 			RGBA* it = ib.Begin();
 			if (is_color) {
 				for (int y = 0; y < data_h; y++) {
 					for (int x = 0; x < data_w; x++) {
-						it->r = data.Get(x, y, 0, data_w, data_d) * 255;
-						it->g = data.Get(x, y, 1, data_w, data_d) * 255;
-						it->b = data.Get(x, y, 2, data_w, data_d) * 255;
+						it->r = Volume::Get(data, x, y, 0, data_w, data_d) * 255;
+						it->g = Volume::Get(data, x, y, 1, data_w, data_d) * 255;
+						it->b = Volume::Get(data, x, y, 2, data_w, data_d) * 255;
 						it->a = 255;
 						it++;
 					}
@@ -318,7 +318,7 @@ void LayerView::PaintInputImage(Draw& id) {
 			} else {
 				for (int y = 0; y < data_h; y++) {
 					for (int x = 0; x < data_w; x++) {
-						it->r = data.Get(x, y, 0, data_w, data_d) * 255;
+						it->r = Volume::Get(data, x, y, 0, data_w, data_d) * 255;
 						it->g = it->r;
 						it->b = it->r;
 						it->a = 255;
@@ -337,10 +337,10 @@ void LayerView::PaintInputImage(Draw& id) {
 		}
 	}
 	
-	const Vector<LayerBasePtr>& layers = net.GetLayers();
+	const Vector<LayerBase>& layers = net.GetLayers();
 	if (lix < 0 || lix >= layers.GetCount()) return;
-	LayerBase& lb = *layers[lix];
-	Volume& output = lb.output_activation;
+	const LayerBase& lb = layers[lix];
+	const Volume& output = lb.output_activation;
 	
 	
 	Volume netx(data_w, data_h, data_d, 0);
@@ -355,7 +355,7 @@ void LayerView::PaintInputImage(Draw& id) {
 	for(int i = 0; i < volumes.GetCount(); i++) {
 		
 		// also draw transformed data points while we're at it
-		netx.SetData(*volumes[i]);
+		netx.SetData(volumes[i]);
 		Volume& a = net.Forward(netx, false);
 		
 		Pointf& p = tmp_pts[i];
@@ -438,14 +438,14 @@ void LayerCtrl::RefreshData() {
 	ses->Enter();
 	Net& net = ses->GetNetwork();
 	
-	const Vector<LayerBasePtr>& layers = net.GetLayers();
+	const Vector<LayerBase>& layers = net.GetLayers();
 	if (lix < 0 || lix >= layers.GetCount()) lix = 0;
 	d0 = 0;
 	d1 = 1;
 	
 	int first_xy_layer = -1;
 	for(int i = 0; i < layers.GetCount(); i++) {
-		const LayerBase& lb = *layers[i];
+		const LayerBase& lb = layers[i];
 		
 		String lstr = lb.GetKey();
 		int length = lb.output_depth * lb.output_height * lb.output_width;
@@ -484,8 +484,8 @@ void LayerCtrl::ViewLayer(int i) {
 
 void LayerCtrl::Cycle() {
 	Net& net = ses->GetNetwork();
-	const Vector<LayerBasePtr>& layers = net.GetLayers();
-	LayerBase& lb = *layers[lix];
+	const Vector<LayerBase>& layers = net.GetLayers();
+	const LayerBase& lb = layers[lix];
 	
 	d0 += 1;
 	d1 += 1;
@@ -499,7 +499,7 @@ void LayerCtrl::Cycle() {
 void LayerCtrl::RefreshCycle() {
 	Net& net = ses->GetNetwork();
 	String s;
-	s << "drawing neurons " << d0 << " and " << d1 << " of layer #" << lix << " (" << net.GetLayers()[lix]->GetKey() << ")";
+	s << "drawing neurons " << d0 << " and " << d1 << " of layer #" << lix << " (" << net.GetLayers()[lix].GetKey() << ")";
 	lbl_layer.SetLabel(s);
 }
 

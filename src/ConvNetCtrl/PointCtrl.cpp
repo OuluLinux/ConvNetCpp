@@ -41,7 +41,7 @@ void PointCtrl::Paint(Draw& draw) {
 	ses.Enter();
 	Net& net = ses.GetNetwork();
 	
-	InputLayer* input = ses.GetInput();
+	LayerBase* input = ses.GetInput();
 	if (!input) {
 		ses.Leave();
 		return;

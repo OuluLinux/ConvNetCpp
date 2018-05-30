@@ -75,7 +75,7 @@ protected:
 	
 	ParentCtrl statusctrl;
 	Label status;
-	Button load_pretrained;
+	Button save, load, load_pretrained;
 	
 	TrainingGraph reward;
 	
@@ -98,6 +98,8 @@ public:
 	void Refresher();
 	void RefreshEpsilon();
 	void ToggleIteration();
+	void Save();
+	void Load();
 	void LoadPretrained();
 	void RefreshStatus();
 	

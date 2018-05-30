@@ -159,7 +159,7 @@ protected:
 	Button goveryfast, gofast, gonorm, goslow, reset;
 	ParentCtrl statusctrl;
 	Label status;
-	Button load_pretrained;
+	Button save, load, load_pretrained;
 	TrainingGraph reward;
 	Button reload_btn;
 	ParentCtrl agent_ctrl;
@@ -182,6 +182,8 @@ public:
 	void Reload();
 	void Refresher();
 	void RefreshEpsilon();
+	void Save();
+	void Load();
 	void LoadPretrained();
 	void RefreshStatus();
 	void PostRefreshStatus() {PostCallback(THISBACK(RefreshStatus));}

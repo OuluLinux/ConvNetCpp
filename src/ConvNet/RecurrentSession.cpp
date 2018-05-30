@@ -41,7 +41,7 @@ int RecurrentSession::GetMatCount() {
 	return count;
 }
 
-Mat& RecurrentSession::GetMat(int i) {
+MatId RecurrentSession::GetMat(int i) {
 	int count = 0, cols = 0, rows = 0;
 	if (mode == MODE_RNN) {
 		rows = rnn_model.GetCount();
@@ -89,6 +89,8 @@ void RecurrentSession::Init() {
 	ASSERT_(input_size != -1, "Input size must be set");
 	ASSERT_(output_size != -1, "Output size must be set");
 	
+	ClearPool();
+	
 	if (mode == MODE_HIGHWAY)
 		RandMat(input_size, hidden_sizes[0], 0, 0.08, Wil);
 	else
@@ -117,20 +119,20 @@ void RecurrentSession::InitGraphs() {
 	ASSERT_(hidden_count > 0, "Hidden sizes must be set");
 	
 	for (int i = 0; i < hidden_prevs.GetCount(); i++) {
-		Vector<Mat*>& hidden_prevs = this->hidden_prevs[i];
-		Vector<Mat*>& cell_prevs = this->cell_prevs[i];
-		hidden_prevs.SetCount(hidden_count, NULL);
-		cell_prevs.SetCount(hidden_count, NULL);
+		Vector<MatId>& hidden_prevs = this->hidden_prevs[i];
+		Vector<MatId>& cell_prevs = this->cell_prevs[i];
+		hidden_prevs.SetCount(hidden_count);
+		cell_prevs.SetCount(hidden_count);
 	}
 	
 	
 	first_hidden.SetCount(hidden_count);
 	first_cell.SetCount(hidden_count);
 	for(int i = 0; i < hidden_count; i++) {
-		hidden_prevs[0][i]	= &first_hidden[i];
-		cell_prevs[0][i]	= &first_cell[i];
-		first_hidden[i]	.Init(1, hidden_sizes[i], 0);
-		first_cell[i]	.Init(1, hidden_sizes[i], 0);
+		InitMat(first_hidden[i], 1, hidden_sizes[i], 0);
+		InitMat(first_cell[i],   1, hidden_sizes[i], 0);
+		hidden_prevs[0][i]	= first_hidden[i];
+		cell_prevs[0][i]	= first_cell[i];
 	}
 	
 	
@@ -138,6 +140,8 @@ void RecurrentSession::InitGraphs() {
 		Array<GraphTree>& hidden_graphs = graphs[i];
 		hidden_graphs.SetCount(hidden_count);
 		for (int j = 0; j < hidden_count; j++) {
+			hidden_graphs[j].SetPool(*this);
+			
 			if (mode == MODE_RNN)
 				InitRNN(i, j, hidden_graphs[j]);
 			else if (mode == MODE_LSTM)
@@ -159,12 +163,12 @@ void RecurrentSession::InitRNN() {
 		RNNModel& m = rnn_model[d];
 		RandMat(hidden_size, prev_size,		0, 0.08,	m.Wxh);
 		RandMat(hidden_size, hidden_size,	0, 0.08,	m.Whh);
-		m.bhh.Init(1, hidden_size, 0);
+		InitMat(m.bhh, 1, hidden_size, 0);
 	}
 	
 	// decoder params
 	RandMat(output_size, hidden_size, 0, 0.08,	Whd);
-	bd.Init(1, output_size, 0);
+	InitMat(bd, 1, output_size, 0);
 }
 
 void RecurrentSession::InitRNN(int i, int j, GraphTree& g) {
@@ -172,21 +176,21 @@ void RecurrentSession::InitRNN(int i, int j, GraphTree& g) {
 	
 	g.Clear();
 	
-	Vector<Mat*>& hidden_prevs = this->hidden_prevs[i];
-	Vector<Mat*>& hidden_nexts = this->hidden_prevs[i+1];
+	Vector<MatId>& hidden_prevs = this->hidden_prevs[i];
+	Vector<MatId>& hidden_nexts = this->hidden_prevs[i+1];
 	
 	if (j == 0) {
-		input = &g.RowPluck(&index_sequence[i], Wil);
+		input = g.RowPluck(i, Wil);
 	}
 	
-	Mat& input_vector = j == 0 ? *input : *hidden_nexts[j-1];
-	Mat& hidden_prev = *hidden_prevs[j];
+	MatId input_vector = j == 0 ? input : hidden_nexts[j-1];
+	MatId hidden_prev = hidden_prevs[j];
 	
-	Mat& h0 = g.Mul(m.Wxh, input_vector);
-	Mat& h1 = g.Mul(m.Whh, hidden_prev);
-	Mat& hidden_d = g.Relu(g.Add(g.Add(h0, h1), m.bhh));
+	MatId h0 = g.Mul(m.Wxh, input_vector);
+	MatId h1 = g.Mul(m.Whh, hidden_prev);
+	MatId hidden_d = g.Relu(g.Add(g.Add(h0, h1), m.bhh));
 	
-	hidden_nexts[j] = &hidden_d;
+	hidden_nexts[j] = hidden_d;
 	
 	// one decoder to outputs at end
 	if (j == hidden_prevs.GetCount() - 1) {
@@ -210,23 +214,23 @@ void RecurrentSession::InitLSTM() {
 		// gates parameters
 		RandMat(hidden_size, prev_size,		0, 0.08,	m.Wix);
 		RandMat(hidden_size, hidden_size,	0, 0.08,	m.Wih);
-		m.bi	.Init(1, hidden_size, 0);
+		InitMat(m.bi, 1, hidden_size, 0);
 		RandMat(hidden_size, prev_size,		0, 0.08,	m.Wfx);
 		RandMat(hidden_size, hidden_size,	0, 0.08,	m.Wfh);
-		m.bf	.Init(1, hidden_size, 0);
+		InitMat(m.bf, 1, hidden_size, 0);
 		RandMat(hidden_size, prev_size,		0, 0.08,	m.Wox);
 		RandMat(hidden_size, hidden_size,	0, 0.08,	m.Woh);
-		m.bo	.Init(1, hidden_size, 0);
+		InitMat(m.bo, 1, hidden_size, 0);
 		
 		// cell write params
 		RandMat(hidden_size, prev_size,		0, 0.08,	m.Wcx);
 		RandMat(hidden_size, hidden_size,	0, 0.08,	m.Wch);
-		m.bc	.Init(1, hidden_size, 0);
+		InitMat(m.bc, 1, hidden_size, 0);
 	}
 	
 	// decoder params
 	RandMat(output_size, hidden_size,	0, 0.08,	Whd);
-	bd.Init(1, output_size, 0);
+	InitMat(bd, 1, output_size, 0);
 }
 
 void RecurrentSession::InitLSTM(int i, int j, GraphTree& g) {
@@ -234,49 +238,50 @@ void RecurrentSession::InitLSTM(int i, int j, GraphTree& g) {
 	
 	g.Clear();
 	
-	Vector<Mat*>& hidden_prevs = this->hidden_prevs[i];
-	Vector<Mat*>& hidden_nexts = this->hidden_prevs[i+1];
-	Vector<Mat*>& cell_prevs = this->cell_prevs[i];
-	Vector<Mat*>& cell_nexts = this->cell_prevs[i+1];
+	Vector<MatId>& hidden_prevs = this->hidden_prevs[i];
+	Vector<MatId>& hidden_nexts = this->hidden_prevs[i+1];
+	Vector<MatId>& cell_prevs = this->cell_prevs[i];
+	Vector<MatId>& cell_nexts = this->cell_prevs[i+1];
 	
 	if (j == 0) {
-		input = &g.RowPluck(&index_sequence[i], Wil);
+		input = g.RowPluck(i, Wil);
 	}
 	
-	Mat& input_vector = j == 0 ? *input : *hidden_nexts[j-1];
-	Mat& hidden_prev = *hidden_prevs[j];
-	Mat& cell_prev = *cell_prevs[j];
+	MatId input_vector = j == 0 ? input : hidden_nexts[j-1];
+	MatId hidden_prev = hidden_prevs[j];
+	MatId cell_prev = cell_prevs[j];
+	ASSERT(hidden_prev.value != -1 && cell_prev.value != -1);
 	
 	// input gate
-	Mat& h0 = g.Mul(m.Wix, input_vector);
-	Mat& h1 = g.Mul(m.Wih, hidden_prev);
-	Mat& input_gate = g.Sigmoid(g.Add(g.Add(h0, h1), m.bi));
+	MatId h0 = g.Mul(m.Wix, input_vector);
+	MatId h1 = g.Mul(m.Wih, hidden_prev);
+	MatId input_gate = g.Sigmoid(g.Add(g.Add(h0, h1), m.bi));
 	
 	// forget gate
-	Mat& h2 = g.Mul(m.Wfx, input_vector);
-	Mat& h3 = g.Mul(m.Wfh, hidden_prev);
-	Mat& forget_gate = g.Sigmoid(g.Add(g.Add(h2, h3), m.bf));
+	MatId h2 = g.Mul(m.Wfx, input_vector);
+	MatId h3 = g.Mul(m.Wfh, hidden_prev);
+	MatId forget_gate = g.Sigmoid(g.Add(g.Add(h2, h3), m.bf));
 	
 	// output gate
-	Mat& h4 = g.Mul(m.Wox, input_vector);
-	Mat& h5 = g.Mul(m.Woh, hidden_prev);
-	Mat& output_gate = g.Sigmoid(g.Add(g.Add(h4, h5), m.bo));
+	MatId h4 = g.Mul(m.Wox, input_vector);
+	MatId h5 = g.Mul(m.Woh, hidden_prev);
+	MatId output_gate = g.Sigmoid(g.Add(g.Add(h4, h5), m.bo));
 	
 	// write operation on cells
-	Mat& h6 = g.Mul(m.Wcx, input_vector);
-	Mat& h7 = g.Mul(m.Wch, hidden_prev);
-	Mat& cell_write = g.Tanh(g.Add(g.Add(h6, h7), m.bc));
+	MatId h6 = g.Mul(m.Wcx, input_vector);
+	MatId h7 = g.Mul(m.Wch, hidden_prev);
+	MatId cell_write = g.Tanh(g.Add(g.Add(h6, h7), m.bc));
 	
 	// compute new cell activation
-	Mat& retain_cell = g.EltMul(forget_gate, cell_prev); // what do we keep from cell
-	Mat& write_cell = g.EltMul(input_gate, cell_write); // what do we write to cell
-	Mat& cell_d = g.Add(retain_cell, write_cell); // new cell contents
+	MatId retain_cell = g.EltMul(forget_gate, cell_prev); // what do we keep from cell
+	MatId write_cell = g.EltMul(input_gate, cell_write); // what do we write to cell
+	MatId cell_d = g.Add(retain_cell, write_cell); // new cell contents
 	
 	// compute hidden state as gated, saturated cell activations
-	Mat& hidden_d = g.EltMul(output_gate, g.Tanh(cell_d));
+	MatId hidden_d = g.EltMul(output_gate, g.Tanh(cell_d));
 	
-	hidden_nexts[j] = &hidden_d;
-	cell_nexts[j] = &cell_d;
+	hidden_nexts[j] = hidden_d;
+	cell_nexts[j] = cell_d;
 	
 	
 	// one decoder to outputs at end
@@ -318,7 +323,7 @@ void RecurrentSession::InitHighway() {
 	
 	// decoder params
 	RandMat(output_size, hidden_size,	0, 0.08,	Whd);
-	bd.Init(1, output_size, 0);
+	InitMat(bd, 1, output_size, 0);
 }
 
 void RecurrentSession::InitHighway(int i, int j, GraphTree& g) {
@@ -326,53 +331,53 @@ void RecurrentSession::InitHighway(int i, int j, GraphTree& g) {
 	
 	g.Clear();
 	
-	Vector<Mat*>& hidden_prevs = this->hidden_prevs[i];
-	Vector<Mat*>& hidden_nexts = this->hidden_prevs[i+1];
-	Vector<Mat*>& cell_prevs = this->cell_prevs[i];
-	Vector<Mat*>& cell_nexts = this->cell_prevs[i+1];
+	Vector<MatId>& hidden_prevs = this->hidden_prevs[i];
+	Vector<MatId>& hidden_nexts = this->hidden_prevs[i+1];
+	Vector<MatId>& cell_prevs = this->cell_prevs[i];
+	Vector<MatId>& cell_nexts = this->cell_prevs[i+1];
 	
 	if (j == 0) {
-		input = &g.RowPluck(&index_sequence[i], Wil);
+		input = g.RowPluck(i, Wil);
 	}
 	
-	Mat& input_vector = j == 0 ? *input : *hidden_nexts[j-1];
-	Mat& hidden_prev = *hidden_prevs[j];
+	MatId input_vector = j == 0 ? input : hidden_nexts[j-1];
+	MatId hidden_prev = hidden_prevs[j];
 	
 	if (j == 0) {
-		Mat& dropped_x0			= g.EltMul(input_vector, noise_i[0]);
-		Mat& dropped_h_tab0		= g.EltMul(hidden_prev, m.noise_h[0]);
+		MatId dropped_x0			= g.EltMul(input_vector, noise_i[0]);
+		MatId dropped_h_tab0		= g.EltMul(hidden_prev, m.noise_h[0]);
 		
-		Mat& dropped_x1			= g.EltMul(input_vector, noise_i[1]);
-		Mat& dropped_h_tab1		= g.EltMul(hidden_prev, m.noise_h[1]);
+		MatId dropped_x1			= g.EltMul(input_vector, noise_i[1]);
+		MatId dropped_h_tab1		= g.EltMul(hidden_prev, m.noise_h[1]);
 		
-		Mat& t_gate_tab			= g.Sigmoid(g.AddConstant(initial_bias, g.Add(dropped_x0, dropped_h_tab0)));
-		Mat& in_transform_tab	= g.Tanh(g.Add(dropped_x1, dropped_h_tab1));
-		Mat& c_gate_tab			= g.AddConstant(1, g.MulConstant(-1, t_gate_tab));
-		Mat& hidden_d			= g.Add(
+		MatId t_gate_tab			= g.Sigmoid(g.AddConstant(initial_bias, g.Add(dropped_x0, dropped_h_tab0)));
+		MatId in_transform_tab		= g.Tanh(g.Add(dropped_x1, dropped_h_tab1));
+		MatId c_gate_tab			= g.AddConstant(1, g.MulConstant(-1, t_gate_tab));
+		MatId hidden_d				= g.Add(
 										g.EltMul(hidden_prev, c_gate_tab),
 										g.EltMul(in_transform_tab, t_gate_tab));
 		
-		hidden_nexts[j] = &hidden_d;
+		hidden_nexts[j] = hidden_d;
 	}
 	else
 	{
-		Mat& dropped_h_tab0		= g.EltMul(input_vector, m.noise_h[0]);
-		Mat& dropped_h_tab1		= g.EltMul(input_vector, m.noise_h[1]);
+		MatId dropped_h_tab0		= g.EltMul(input_vector, m.noise_h[0]);
+		MatId dropped_h_tab1		= g.EltMul(input_vector, m.noise_h[1]);
 		
-		Mat& t_gate_tab			= g.Sigmoid(g.AddConstant(initial_bias, dropped_h_tab0));
-		Mat& in_transform_tab	= g.Tanh(dropped_h_tab1);
-		Mat& c_gate_tab			= g.AddConstant(1, g.MulConstant(-1, t_gate_tab));
-		Mat& hidden_d			= g.Add(
+		MatId t_gate_tab			= g.Sigmoid(g.AddConstant(initial_bias, dropped_h_tab0));
+		MatId in_transform_tab		= g.Tanh(dropped_h_tab1);
+		MatId c_gate_tab			= g.AddConstant(1, g.MulConstant(-1, t_gate_tab));
+		MatId hidden_d				= g.Add(
 										g.EltMul(input_vector, c_gate_tab),
 										g.EltMul(in_transform_tab, t_gate_tab));
 		
-		hidden_nexts[j] = &hidden_d;
+		hidden_nexts[j] = hidden_d;
 	}
 	
 	
 	// one decoder to outputs at end
 	if (j == hidden_prevs.GetCount() - 1) {
-		g.Add(g.Mul(Whd, *hidden_nexts.Top()), bd);
+		g.Add(g.Mul(Whd, hidden_nexts.Top()), bd);
 	}
 }
 	
@@ -403,18 +408,19 @@ void RecurrentSession::Learn(const Vector<int>& input_sequence) {
 			list[j].Forward();
 		}
 		
-		Mat& logprobs = list.Top().Top().output;
-		Softmax(logprobs, probs); // compute the softmax probabilities
+		MatId logprobs = list.Top().Top().output;
+		Mat& logprobs_mat = Get(logprobs);
+		Softmax(logprobs_mat, probs); // compute the softmax probabilities
 		
 		double p = probs.Get(ix_target);
 		log2ppl += -log2(p); // accumulate base 2 log prob and do smoothing
 		cost += -log(p);
 		
 		// write gradients into log probabilities
-		int count = logprobs.GetLength();
+		int count = logprobs_mat.GetLength();
 		for(int j = 0; j < count; j++)
-			logprobs.SetGradient(j, probs.Get(j));
-		logprobs.AddGradient(ix_target, -1.0);
+			logprobs_mat.SetGradient(j, probs.Get(j));
+		logprobs_mat.AddGradient(ix_target, -1.0);
 	}
 	
 	ppl = pow(2, log2ppl / (n - 1));
@@ -444,7 +450,7 @@ void RecurrentSession::SolverStep() {
 	step_cache.SetCount(n);
 	
 	for (int k = 0; k < n; k++) {
-		Mat& m = GetMat(k);
+		Mat& m = Get(GetMat(k));
 		Mat& s = step_cache[k];
 		
 		if (k >= step_cache_count) {
@@ -481,12 +487,12 @@ void RecurrentSession::ResetPrevs() {
 	
 	first_hidden.SetCount(hidden_count);
 	for (int d = 0; d < hidden_count; d++) {
-		first_hidden[d].Init(1, hidden_sizes[d], 0);
+		InitMat(first_hidden[d], 1, hidden_sizes[d], 0);
 	}
 	
 	first_cell.SetCount(hidden_count);
 	for (int d = 0; d < hidden_count; d++) {
-		first_cell[d].Init(1, hidden_sizes[d], 0);
+		InitMat(first_cell[d], 1, hidden_sizes[d], 0);
 	}
 }
 
@@ -525,19 +531,20 @@ void RecurrentSession::Predict(Vector<int>& output_sequence, bool samplei, doubl
 		// By default, predict from START token and previous input value
 		else {
 			// sample predicted letter
-			Mat& logprobs = list.Top().Top().output;
+			MatId logprobs = list.Top().Top().output;
+			Mat& logprobs_mat = Get(logprobs);
 			
 			if (temperature != 1.0 && samplei) {
 				// scale log probabilities by temperature and renormalize
 				// if temperature is high, logprobs will go towards zero
 				// and the softmax outputs will be more diffuse. if temperature is
 				// very low, the softmax outputs will be more peaky
-				for (int q = 0; q < logprobs.GetLength(); q++) {
-					logprobs.Set(q, logprobs.Get(q) / temperature);
+				for (int q = 0; q < logprobs_mat.GetLength(); q++) {
+					logprobs_mat.Set(q, logprobs_mat.Get(q) / temperature);
 				}
 			}
 			
-			Softmax(logprobs, probs);
+			Softmax(logprobs_mat, probs);
 			
 			int ix = 0;
 			if (samplei) {
@@ -577,7 +584,7 @@ void RecurrentSession::Load(const ValueMap& js) {
 	LOAD(regc);
 	LOAD(learning_rate);
 	LOAD(clipval);
-	
+	/*
 	if (js.Find("model") != -1) {
 		ValueMap model = js.GetValue(js.Find("model"));
 		
@@ -624,7 +631,7 @@ void RecurrentSession::Load(const ValueMap& js) {
 			}
 		}
 	}
-	#undef LOAD
+	#undef LOAD*/
 }
 
 void RecurrentSession::Store(ValueMap& js) {
@@ -641,7 +648,7 @@ void RecurrentSession::Store(ValueMap& js) {
 	SAVE(regc);
 	SAVE(learning_rate);
 	SAVE(clipval);
-	
+	/*
 	ValueMap model;
 	
 	#define SAVEVOL(x) {ValueMap map; this->x.Store(map); model.GetAdd(#x) = map;}
@@ -682,19 +689,47 @@ void RecurrentSession::Store(ValueMap& js) {
 		}
 	}
 	
-	js.Add("model", model);
+	js.Add("model", model);*/
 }
 
 void RecurrentSession::Serialize(Stream& s) {
+	MatPool::Serialize(s);
+	
+	s % graphs
+	  % hw_model
+	  % lstm_model
+	  % rnn_model
+	  % Whd % bd % Wil
+	  % noise_i[0] % noise_i[1]
+	  % step_cache
+	  % decay_rate
+	  % smooth_eps
+	  % first_hidden % first_cell
+	  % hidden_prevs
+	  % cell_prevs
+	  % hidden_sizes
+	  % input
+	  % probs
+	  % ppl % cost
+	  % regc
+	  % learning_rate
+	  % clipval
+	  % ratio_clipped
+	  % initial_bias
+	  % mode
+	  % input_size
+	  % output_size
+	  % letter_size
+	  % max_graphs;
+	 
 	if (s.IsLoading()) {
-		ValueMap map;
-		s % map;
-		Load(map);
-	}
-	else if (s.IsStoring()) {
-		ValueMap map;
-		Store(map);
-		s % map;
+		for(int i = 0; i < graphs.GetCount(); i++) {
+			for(int j = 0; j < graphs[i].GetCount(); j++) {
+				GraphTree& t = graphs[i][j];
+				t.SetPool(*this);
+				t.FixPool();
+			}
+		}
 	}
 }
 

@@ -7,17 +7,21 @@ namespace ConvNet {
 
 #define IF_NULL_1(x) (x != NULL ? *x : 1.0)
 
+enum {TRAINER_NULL, TRAINER_ADADELTA, TRAINER_ADAGRAD, TRAINER_ADAM, TRAINER_NETSTEROV, TRAINER_SGD, TRAINER_WINDOWGRAD};
+
 class TrainerBase {
 	
 protected:
 	friend class Session;
 	friend class Brain;
 	
-	Net* net;
-	int iter_count;
+	Net* net = NULL;
 	Vector<VolumePtr> vec;
 	
-	// Previously public vars
+	int iter_count;
+	Vector<Vector<double> > gsum;
+	Vector<Vector<double> > xsum;
+	int trainer_type = TRAINER_NULL;
 	int batch_size;
 	double cost_loss;
 	double cost_reward;
@@ -32,13 +36,14 @@ protected:
 	double eps;
 	double ro;
 	
-	TrainerBase(Net& net);
-	TrainerBase(const TrainerBase& o) {}
-	TrainerBase() {}
 	
 public:
-	virtual ~TrainerBase() {}
+	TrainerBase();
+	~TrainerBase() {}
 	
+	void Serialize(Stream& s);
+	
+	int GetType() const {return trainer_type;}
 	int GetIteration() const {return iter_count;}
 	int GetBatchSize() const {return batch_size;}
 	double GetCostLoss() const {return cost_loss;}
@@ -52,12 +57,15 @@ public:
 	double GetL2Decay() const {return l2_decay;}
 	double GetL1DecayLoss() const {return l1_decay_loss;}
 	double GetL2DecayLoss() const {return l2_decay_loss;}
-	virtual double GetLoss() {return cost_loss;}
-	virtual double GetReward() {return cost_reward;}
+	double GetLoss() {return cost_loss;}
+	double GetReward() {return cost_reward;}
 	
-	virtual String ToString() const = 0;
-	virtual String GetKey() const = 0;
+	String ToString() const;
+	String GetKey() const;
 	
+	
+	TrainerBase& SetNet(Net& net) {this->net = &net; return *this;}
+	TrainerBase& SetType(int i) {trainer_type = i; return *this;}
 	TrainerBase& SetBatchSize(int i) {batch_size = i; return *this;}
 	TrainerBase& SetCostLoss(double d) {cost_loss = d; return *this;}
 	TrainerBase& SetBeta1(double d) {Beta1 = d; return *this;}
@@ -73,24 +81,34 @@ public:
 	
 	void Train(Volume& x, int pos, double y);
 	void Train(double y, const Vector<VolumePtr>& x);
-	void Train(Volume& x, const VolumeDataBase& y);
-	void Train(const VolumeDataBase& y, const Vector<VolumePtr>& x);
+	void Train(Volume& x, const Vector<double>& y);
+	void Train(const Vector<double>& y, const Vector<VolumePtr>& x);
 	void Train(Volume& x, int cols, const Vector<int>& pos, const Vector<double>& y);
 	void Forward(const Vector<VolumePtr>& x);
 	
-	virtual void TrainImplem() = 0;
-	virtual void Backward(int pos, double y);
-	virtual void Backward(const VolumeDataBase& y);
-	virtual void Backward(int cols, const Vector<int>& pos, const Vector<double>& y);
-	virtual void Reset();
+	void TrainImplem();
+	void Backward(int pos, double y);
+	void Backward(const Vector<double>& y);
+	void Backward(int cols, const Vector<int>& pos, const Vector<double>& y);
+	void Reset();
 	
+	void TrainImplemAdadelta();
+	void TrainImplemAdagrad();
+	void TrainImplemAdam();
+	void TrainImplemNetsterov();
+	void TrainImplemSgd();
+	void TrainImplemWindowgrad();
+	String ToStringAdadelta() const;
+	String ToStringAdagrad() const;
+	String ToStringAdam() const;
+	String ToStringNetsterov() const;
+	String ToStringSgd() const;
+	String ToStringWindowgrad() const;
 };
 
 typedef TrainerBase* TrainerBasePtr;
 
 class AdadeltaTrainer : public TrainerBase {
-	Vector<Vector<double> > gsum;
-	Vector<Vector<double> > xsum;
 	
 protected:
 	AdadeltaTrainer(const AdadeltaTrainer& o) {}
@@ -102,7 +120,7 @@ public:
 protected:
 	virtual void TrainImplem();
 	virtual void Backward(int pos, double y);
-	virtual void Backward(const VolumeDataBase& y);
+	virtual void Backward(const Vector<double>& y);
 	virtual void Backward(int cols, const Vector<int>& pos, const Vector<double>& y);
 	virtual void Reset();
 	virtual String ToString() const;
@@ -124,7 +142,7 @@ public:
 protected:
 	virtual void TrainImplem();
 	virtual void Backward(int pos, double y);
-	virtual void Backward(const VolumeDataBase& y);
+	virtual void Backward(const Vector<double>& y);
 	virtual void Backward(int cols, const Vector<int>& pos, const Vector<double>& y);
 	virtual void Reset();
 	virtual String ToString() const;
@@ -148,7 +166,7 @@ protected:
 
 	virtual void TrainImplem();
 	virtual void Backward(int pos, double y);
-	virtual void Backward(const VolumeDataBase& y);
+	virtual void Backward(const Vector<double>& y);
 	virtual void Backward(int cols, const Vector<int>& pos, const Vector<double>& y);
 	virtual void Reset();
 	virtual String ToString() const;
@@ -170,7 +188,7 @@ public:
 protected:
 	virtual void TrainImplem();
 	virtual void Backward(int pos, double y);
-	virtual void Backward(const VolumeDataBase& y);
+	virtual void Backward(const Vector<double>& y);
 	virtual void Backward(int cols, const Vector<int>& pos, const Vector<double>& y);
 	virtual void Reset();
 	virtual String ToString() const;
@@ -194,7 +212,7 @@ public:
 protected:
 	virtual void TrainImplem();
 	virtual void Backward(int pos, double y);
-	virtual void Backward(const VolumeDataBase& y);
+	virtual void Backward(const Vector<double>& y);
 	virtual void Backward(int cols, const Vector<int>& pos, const Vector<double>& y);
 	virtual void Reset();
 	virtual String ToString() const;
@@ -220,7 +238,7 @@ protected:
 	
 	virtual void TrainImplem();
 	virtual void Backward(int pos, double y);
-	virtual void Backward(const VolumeDataBase& y);
+	virtual void Backward(const Vector<double>& y);
 	virtual void Backward(int cols, const Vector<int>& pos, const Vector<double>& y);
 	virtual void Reset();
 	virtual String ToString() const;

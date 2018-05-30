@@ -50,7 +50,7 @@ void LoaderCIFAR10::Load() {
 	
 	SessionData& d = ses->Data();
 	
-	d.BeginDataClass<VolumeDataDivider<byte, 255> >(10, 50000, 32, 32, 3, 10000);
+	d.BeginDataClass(10, 50000, 32, 32, 3, 10000);
 	
 	d.SetClass(0, "airplane");
 	d.SetClass(1, "automobile");
@@ -110,14 +110,14 @@ void LoaderCIFAR10::Load() {
 			else
 				d.SetTestLabel(base + j, cls);
 			
-			VolumeDataBase& out = main ? d.Get(base + j) : d.GetTest(base + j);
+			Vector<double>& out = main ? d.Get(base + j) : d.GetTest(base + j);
 			
 			for (int clr = 0; clr < 3; clr++) {
 				for (int y = 0; y < rows; y++) {
 					for (int x = 0; x < cols; x++) {
 						byte pixel;
 						in.Get(&pixel, 1);
-						out.Set(x, y, clr, cols, 3, pixel / 255.0);
+						Volume::Set(out, x, y, clr, cols, 3, pixel / 255.0);
 					}
 				}
 			}

@@ -29,7 +29,7 @@ void HeatmapTimeView::PaintSession(Draw& d) {
 	int total_output = 0;
 	
 	for(int i = 0; i < layer_count; i++) {
-		LayerBase& lb = *net.GetLayers()[i];
+		LayerBase& lb = net.GetLayers()[i];
 		total_output += lb.output_activation.GetLength();
 	}
 	
@@ -39,7 +39,7 @@ void HeatmapTimeView::PaintSession(Draw& d) {
 	
 	for(int i = 0; i < layer_count; i++) {
 		
-		LayerBase& lb = *net.GetLayers()[i];
+		LayerBase& lb = net.GetLayers()[i];
 		int output_count = lb.output_activation.GetLength();
 		
 		double max = 0.0;
@@ -95,7 +95,8 @@ void HeatmapTimeView::PaintGraph(Draw& d) {
 	
 	for(int i = 0; i < layer_count; i++) {
 		RecurrentBase& lb = graph->GetLayer(i);
-		total_output += lb.output.GetLength();
+		Mat& output = graph->GetPool().Get(lb.output);
+		total_output += output.GetLength();
 	}
 	
 	ImageBuffer ib(total_output, 1);
@@ -105,14 +106,15 @@ void HeatmapTimeView::PaintGraph(Draw& d) {
 	for(int i = 0; i < layer_count; i++) {
 		
 		RecurrentBase& lb = graph->GetLayer(i);
-		int output_count = lb.output.GetLength();
+		Mat& output = graph->GetPool().Get(lb.output);
+		int output_count = output.GetLength();
 		
 		double max = 0.0;
 		
 		tmp.SetCount(output_count);
 		
 		for(int j = 0; j < output_count; j++) {
-			double d = lb.output.Get(j);
+			double d = output.Get(j);
 			tmp[j] = d;
 			double fd = fabs(d);
 			if (fd > max) max = fd;
@@ -159,7 +161,10 @@ void HeatmapTimeView::PaintRecurrentSession(Draw& d) {
 	int total_output = 0;
 	
 	for(int i = 0; i < layer_count; i++) {
-		Mat& lb = rses->GetMat(i);
+		MatId id = rses->GetMat(i);
+		if (id.value == -1)
+			return;
+		Mat& lb = rses->Get(id);
 		total_output += lb.GetLength();
 	}
 	
@@ -169,7 +174,7 @@ void HeatmapTimeView::PaintRecurrentSession(Draw& d) {
 	
 	for(int i = 0; i < layer_count; i++) {
 		
-		Mat& lb = rses->GetMat(i);
+		Mat& lb = rses->Get(rses->GetMat(i));
 		int output_count = lb.GetLength();
 		
 		double max = 0.0;

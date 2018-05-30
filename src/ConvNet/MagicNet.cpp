@@ -80,7 +80,7 @@ void MagicNet::SampleCandidate(Session& cand) {
 		
 		double bias_pref = act == 2 ? 0.1 : 0.0; // 0.1 for relu
 		
-		FullyConnLayer& fc = cand.AddFullyConnLayer(ni);
+		LayerBase& fc = cand.AddFullyConnLayer(ni);
 		fc.bias_pref = bias_pref;
 		
 		if (act == 0) {
@@ -112,21 +112,20 @@ void MagicNet::SampleCandidate(Session& cand) {
 	
 	
 	// add trainer
-	TrainerBase* trainer;
+	TrainerBase& trainer = cand.GetTrainer();;
 	if (tp < 1.0/3.0) {
-		trainer = new AdadeltaTrainer(cand.GetNetwork());
+		trainer.SetType(TRAINER_ADADELTA);
 	}
 	else if (tp < 2.0/3.0) {
-		trainer = new AdagradTrainer(cand.GetNetwork());
+		trainer.SetType(TRAINER_ADAGRAD);
 	}
 	else {
-		trainer = new SgdTrainer(cand.GetNetwork());
+		trainer.SetType(TRAINER_SGD);
 	}
-	trainer->SetBatchSize(bs);
-	trainer->SetLearningRate(lr);
-	trainer->SetL2Decay(l2);
-	trainer->SetMomentum(mom);
-	cand.AttachTrainer(trainer); // Session will own and delete the trainer
+	trainer.SetBatchSize(bs);
+	trainer.SetLearningRate(lr);
+	trainer.SetL2Decay(l2);
+	trainer.SetMomentum(mom);
 	
 	foldix = 0;
 	datapos = 0;
@@ -155,12 +154,12 @@ void MagicNet::Step() {
 	if (datapos >= fold.GetCount()) datapos = 0;
 	
 	tmp_in.Init(data.GetDataWidth(), data.GetDataHeight(), data.GetDataDepth(), 0);
-	VolumeDataBase& x = data.Get(datapos);
+	Vector<double>& x = data.Get(datapos);
 	tmp_in.SetData(x);
 	int l = data.GetLabel(datapos);
 	
 	for (int k = 0; k < session.GetCount(); k++) {
-		session[k].GetTrainer()->Train(tmp_in, l, 1.0);
+		session[k].GetTrainer().Train(tmp_in, l, 1.0);
 	}
 	
 	if ((total_iter % 100) == 0) {
@@ -229,7 +228,7 @@ void MagicNet::EvaluateValueErrors(Vector<double>& vals) {
 		Net& net = session[k].GetNetwork();
 		double v = 0.0;
 		for (int q = 0; q < fold.GetCount(); q++) {
-			VolumeDataBase& x = d.Get(fold[q]);
+			Vector<double>& x = d.Get(fold[q]);
 			tmp_in.SetData(x);
 			int l = d.GetLabel(fold[q]);
 			net.Forward(tmp_in);
@@ -296,13 +295,5 @@ int MagicNet::PredictSoftLabel(Volume& in) {
 	return predicted_label;
 }
 
-
-void MagicNet::Store(ValueMap& map) const {
-	Panic("TODO");
-}
-
-void MagicNet::Load(const ValueMap& map) {
-	Panic("TODO");
-}
 
 }

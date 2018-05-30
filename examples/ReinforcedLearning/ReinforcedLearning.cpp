@@ -76,6 +76,7 @@ ReinforcedLearning::ReinforcedLearning() {
 	
 	reward_graph.SetSession(world.agents[0].brain);
 	
+	PostCallback(THISBACK(Reload));
 	PostCallback(THISBACK(Start));
 	PostCallback(THISBACK(Refresher));
 }
@@ -137,9 +138,9 @@ void ReinforcedLearning::Tick() {
 	world.Tick();
 	
 	Brain& brain = world.agents[0].brain;
-	int experiences = brain.GetExperienceCount();
+	int age = brain.GetAge();
 	int average_window_size = brain.GetAverageLossWindowSize();
-	if (experiences >= average_window_size && (experiences % 100) == 0)
+	if (age >= average_window_size && (age % 100) == 0)
 		reward_graph.AddValue();
 }
 
@@ -180,12 +181,6 @@ void ReinforcedLearning::Reload() {
 	brain.Reset();
 	bool success = brain.MakeLayers(net_str);
 	ticking_lock.Leave();
-	
-	if (success)
-		brain.StartTraining();
-	else
-		brain.StopTraining();
-	
 }
 
 void ReinforcedLearning::Start() {
@@ -211,7 +206,7 @@ void ReinforcedLearning::LoadPreTrained() {
 	
 	// This is the pre-trained network from original ConvNetJS
 	MemReadStream pretrained_mem(pretrained, pretrained_length);
-	String json = BZ2Decompress(pretrained_mem);
+	BZ2DecompressStream stream(pretrained_mem);
 	
 	// Stop training
 	ticking_lock.Enter();
@@ -219,7 +214,7 @@ void ReinforcedLearning::LoadPreTrained() {
 	RefreshTrainingStatus();
 	
 	// Load json
-	world.agents[0].brain.LoadJSON(json);
+	world.agents[0].brain.SerializeWithoutExperience(stream);
 	ticking_lock.Leave();
 	
 	// Go slower
@@ -228,7 +223,7 @@ void ReinforcedLearning::LoadPreTrained() {
 }
 
 void ReinforcedLearning::OpenFile() {
-	String file = SelectFileOpen("JSON files\t*.json\nAll files\t*.*");
+	String file = SelectFileOpen("BIN files\t*.bin\nAll files\t*.*");
 	if (file.IsEmpty()) return;
 	
 	if (!FileExists(file)) {
@@ -240,23 +235,12 @@ void ReinforcedLearning::OpenFile() {
 	this->is_training = false;
 	RefreshTrainingStatus();
 	
-	// Load json
-	String json = LoadFile(file);
-	if (json.IsEmpty()) {
-		PromptOK("File is empty");
-		return;
-	}
+	
 	ticking_lock.Enter();
-	bool res = world.agents[0].brain.LoadJSON(json);
-	if (!res) {
-		ticking_running = false;
-	}
+	FileIn fin(file);
+	world.agents[0].brain.SerializeWithoutExperience(fin);
 	ticking_lock.Leave();
 	
-	if (!res) {
-		PromptOK("Loading failed.");
-		return;
-	}
 	
 	// Go slower
 	GoNormal();
@@ -265,22 +249,15 @@ void ReinforcedLearning::OpenFile() {
 }
 
 void ReinforcedLearning::SaveFile() {
-	String file = SelectFileSaveAs("JSON files\t*.json\nAll files\t*.*");
+	String file = SelectFileSaveAs("BIN files\t*.bin\nAll files\t*.*");
 	if (file.IsEmpty()) return;
-	
-	// Save json
-	String json;
-	if (!world.agents[0].brain.StoreJSON(json)) {
-		PromptOK("Error: Getting JSON failed");
-		return;
-	}
 	
 	FileOut fout(file);
 	if (!fout.IsOpen()) {
 		PromptOK("Error: could not open file " + file);
 		return;
 	}
-	fout << json;
+	world.agents[0].brain.SerializeWithoutExperience(fout);
 }
 
 

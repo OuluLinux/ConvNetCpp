@@ -1,24 +1,12 @@
-﻿#include "Layers.h"
+#include "LayerBase.h"
 
 
 namespace ConvNet {
 
-
-PoolLayer::PoolLayer(int width, int height) {
-	stride = 2;
-	pad = 0;
+void LayerBase::InitPool(int input_width, int input_height, int input_depth) {
 	
-	this->width = width;
-	this->height = height;
-}
-
-void PoolLayer::Init(int input_width, int input_height, int input_depth) {
-	LayerBase::Init(input_width, input_height, input_depth);
+	// Update Output Size
 	
-	UpdateOutputSize();
-}
-
-void PoolLayer::UpdateOutputSize() {
 	// computed
 	output_depth = input_depth;
 	output_width = (int)floor((input_width + pad * 2 - width) / (double)stride + 1);
@@ -29,7 +17,7 @@ void PoolLayer::UpdateOutputSize() {
 	switchy.SetCount(output_width * output_height * output_depth, 0);
 }
 
-Volume& PoolLayer::Forward(Volume& input, bool is_training) {
+Volume& LayerBase::ForwardPool(Volume& input, bool is_training) {
 	input_activation = &input;
 	
 	output_activation.Init(output_width, output_height, output_depth, 0.0);
@@ -76,7 +64,7 @@ Volume& PoolLayer::Forward(Volume& input, bool is_training) {
 	return output_activation;
 }
 
-void PoolLayer::Backward() {
+void LayerBase::BackwardPool() {
 	// pooling layers have no parameters, so simply compute
 	// gradient wrt data here
 	Volume& input = *input_activation;
@@ -97,37 +85,7 @@ void PoolLayer::Backward() {
 	}
 }
 
-#define STOREVAR(json, field) map.GetAdd(#json) = this->field;
-#define LOADVAR(field, json) this->field = map.GetValue(map.Find(#json));
-#define LOADVARDEF(field, json, def) {Value tmp = map.GetValue(map.Find(#json)); if (tmp.IsNull()) this->field = def; else this->field = tmp;}
-
-void PoolLayer::Store(ValueMap& map) const {
-	STOREVAR(out_depth, output_depth);
-	STOREVAR(out_sx, output_width);
-	STOREVAR(out_sy, output_height);
-	STOREVAR(layer_type, GetKey());
-	STOREVAR(sx, width);
-	STOREVAR(sy, height);
-	STOREVAR(stride, stride);
-	STOREVAR(pad, pad);
-}
-
-void PoolLayer::Load(const ValueMap& map) {
-	LOADVAR(output_depth, out_depth);
-	LOADVAR(output_width, out_sx);
-	LOADVAR(output_height, out_sy);
-	LOADVAR(width, sx);
-	LOADVAR(height, sy);
-	LOADVAR(stride, stride);
-	LOADVARDEF(pad, pad, 0); // backwards compatibility
-	int length = output_depth * output_width * output_height;
-	switchx.SetCount(0);
-	switchx.SetCount(length, 0);
-	switchy.SetCount(0);
-	switchy.SetCount(length, 0);
-}
-
-String PoolLayer::ToString() const {
+String LayerBase::ToStringPool() const {
 	return Format("Pool: w:%d, h:%d, d:%d stride:%d pad:%d",
 		output_width, output_height, output_depth, stride, pad);
 }

@@ -317,4 +317,56 @@ void Mat::Load(const ValueMap& map) {
 
 
 
+
+
+void MatPool::InitMat(MatId& id, int width, int height, double default_value) {
+	lock.Enter();
+	id.value = mats.GetCount();
+	Mat& mat = mats.Add();
+	mat.Init(width, height, default_value);
+	lock.Leave();
+}
+
+void MatPool::InitMat(MatId& id) {
+	lock.Enter();
+	id.value = mats.GetCount();
+	Mat& mat = mats.Add();
+	lock.Leave();
+}
+
+void MatPool::RandMat(int n, int d, double mu, double std, MatId& out) {
+	lock.Enter();
+	out.value = mats.GetCount();
+	Mat& mat = mats.Add();
+	ConvNet::RandMat(n, d, mu, std, mat);
+	lock.Leave();
+}
+
+MatId MatPool::AddTempMat(Mat& mat) {
+	lock.Enter();
+	MatId id;
+	id.value = tmp_mat.GetCount() * -1 -2;
+	tmp_mat.Add(&mat);
+	lock.Leave();
+	return id;
+}
+
+void MatPool::ClearTempMat() {
+	tmp_mat.SetCount(0);
+}
+
+Mat& MatPool::Get(const MatId& id) {
+	if (id.value >= 0)
+		return mats[id.value];
+	if (id.value == -1)
+		Panic("Invalid MatId");
+	int pos = id.value * -1 - 2;
+	return *tmp_mat[pos];
+}
+
+int MatPool::GetInput(int pos) {
+	return index_sequence[pos];
+}
+
+
 }

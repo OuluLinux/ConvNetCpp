@@ -30,6 +30,7 @@ WaterWorldAgent::WaterWorldAgent() {
 	max_tail = 100;
 	smooth_reward = 0.0;
 	do_training = true;
+	
 }
 
 void WaterWorldAgent::Forward() {

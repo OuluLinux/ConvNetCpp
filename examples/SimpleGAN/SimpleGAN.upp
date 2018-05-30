@@ -1,0 +1,13 @@
+uses
+	CtrlLib;
+
+file
+	Copying,
+	SimpleGAN.h,
+	SimpleGAN.cpp,
+	main.cpp,
+	SimpleGAN.iml;
+
+mainconfig
+	"" = "GUI";
+

@@ -174,9 +174,7 @@ void ClassifyImages::DockInit() {
 }
 
 void ClassifyImages::UpdateNetParamDisplay() {
-	TrainerBase* t = ses.GetTrainer();
-	if (!t) return;
-	TrainerBase& trainer = *t;
+	TrainerBase& trainer = ses.GetTrainer();
 	rate.SetData(trainer.GetLearningRate());
 	mom.SetData(trainer.GetMomentum());
 	batch.SetData(trainer.GetBatchSize());
@@ -184,9 +182,7 @@ void ClassifyImages::UpdateNetParamDisplay() {
 }
 
 void ClassifyImages::ApplySettings() {
-	TrainerBase* t = ses.GetTrainer();
-	if (!t) return;
-	TrainerBase& trainer = *t;
+	TrainerBase& trainer = ses.GetTrainer();
 	trainer.SetLearningRate(rate.GetData());
 	trainer.SetMomentum(mom.GetData());
 	trainer.SetBatchSize(batch.GetData());
@@ -194,7 +190,7 @@ void ClassifyImages::ApplySettings() {
 }
 
 void ClassifyImages::OpenFile() {
-	String file = SelectFileOpen("JSON files\t*.json\nAll files\t*.*");
+	String file = SelectFileOpen("BIN files\t*.bin\nAll files\t*.*");
 	if (file.IsEmpty()) return;
 	
 	if (!FileExists(file)) {
@@ -202,45 +198,32 @@ void ClassifyImages::OpenFile() {
 		return;
 	}
 	
-	// Load json
-	String json = LoadFile(file);
-	if (json.IsEmpty()) {
-		PromptOK("File is empty");
-		return;
-	}
-	
 	ses.StopTraining();
 	
 	ticking_lock.Enter();
-	bool res = ses.LoadJSON(json);
-	
+	FileIn fin(file);
+	fin % ses;
 	ticking_lock.Leave();
 	
-	if (!res) {
-		PromptOK("Loading failed.");
-		return;
-	}
-	
 	ResetAll();
+	ses.StartTraining();
 }
 
 void ClassifyImages::SaveFile() {
-	String file = SelectFileSaveAs("JSON files\t*.json\nAll files\t*.*");
+	String file = SelectFileSaveAs("BIN files\t*.bin\nAll files\t*.*");
 	if (file.IsEmpty()) return;
-	
-	// Save json
-	String json;
-	if (!ses.StoreJSON(json)) {
-		PromptOK("Error: Getting JSON failed");
-		return;
-	}
 	
 	FileOut fout(file);
 	if (!fout.IsOpen()) {
 		PromptOK("Error: could not open file " + file);
 		return;
 	}
-	fout << json;
+	
+	ses.StopTraining();
+	
+	fout % ses;
+	
+	ses.StartTraining();
 }
 
 void ClassifyImages::Reload() {

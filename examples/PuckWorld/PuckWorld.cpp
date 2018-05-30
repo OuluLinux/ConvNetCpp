@@ -189,9 +189,15 @@ PuckWorld::PuckWorld() {
 	reload_btn.SetLabel("Reload Agent");
 	reload_btn <<= THISBACK(Reload);
 	
-	statusctrl.Add(status.HSizePos().VSizePos(0,30));
+	statusctrl.Add(status.HSizePos().VSizePos(0,90));
+	statusctrl.Add(save.HSizePos().BottomPos(60,30));
+	statusctrl.Add(load.HSizePos().BottomPos(30,30));
 	statusctrl.Add(load_pretrained.HSizePos().BottomPos(0,30));
+	save.SetLabel("Save");
+	load.SetLabel("Load");
 	load_pretrained.SetLabel("Load a Pretrained Agent");
+	save <<= THISBACK(Save);
+	load <<= THISBACK(Load);
 	load_pretrained <<= THISBACK(LoadPretrained);
 	
 	Add(btnsplit.HSizePos().TopPos(0,30));
@@ -301,10 +307,44 @@ void PuckWorld::LoadPretrained() {
 	
 	// This is the pre-trained network from original ConvNetJS
 	MemReadStream pretrained_mem(pretrained, pretrained_length);
-	String json = BZ2Decompress(pretrained_mem);
+	BZ2DecompressStream bz2(pretrained_mem);
 	
 	agent.Stop();
-	agent.LoadJSON(json);
+	bz2 % agent;
+	agent.Start();
+}
+
+void PuckWorld::Save() {
+	String file = SelectFileSaveAs("BIN files\t*.bin\nAll files\t*.*");
+	if (file.IsEmpty()) return;
+	
+	agent.Stop();
+	
+	FileOut fout(file);
+	if (!fout.IsOpen()) {
+		PromptOK("Error: could not open file " + file);
+		return;
+	}
+	
+	fout % agent;
+	
+	agent.Start();
+}
+
+void PuckWorld::Load() {
+	String file = SelectFileOpen("BIN files\t*.bin\nAll files\t*.*");
+	if (file.IsEmpty()) return;
+	
+	if (!FileExists(file)) {
+		PromptOK("File does not exists");
+		return;
+	}
+	
+	agent.Stop();
+	
+	FileIn fin(file);
+	fin % agent;
+	
 	agent.Start();
 }
 

@@ -23,8 +23,6 @@ public:
 	void ClearSessions();
 	void Step();
 	
-	virtual void Store(ValueMap& map) const;
-	virtual void Load(const ValueMap& map);
 	
 	Array<Session>& GetSessions() {return session;}
 	SessionData& GetSessionData(int i) {return data[i];}

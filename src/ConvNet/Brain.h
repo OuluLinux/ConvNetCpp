@@ -51,6 +51,9 @@ class Brain : public Session {
 	// Temp vars
 	Vector<double> net_input;
 	Vector<double> action1ofk;
+	Volume brain_tmp1;
+	Volume svol;
+	Volume x;
 	
 public:
 	typedef Brain CLASSNAME;
@@ -59,9 +62,19 @@ public:
 	void Init(int num_states, int num_actions, Vector<double>* random_action_distribution=NULL);
 	void Reset() {Init(num_states, num_actions);}
 	void Serialize(Stream& s) {
+		Session::Serialize(s);
 		s % random_action_distribution % temporal_window % net_inputs % num_states % num_actions %
 			window_size % state_window % action_window % reward_window % net_window %
 			experience % learning % age % forward_passes % epsilon % latest_reward % last_input_array %
+			average_reward_window % average_loss_window % net_input % action1ofk %
+			experience_size % start_learn_threshold % gamma % learning_steps_total % learning_steps_burnin %
+			epsilon_min % epsilon_test_time;
+	}
+	void SerializeWithoutExperience(Stream& s) {
+		Session::Serialize(s);
+		s % random_action_distribution % temporal_window % net_inputs % num_states % num_actions %
+			window_size % state_window % action_window % reward_window % net_window %
+			learning % age % forward_passes % epsilon % latest_reward % last_input_array %
 			average_reward_window % average_loss_window % net_input % action1ofk %
 			experience_size % start_learn_threshold % gamma % learning_steps_total % learning_steps_burnin %
 			epsilon_min % epsilon_test_time;

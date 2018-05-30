@@ -32,9 +32,15 @@ WaterWorld::WaterWorld() {
 	reload_btn.SetLabel("Reload Agent");
 	reload_btn <<= THISBACK(Reload);
 	
-	statusctrl.Add(status.HSizePos().VSizePos(0,30));
+	statusctrl.Add(status.HSizePos().VSizePos(0,90));
+	statusctrl.Add(save.HSizePos().BottomPos(60,30));
+	statusctrl.Add(load.HSizePos().BottomPos(30,30));
 	statusctrl.Add(load_pretrained.HSizePos().BottomPos(0,30));
+	save.SetLabel("Save");
+	load.SetLabel("Load");
 	load_pretrained.SetLabel("Load a Pretrained Agent");
+	save <<= THISBACK(Save);
+	load <<= THISBACK(Load);
 	load_pretrained <<= THISBACK(LoadPretrained);
 	
 	Add(btnsplit.HSizePos().TopPos(0,30));
@@ -137,6 +143,7 @@ void WaterWorld::Reload() {
 	
 	ticking_lock.Enter();
 	agent.LoadInitJSON(param_str);
+	agent.Reset();
 	ticking_lock.Leave();
 }
 
@@ -156,11 +163,47 @@ void WaterWorld::LoadPretrained() {
 	
 	// This is the pre-trained network from original ConvNetJS
 	MemReadStream pretrained_mem(pretrained, pretrained_length);
-	String json = BZ2Decompress(pretrained_mem);
+	BZ2DecompressStream bz2(pretrained_mem);
 	
 	agent.do_training = false;
 	ticking_lock.Enter();
-	agent.LoadJSON(json);
+	agent.SerializeWithoutExperience(bz2);
+	ticking_lock.Leave();
+}
+
+void WaterWorld::Save() {
+	WaterWorldAgent& agent = world.agents[0];
+	String file = SelectFileSaveAs("BIN files\t*.bin\nAll files\t*.*");
+	if (file.IsEmpty()) return;
+	
+	ticking_lock.Enter();
+	
+	FileOut fout(file);
+	if (!fout.IsOpen()) {
+		PromptOK("Error: could not open file " + file);
+		return;
+	}
+	
+	agent.SerializeWithoutExperience(fout);
+	
+	ticking_lock.Leave();
+}
+
+void WaterWorld::Load() {
+	WaterWorldAgent& agent = world.agents[0];
+	String file = SelectFileOpen("BIN files\t*.bin\nAll files\t*.*");
+	if (file.IsEmpty()) return;
+	
+	if (!FileExists(file)) {
+		PromptOK("File does not exists");
+		return;
+	}
+	
+	ticking_lock.Enter();
+	
+	FileIn fin(file);
+	agent.SerializeWithoutExperience(fin);
+	
 	ticking_lock.Leave();
 }
 

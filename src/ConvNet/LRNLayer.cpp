@@ -2,21 +2,8 @@
 
 namespace ConvNet {
 
-// a bit experimental layer for now. I think it works but I'm not 100%
-// the gradient check is a bit funky. I'll look into this a bit later.
-// Local Response Normalization in window, along depths of volumes
-LrnLayer::LrnLayer(double k, int n, double alpha, double beta) {
-	this->k = k;
-	this->n = n;
-	this->alpha = alpha;
-	this->beta = beta;
-	
-    // checks
-    ASSERT_(n % 2 == 0, "ERROR: n should be odd for LRN layer");
-}
 
-void LrnLayer::Init(int input_width, int input_height, int input_depth) {
-	LayerBase::Init(input_width, input_height, input_depth);
+void LayerBase::InitLrn(int input_width, int input_height, int input_depth) {
 	
 	// computed
 	output_width = input_width;
@@ -24,7 +11,7 @@ void LrnLayer::Init(int input_width, int input_height, int input_depth) {
 	output_depth = input_depth;
 }
 
-Volume& LrnLayer::Forward(Volume& input, bool is_training) {
+Volume& LayerBase::ForwardLrn(Volume& input, bool is_training) {
 	input_activation = &input;
 	
 	output_activation.Init(input.GetWidth(), input.GetHeight(), input.GetDepth(), 0);
@@ -55,7 +42,7 @@ Volume& LrnLayer::Forward(Volume& input, bool is_training) {
 	return output_activation;
 }
 
-void LrnLayer::Backward() {
+void LayerBase::BackwardLrn() {
 	// evaluate gradient wrt data
 	Volume& input = *input_activation; // we need to set dw of this
 	input.SetConstGradient(0); // zero out gradient wrt data
@@ -88,32 +75,7 @@ void LrnLayer::Backward() {
 	}
 }
 
-#define STOREVAR(json, field) map.GetAdd(#json) = this->field;
-#define LOADVAR(field, json) this->field = map.GetValue(map.Find(#json));
-#define LOADVARDEF(field, json, def) {Value tmp = map.GetValue(map.Find(#json)); if (tmp.IsNull()) this->field = def; else this->field = tmp;}
-
-void LrnLayer::Store(ValueMap& map) const {
-	STOREVAR(out_depth, output_depth);
-	STOREVAR(out_sx, output_width);
-	STOREVAR(out_sy, output_height);
-	STOREVAR(layer_type, GetKey());
-	STOREVAR(k, k);
-	STOREVAR(n, n);
-	STOREVAR(alpha, alpha);
-	STOREVAR(beta, beta);
-}
-
-void LrnLayer::Load(const ValueMap& map) {
-	LOADVAR(output_depth, out_depth);
-	LOADVAR(output_width, out_sx);
-	LOADVAR(output_height, out_sy);
-	LOADVAR(k, k);
-	LOADVAR(n, n);
-	LOADVAR(alpha, alpha);
-	LOADVAR(beta, beta);
-}
-
-String LrnLayer::ToString() const {
+String LayerBase::ToStringLrn() const {
 	return Format("LRN: w:%d, h:%d, d:%d",
 		output_width, output_height, output_depth);
 }

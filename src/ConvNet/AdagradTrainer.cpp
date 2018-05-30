@@ -2,16 +2,7 @@
 
 namespace ConvNet {
 
-AdagradTrainer::AdagradTrainer(Net& net) : TrainerBase(net) {
-	learning_rate = 0.01;
-	eps = 1e-6;
-	l1_decay = 0;
-	l2_decay = 0;
-	l2_decay_loss = 0;
-	l1_decay_loss = 0;
-}
-
-void AdagradTrainer::TrainImplem() {
+void TrainerBase::TrainImplemAdagrad() {
 	
 	iter_count++;
 	
@@ -66,33 +57,7 @@ void AdagradTrainer::TrainImplem() {
 	// and it should all be computed correctly and automatically.
 }
 
-void AdagradTrainer::Backward(int pos, double y) {
-	TrainerBase::Backward(pos, y);
-	
-	l2_decay_loss = 0.0;
-	l1_decay_loss = 0.0;
-}
-
-void AdagradTrainer::Backward(const VolumeDataBase& y) {
-	TrainerBase::Backward(y);
-	
-	l2_decay_loss = 0.0;
-	l1_decay_loss = 0.0;
-}
-
-void AdagradTrainer::Backward(int cols, const Vector<int>& pos, const Vector<double>& y) {
-	TrainerBase::Backward(cols, pos, y);
-	
-	l2_decay_loss = 0.0;
-	l1_decay_loss = 0.0;
-}
-
-void AdagradTrainer::Reset() {
-	TrainerBase::Reset();
-	gsum.Clear();
-}
-
-String AdagradTrainer::ToString() const {
+String TrainerBase::ToStringAdagrad() const {
 	return Format("Adagrad: batch_size:%d, cost_loss:%2!,n, cost_reward:%2!,n, Beta1:%2!,n, Beta2:%2!,n,"
 		"l1_decay:%2!,n, l2_decay:%2!,n, l1_decay_loss:%2!,n, l2_decay_loss:%2!,n, learning_rate:%2!,n, momentum:%2!,n, eps:%2!,n, ro:%2!,n",
 		batch_size, cost_loss, cost_reward, Beta1, Beta2,

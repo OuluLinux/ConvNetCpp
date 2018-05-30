@@ -20,7 +20,7 @@ class LayerView : public Ctrl {
 	Vector<Point> tmp_pts1;
 	Vector<Vector<Point> > tmp_pts2;
 	Vector<Image> tmp_imgs;
-	Vector<VolumeDataBase*> volumes;
+	Vector<Vector<double> > volumes;
 	Vector<Color> lbl_colors;
 	Vector<int> labels;
 	LayerCtrl* lc;

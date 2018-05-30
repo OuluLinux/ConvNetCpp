@@ -13,8 +13,8 @@
 #include "ConvLayerCtrl.h"
 #include "TrainingGraph.h"
 #include "ImageRegression.h"
-#include "MetaSessionGraph.h"
 #include "GridWorldCtrl.h"
+#include "MetaSessionGraph.h"
 
 namespace ConvNet {
 using namespace Upp;

@@ -147,7 +147,7 @@ void NetworkOptimization::RefreshStatus() {
 		String s;
 		s << "Validation accuracy of best model so far, overall: " << best_cand.GetValidationAccuracyAverage() << "\n";
 		s << "Net layer definitions:\n" << best_cand.GetNetwork().ToString() << "\n";
-		s << "Trainer definition:\n" << best_cand.GetTrainer()->ToString() << "\n";
+		s << "Trainer definition:\n" << best_cand.GetTrainer().ToString() << "\n";
 		status.SetLabel(s);
 	}
 }
@@ -157,8 +157,8 @@ void NetworkOptimization::RefreshBestNetwork() {
 		Session& best_cand = mnet.GetEvaluatedCandidateCount() > 0 ?
 			mnet.GetEvaluatedCandidate(0) :
 			mnet.GetSessions()[0];
-		String net;
-		best_cand.StoreJSON(net);
+		
+		String net = DoStoreAsXML(callback(&best_cand, &Session::Xmlize), "best");
 		best_net.SetData(net);
 	}
 	

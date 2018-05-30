@@ -28,13 +28,13 @@ void MetaSession::Step() {
 	{
 		int id = total_iter % sd.GetDataCount();
 		tmp_in.Init(sd.GetDataWidth(), sd.GetDataHeight(), sd.GetDataDepth(), 0);
-		VolumeDataBase& x = sd.Get(id);
+		Vector<double>& x = sd.Get(id);
 		int label = sd.GetLabel(id);
 		tmp_in.SetData(x);
 		
 		for (int i = 0; i < session.GetCount(); i++) {
 			Session& ses = session[i];
-			TrainerBase& trainer = *ses.GetTrainer();
+			TrainerBase& trainer = ses.GetTrainer();
 			Net& net = ses.GetNetwork();
 			
 			// train on training example
@@ -48,13 +48,13 @@ void MetaSession::Step() {
 	{
 		int id = total_iter % sd.GetTestCount();
 		tmp_in.Init(sd.GetDataWidth(), sd.GetDataHeight(), sd.GetDataDepth(), 0);
-		VolumeDataBase& x = sd.GetTest(id);
+		Vector<double>& x = sd.GetTest(id);
 		int label = sd.GetTestLabel(id);
 		tmp_in.SetData(x);
 		
 		for (int i = 0; i < session.GetCount(); i++) {
 			Session& ses = session[i];
-			TrainerBase& trainer = *ses.GetTrainer();
+			TrainerBase& trainer = ses.GetTrainer();
 			Net& net = ses.GetNetwork();
 			
 			// evaluate a test example
@@ -67,14 +67,6 @@ void MetaSession::Step() {
 	if ((total_iter % 100) == 0) {
 		WhenStepInterval(total_iter);
 	}
-}
-
-void MetaSession::Store(ValueMap& map) const {
-	Panic("TODO");
-}
-
-void MetaSession::Load(const ValueMap& map) {
-	Panic("TODO");
 }
 
 }

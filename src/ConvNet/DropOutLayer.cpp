@@ -1,17 +1,10 @@
-﻿#include "Layers.h"
+#include "LayerBase.h"
 
 
 namespace ConvNet {
 
 
-DropOutLayer::DropOutLayer(double drop_prob) : drop_prob(drop_prob) {
-	if (!(drop_prob >= 0.0 && drop_prob <= 1.0))
-		throw ArgumentException("DropOutLayer probability is not valid");
-	
-}
-
-void DropOutLayer::Init(int input_width, int input_height, int input_depth) {
-	LayerBase::Init(input_width, input_height, input_depth);
+void LayerBase::InitDropOut(int input_width, int input_height, int input_depth) {
 	
 	// computed
 	output_width = input_width;
@@ -22,7 +15,7 @@ void DropOutLayer::Init(int input_width, int input_height, int input_depth) {
 	dropped.SetCount(output_width * output_height * output_depth, false);
 }
 
-Volume& DropOutLayer::Forward(Volume& input, bool is_training) {
+Volume& LayerBase::ForwardDropOut(Volume& input, bool is_training) {
 	input_activation = &input;
 	output_activation = input;
 	Volume& output = output_activation;
@@ -54,7 +47,7 @@ Volume& DropOutLayer::Forward(Volume& input, bool is_training) {
 	return output_activation; // dummy identity function for now
 }
 
-void DropOutLayer::Backward() {
+void LayerBase::BackwardDropOut() {
 	Volume& input = *input_activation; // we need to set dw of this
 	Volume& output = output_activation;
 	
@@ -68,26 +61,7 @@ void DropOutLayer::Backward() {
 	}
 }
 
-#define STOREVAR(json, field) map.GetAdd(#json) = this->field;
-#define LOADVAR(field, json) this->field = map.GetValue(map.Find(#json));
-#define LOADVARDEF(field, json, def) {Value tmp = map.GetValue(map.Find(#json)); if (tmp.IsNull()) this->field = def; else this->field = tmp;}
-
-void DropOutLayer::Store(ValueMap& map) const {
-	STOREVAR(out_depth, output_depth);
-	STOREVAR(out_sx, output_width);
-	STOREVAR(out_sy, output_height);
-	STOREVAR(layer_type, GetKey());
-	STOREVAR(drop_prob, drop_prob);
-}
-
-void DropOutLayer::Load(const ValueMap& map) {
-	LOADVAR(output_depth, out_depth);
-	LOADVAR(output_width, out_sx);
-	LOADVAR(output_height, out_sy);
-	LOADVAR(drop_prob, drop_prob);
-}
-
-String DropOutLayer::ToString() const {
+String LayerBase::ToStringDropOut() const {
 	return Format("Dropout: w:%d, h:%d, d:%d, probability:%2!,n",
 		output_width, output_height, output_depth, drop_prob);
 }

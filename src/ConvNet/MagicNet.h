@@ -79,8 +79,6 @@ public:
 	int PredictSoftLabel(Volume& in);
 	
 	
-	virtual void Store(ValueMap& map) const;
-	virtual void Load(const ValueMap& map);
 	
 	
 	Session& GetEvaluatedCandidate(int i) {return evaluated_candidates[i];}

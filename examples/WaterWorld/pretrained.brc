@@ -1,1 +1,1 @@
-BINARY(pretrained, "pretrained.json" BZ2)
+BINARY(pretrained, "pretrained.bin" BZ2)

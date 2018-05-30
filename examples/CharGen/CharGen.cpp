@@ -179,23 +179,24 @@ void CharGen::SetSampleTemperature() {
 }
 
 void CharGen::Save() {
-	String file = SelectFileSaveAs("JSON files\t*.json\nAll files\t*.*");
+	String file = SelectFileSaveAs("BIN files\t*.bin\nAll files\t*.*");
 	if (file.IsEmpty()) return;
 	
-	// Save json
-	String json;
-	StoreJSON(json);
+	Stop();
 	
 	FileOut fout(file);
 	if (!fout.IsOpen()) {
 		PromptOK("Error: could not open file " + file);
 		return;
 	}
-	fout << json;
+	
+	fout % ses % letterToIndex % indexToLetter % vocab;
+	
+	Start();
 }
 
 void CharGen::Load() {
-	String file = SelectFileOpen("JSON files\t*.json\nAll files\t*.*");
+	String file = SelectFileOpen("BIN files\t*.bin\nAll files\t*.*");
 	if (file.IsEmpty()) return;
 	
 	if (!FileExists(file)) {
@@ -203,104 +204,30 @@ void CharGen::Load() {
 		return;
 	}
 	
-	// Load json
-	String json = LoadFile(file);
-	if (json.IsEmpty()) {
-		PromptOK("File is empty");
-		return;
-	}
-	
-	LoadJSON(json);
-}
-
-void CharGen::LoadPretrained() {
-	Stop();
-	MemReadStream pretrained_mem(pretrained, pretrained_length);
-	String pretrained_str = BZ2Decompress(pretrained_mem);
-	LoadJSON(pretrained_str);
-}
-
-void CharGen::LoadJSON(const String& json) {
 	Stop();
 	
-	{
-		ValueMap map = ParseJSON(json);
-		
-		ses.Load(map);
-		ses.SetInputSize(input_size);
-		ses.SetOutputSize(output_size);
-		ses.InitGraphs();
-		
-		letterToIndex.Clear();
-		indexToLetter.Clear();
-		vocab.Clear();
-		
-		ValueMap l2i = map.GetAdd("letterToIndex");
-		for(int i = 0; i < l2i.GetCount(); i++) {
-			String k = l2i.GetKey(i);
-			int v = l2i.GetValue(i);
-			letterToIndex.Add(k.ToWString()[0], v);
-		}
+	FileIn fin(file);
+	fin % ses % letterToIndex % indexToLetter % vocab;
 	
-		ValueMap i2l = map.GetAdd("indexToLetter");
-		int count = i2l.GetCount();
-		for(int i = 0; i < count; i++) {
-			String k = i2l.GetKey(i);
-			String v = i2l.GetValue(i);
-			indexToLetter.Add(StrInt(k), v.ToWString()[0]);
-		}
-		
-		ValueMap v = map.GetAdd("vocab");
-		for(int i = 0; i < v.GetCount(); i++) {
-			vocab.Add(String(v[i]).ToWString());
-		}
-		
-		perp.Clear();
-		tick_iter = 0;
-		learning_rate_slider.SetData(ses.GetLearningRate() / 0.00001);
-		SetLearningRate();
-	}
+	perp.Clear();
+	tick_iter = 0;
+	learning_rate_slider.SetData(ses.GetLearningRate() / 0.00001);
+	SetLearningRate();
 	
 	Start();
 }
 
-void CharGen::StoreJSON(String& json) {
+void CharGen::LoadPretrained() {
 	Stop();
 	
-	{
-		ValueMap js;
-		
-		ses.Store(js);
-		
-		ValueMap l2i;
-		for(int i = 0; i < letterToIndex.GetCount(); i++) {
-			int k = letterToIndex.GetKey(i);
-			int v = letterToIndex[i];
-			WString ws;
-			ws.Cat(k);
-			l2i.Add(ws.ToString(), v);
-		}
-		js.GetAdd("letterToIndex") = l2i;
+	MemReadStream pretrained_mem(pretrained, pretrained_length);
+	BZ2DecompressStream stream(pretrained_mem);
+	stream % ses % letterToIndex % indexToLetter % vocab;
 	
-		ValueMap i2l;
-		int count = indexToLetter.GetCount();
-		for(int i = 0; i < count; i++) {
-			int k = indexToLetter.GetKey(i);
-			int v = indexToLetter[i];
-			WString ws;
-			ws.Cat(v);
-			i2l.Add(IntStr(k), ws.ToString());
-		}
-		js.GetAdd("indexToLetter") = i2l;
-		
-		ValueMap v;
-		for(int i = 0; i < vocab.GetCount(); i++) {
-			v.Add(IntStr(i), vocab[i].ToString());
-		}
-		js.GetAdd("vocab") = v;
-		
-		json = FixJsonComma(AsJSON(js, true));
-	}
+	perp.Clear();
+	tick_iter = 0;
+	learning_rate_slider.SetData(ses.GetLearningRate() / 0.00001);
+	SetLearningRate();
 	
 	Start();
 }
@@ -379,8 +306,9 @@ void CharGen::Tick() {
 	int sentix = Random(data_sents.GetCount());
 	const WString& sent = data_sents[sentix];
 	
-	sequence.SetCount(sent.GetCount());
-	for(int i = 0; i < sent.GetCount(); i++) {
+	int size = min(ses.GetGraphCount()-1, sent.GetCount());
+	sequence.SetCount(size);
+	for(int i = 0; i < size; i++) {
 		sequence[i] = letterToIndex.Get(sent[i]);
 	}
 	

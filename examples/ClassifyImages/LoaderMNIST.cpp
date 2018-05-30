@@ -47,7 +47,7 @@ void LoaderMNIST::Load() {
 	
 	SessionData& d = ses->Data();
 	
-	d.BeginDataClass<VolumeDataDivider<byte, 255> >(10, 60000, 28, 28, 1, 10000);
+	d.BeginDataClass(10, 60000, 28, 28, 1, 10000);
 	
 	d.SetClass(0, "0");
 	d.SetClass(1, "1");
@@ -136,7 +136,7 @@ void LoaderMNIST::Load() {
 			int len = rows * cols;
 			
 			for(int j = 0; j < items && !in.IsEof() && !IsFail(); j++) {
-				VolumeDataBase& out = main ? d.Get(j) : d.GetTest(j);
+				Vector<double>& out = main ? d.Get(j) : d.GetTest(j);
 				for (int p = 0; p < len && !in.IsEof(); p++) {
 					byte pixel;
 					in.Get(&pixel, 1);

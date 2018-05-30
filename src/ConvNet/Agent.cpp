@@ -46,17 +46,6 @@ void UpdateMat(Mat& m, double alpha) {
 	}
 }
 
-void UpdateNet(DQNet& net, double alpha) {
-	/*for (var p in net) {
-		if (net.hasOwnProperty(p)){
-			UpdateMat(net[p], alpha);
-		}
-	}*/
-	UpdateMat(net.W1, alpha);
-	UpdateMat(net.b1, alpha);
-	UpdateMat(net.W2, alpha);
-	UpdateMat(net.b2, alpha);
-}
 
 
 
@@ -89,6 +78,20 @@ Agent::Agent() {
 
 Agent::~Agent() {
 	Stop();
+}
+
+void Agent::Serialize(Stream& s) {
+	MatPool::Serialize(s);
+	
+	s % poldist
+	  % reward
+	  % value
+	  % disable
+	  % width % height % length
+	  % action_count
+	  % start_state % stop_state
+	  % iter_sleep
+	  % running, stopped;
 }
 
 void Agent::Init(int width, int height, int action_count) {
@@ -135,49 +138,13 @@ bool Agent::LoadInitJSON(const String& json) {
 	return true;
 }
 
-bool Agent::LoadJSON(const String& json) {
-	
-	Value js = ParseJSON(json);
-	if (js.IsNull()) {
-		LOG("JSON parse failed");
-		return false;
-	}
-	
-	ValueMap map = js;
-	Load(map);
-	return true;
-}
-
-bool Agent::StoreJSON(String& json) {
-	ValueMap map;
-	Store(map);
-	
-	json = AsJSON(map, true);
-	
-	return true;
-}
-
-void Agent::Load(const ValueMap& map) {
-	LOADVARDEF_(width, 0);
-	LOADVARDEF_(height, 0);
-	LOADVARDEF_(action_count, 0);
-	LOADVARDEF_(start_state, 0);
-	LOADVARDEF_(stop_state, -1);
-}
-
-void Agent::Store(ValueMap& map) {
-	STOREVAR_(width);
-	STOREVAR_(height);
-	STOREVAR_(action_count);
-	STOREVAR_(start_state);
-	STOREVAR_(stop_state);
-}
-
 void Agent::LoadInit(const ValueMap& map) {
 	
 }
 
 void Agent::Reset() {
+	ClearPool();
+	
 	Agent::Init(width, height, action_count);
 	
 }
@@ -886,6 +853,8 @@ void TDAgent::UpdatePolicy(int x, int y) {
 
 
 DQNAgent::DQNAgent() {
+	G.SetPool(*this);
+	
 	gamma = 0.75; // future reward discount factor
 	epsilon = 0.1; // for epsilon-greedy policy
 	alpha = 0.01; // value function learning rate
@@ -897,16 +866,6 @@ DQNAgent::DQNAgent() {
 	
 	num_hidden_units = 100;
 	
-	// Original:
-	//		var a1mat = G.Add(G.Mul(net.W1, s), net.b1);
-	//		var h1mat = G.Tanh(a1mat);
-	//		var a2mat = G.Add(G.Mul(net.W2, h1mat), net.b2);
-	G.Mul(net.W1);
-	G.Add(net.b1);
-	G.Tanh();
-	G.Mul(net.W2);
-	G.Add(net.b2);
-	
 	expi = 0;
 	t = 0;
 	reward0 = 0;
@@ -914,21 +873,34 @@ DQNAgent::DQNAgent() {
 	action1 = 0;
 	has_reward = false;
 	tderror = 0;
+	
 }
 
 void DQNAgent::Reset() {
-	Agent::Reset();
+	ClearPool();
 	
 	nh = num_hidden_units; // number of hidden units
 	ns = GetNumStates();
 	na = GetMaxNumActions();
 	
 	RandMat(nh, ns, 0, 0.01, net.W1);
-	net.b1.Init(1, nh, 0);
+	InitMat(net.b1, 1, nh, 0);
 	//net.b1 = RandMat(nh, 1, 0, 0.01);
 	RandMat(na, nh, 0, 0.01, net.W2);
-	net.b2.Init(1, na, 0);
+	InitMat(net.b2, 1, na, 0);
 	//net.b2 = RandMat(na, 1, 0, 0.01);
+	InitMat(state);
+	
+	// Original:
+	//		var a1mat = G.Add(G.Mul(net.W1, s), net.b1);
+	//		var h1mat = G.Tanh(a1mat);
+	//		var a2mat = G.Add(G.Mul(net.W2, h1mat), net.b2);
+	G.Clear();
+	G.Mul(net.W1);
+	G.Add(net.b1);
+	G.Tanh();
+	G.Mul(net.W2);
+	G.Add(net.b2);
 	
 	expi = 0; // where to insert
 	
@@ -953,63 +925,6 @@ void DQNAgent::LoadInit(const ValueMap& map) {
 	LOADVARDEF(num_hidden_units, num_hidden_units, 100);
 }
 
-void DQNAgent::StoreInit(ValueMap& map) {
-	STOREVAR_(gamma);
-	STOREVAR_(epsilon);
-	STOREVAR_(alpha);
-	STOREVAR_(experience_add_every);
-	STOREVAR_(experience_size);
-	STOREVAR_(learning_steps_per_iteration);
-	STOREVAR_(tderror_clamp);
-	STOREVAR_(num_hidden_units);
-}
-
-void DQNAgent::Load(const ValueMap& map) {
-	Agent::Load(map);
-	LoadInit(map);
-	LOADVAR(nh, nh);
-	LOADVAR(ns, ns);
-	LOADVAR(na, na);
-	ValueMap net = map.GetValue(map.Find("net"));
-	this->net.Load(net);
-}
-
-void DQNet::Load(const ValueMap& map) {
-	W1.Load(map.GetValue(map.Find("W1")));
-	b1.Load(map.GetValue(map.Find("b1")));
-	W2.Load(map.GetValue(map.Find("W2")));
-	b2.Load(map.GetValue(map.Find("b2")));
-}
-
-void DQNet::Store(ValueMap& map) {
-	ValueMap W1;
-	this->W1.Store(W1);
-	map.GetAdd("W1") = W1;
-	
-	ValueMap b1;
-	this->b1.Store(b1);
-	map.GetAdd("b1") = b1;
-	
-	ValueMap W2;
-	this->W2.Store(W2);
-	map.GetAdd("W2") = W2;
-	
-	ValueMap b2;
-	this->b2.Store(b2);
-	map.GetAdd("b2") = b2;
-}
-
-void DQNAgent::Store(ValueMap& map) {
-	Agent::Store(map);
-	StoreInit(map);
-	STOREVAR(nh, nh);
-	STOREVAR(ns, ns);
-	STOREVAR(na, na);
-	ValueMap net;
-	this->net.Store(net);
-	map.GetAdd("net") = net;
-}
-
 int DQNAgent::Act(int x, int y) {
 	Panic("Not useful");
 	return 0;
@@ -1018,7 +933,8 @@ int DQNAgent::Act(int x, int y) {
 int DQNAgent::Act(const Vector<double>& slist) {
 	
 	// convert to a Mat column vector
-	state.Init(width, height, slist);
+	Mat& state_mat = Get(state);
+	state_mat.Init(width, height, slist);
 	
 	// epsilon greedy policy
 	int action;
@@ -1027,14 +943,15 @@ int DQNAgent::Act(const Vector<double>& slist) {
 	} else {
 		// greedy wrt Q function
 		//Mat& amat = ForwardQ(net, state);
-		Mat& amat = G.Forward(state);
+		MatId a = G.Forward(state);
+		Mat& amat = Get(a);
 		action = amat.GetMaxColumn(); // returns index of argmax action
 	}
 	
 	// shift state memory
 	state0 = state1;
 	action0 = action1;
-	state1 = state;
+	state1 = state_mat;
 	action1 = action;
 	
 	return action;
@@ -1081,14 +998,19 @@ double DQNAgent::LearnFromTuple(Mat& s0, int a0, double reward0, Mat& s1, int a1
 	ASSERT(s1.GetLength() > 0);
 	// want: Q(s,a) = r + gamma * max_a' Q(s',a')
 	
+	MatId s0_id = AddTempMat(s0);
+	MatId s1_id = AddTempMat(s1);
+	
 	// compute the target Q value
-	Mat& tmat = G.Forward(s1);
+	MatId t = G.Forward(s1_id);
+	Mat& tmat = Get(t);
 	double qmax = reward0 + gamma * tmat.Get(tmat.GetMaxColumn());
 	
 	// now predict
-	Mat& pred = G.Forward(s0);
+	MatId pred = G.Forward(s0_id);
+	Mat& pred_mat = Get(pred);
 	
-	double tderror = pred.Get(a0) - qmax;
+	double tderror = pred_mat.Get(a0) - qmax;
 	double clamp = tderror_clamp;
 	if (fabs(tderror) > clamp) {  // huber loss to robustify
 		if (tderror > clamp)
@@ -1096,11 +1018,17 @@ double DQNAgent::LearnFromTuple(Mat& s0, int a0, double reward0, Mat& s1, int a1
 		else
 			tderror = -clamp;
 	}
-	pred.SetGradient(a0, tderror);
+	pred_mat.SetGradient(a0, tderror);
 	G.Backward(); // compute gradients on net params
 	
 	// update net
-	UpdateNet(net, alpha);
+	UpdateMat(Get(net.W1), alpha);
+	UpdateMat(Get(net.b1), alpha);
+	UpdateMat(Get(net.W2), alpha);
+	UpdateMat(Get(net.b2), alpha);
+	
+	ClearTempMat();
+	
 	return tderror;
 }
 

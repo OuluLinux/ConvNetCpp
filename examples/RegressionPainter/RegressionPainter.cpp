@@ -75,8 +75,8 @@ void RegressionPainter::RefreshStatus() {
 
 void RegressionPainter::RefreshLearningRate() {
 	double rate = (int)slider.GetData() * 0.00001;
-	if (!ses.GetTrainer()) return;
-	ses.GetTrainer()->SetLearningRate(rate);
+	if (ses.GetTrainer().GetType() == TRAINER_NULL) return;
+	ses.GetTrainer().SetLearningRate(rate);
 	
 	lbl_slider.SetLabel("Learning rate: " + DblStr(rate));
 }
@@ -141,8 +141,8 @@ void RegressionPainter::SetImage() {
 	int i = 0;
 	for (int y = 0; y < sz.cy; y++) {
 		for (int x = 0; x < sz.cx; x++) {
-			VolumeDataBase& in_data		= d.Get(i);
-			VolumeDataBase& out_data	= d.GetResult(i);
+			Vector<double>& in_data		= d.Get(i);
+			Vector<double>& out_data	= d.GetResult(i);
 			in_data.Set(0, (double)x / sz.cx - 0.5);
 			in_data.Set(1, (double)y / sz.cy - 0.5);
 			out_data.Set(0, it->r / 255.0);

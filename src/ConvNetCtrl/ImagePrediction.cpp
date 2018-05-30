@@ -36,7 +36,7 @@ void ImagePrediction::RefreshData() {
 	int layer_count = net.GetLayers().GetCount();
 	ASSERT(layer_count);
 	
-	int num_classes = net.GetLayers()[layer_count-1]->output_depth;
+	int num_classes = net.GetLayers()[layer_count-1].output_depth;
 	
 	int data_w = d.GetDataWidth();
 	int data_h = d.GetDataHeight();
@@ -48,7 +48,7 @@ void ImagePrediction::RefreshData() {
 	for (int num = 0; num < tests; num++) {
 		
 		int i = Random(d.GetDataCount());
-		VolumeDataBase& vol = d.Get(i);
+		Vector<double>& vol = d.Get(i);
 		int label = d.GetLabel(i);
 		
 		Image& img = imgs[num];
@@ -57,12 +57,12 @@ void ImagePrediction::RefreshData() {
 		for (int y = 0; y < data_h; y++) {
 			for (int x = 0; x < data_w; x++) {
 				if (data_d == 3) {
-					it->r = vol.Get(x, y, 0, data_w, data_d) * 255;
-					it->g = vol.Get(x, y, 1, data_w, data_d) * 255;
-					it->b = vol.Get(x, y, 2, data_w, data_d) * 255;
+					it->r = Volume::Get(vol, x, y, 0, data_w, data_d) * 255;
+					it->g = Volume::Get(vol, x, y, 1, data_w, data_d) * 255;
+					it->b = Volume::Get(vol, x, y, 2, data_w, data_d) * 255;
 				}
 				else {
-					byte b = vol.Get(x, y, 0, data_w, data_d) * 255;
+					byte b = Volume::Get(vol, x, y, 0, data_w, data_d) * 255;
 					it->r = b;
 					it->g = b;
 					it->b = b;

@@ -1,32 +1,22 @@
-#include "Layers.h"
+#include "LayerBase.h"
 
 
 namespace ConvNet {
 
-RegressionLayer::RegressionLayer() {
-	
-}
-
-void RegressionLayer::Init(int input_width, int input_height, int input_depth) {
-	LayerBase::Init(input_width, input_height, input_depth);
-	
+void LayerBase::InitRegression(int input_width, int input_height, int input_depth) {
 	int input_count = input_width * input_height * input_depth;
 	output_depth = input_count;
 	output_width = 1;
 	output_height = 1;
 }
 
-Volume& RegressionLayer::Forward(Volume& input, bool is_training) {
+Volume& LayerBase::ForwardRegression(Volume& input, bool is_training) {
 	input_activation = &input;
 	output_activation = input;
 	return input; // identity function
 }
 
-void RegressionLayer::Backward() {
-	throw NotImplementedException();
-}
-
-double RegressionLayer::Backward(const VolumeDataBase& y) {
+double LayerBase::BackwardRegression(const Vector<double>& y) {
 	// compute and accumulate gradient wrt weights and bias of this layer
 	Volume& input = *input_activation;
 	
@@ -34,7 +24,7 @@ double RegressionLayer::Backward(const VolumeDataBase& y) {
 	double loss = 0.0;
 	
 	for (int i = 0; i < output_depth; i++) {
-		double dy = input.Get(i) - y.Get(i);
+		double dy = input.Get(i) - y[i];
 		input.SetGradient(i,  dy);
 		loss += 0.5 * dy * dy;
 	}
@@ -42,7 +32,7 @@ double RegressionLayer::Backward(const VolumeDataBase& y) {
 	return loss;
 }
 
-double RegressionLayer::Backward(int pos, double y) {
+double LayerBase::BackwardRegression(int pos, double y) {
 	// compute and accumulate gradient wrt weights and bias of this layer
 	Volume& input = *input_activation;
 	input.ZeroGradients(); // zero out the gradient of input Vol
@@ -57,7 +47,7 @@ double RegressionLayer::Backward(int pos, double y) {
 }
 
 
-double RegressionLayer::Backward(int cols, const Vector<int>& posv, const Vector<double>& yv) {
+double LayerBase::BackwardRegression(int cols, const Vector<int>& posv, const Vector<double>& yv) {
 	// compute and accumulate gradient wrt weights and bias of this layer
 	Volume& input = *input_activation;
 	input.ZeroGradients(); // zero out the gradient of input Vol
@@ -79,24 +69,7 @@ double RegressionLayer::Backward(int cols, const Vector<int>& posv, const Vector
 }
 
 
-#define STOREVAR(json, field) map.GetAdd(#json) = this->field;
-#define LOADVAR(field, json) this->field = map.GetValue(map.Find(#json));
-#define LOADVARDEF(field, json, def) {Value tmp = map.GetValue(map.Find(#json)); if (tmp.IsNull()) this->field = def; else this->field = tmp;}
-
-void RegressionLayer::Store(ValueMap& map) const {
-	STOREVAR(out_depth, output_depth);
-	STOREVAR(out_sx, output_width);
-	STOREVAR(out_sy, output_height);
-	STOREVAR(layer_type, GetKey());
-}
-
-void RegressionLayer::Load(const ValueMap& map) {
-	LOADVAR(output_depth, out_depth);
-	LOADVAR(output_width, out_sx);
-	LOADVAR(output_height, out_sy);
-}
-
-String RegressionLayer::ToString() const {
+String LayerBase::ToStringRegression() const {
 	return Format("Regression: w:%d, h:%d, d:%d",
 		output_width, output_height, output_depth);
 }

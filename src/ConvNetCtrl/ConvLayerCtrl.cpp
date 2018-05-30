@@ -43,7 +43,7 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 	Net& net = ses->GetNetwork();
 	net.Enter();
 	if (layer_id >= net.GetLayers().GetCount()) {net.Leave(); return;}
-	LayerBase& l = *net.GetLayers()[layer_id];
+	LayerBase& l = net.GetLayers()[layer_id];
 	int xoff = sz.cx * 0.4;
 	int y = 0;
 	String type = l.GetKey();
@@ -65,22 +65,21 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 	
 	
 	if (type == "conv") {
-		ConvLayer& conv = dynamic_cast<ConvLayer&>(l);
 		String s = "filter size ";
-		if (!conv.filters.IsEmpty()) {
-			Volume& f0 = conv.filters[0];
+		if (!l.filters.IsEmpty()) {
+			Volume& f0 = l.filters[0];
 			s << f0.GetWidth() << "x" <<
 				 f0.GetHeight() << "x" <<
-				 f0.GetDepth() << ", stride " << conv.GetStride();
+				 f0.GetDepth() << ", stride " << l.GetStride();
 		}
 		txt_sz = GetTextSize(s, fnt);
 		id.DrawText(2, y, s, fnt);
 		y += txt_sz.cy;
 		
-		int tot_params = conv.filters.GetCount() * conv.width * conv.height * conv.input_depth + conv.filters.GetCount();
+		int tot_params = l.filters.GetCount() * l.width * l.height * l.input_depth + l.filters.GetCount();
 		s.Clear();
 		s << "parameters: "
-			<< conv.filters.GetCount() << " * " << conv.width << " * " << conv.height << " * " << conv.input_depth << " + " << conv.filters.GetCount()
+			<< l.filters.GetCount() << " * " << l.width << " * " << l.height << " * " << l.input_depth << " + " << l.filters.GetCount()
 			<< " = " << tot_params;
 		txt_sz = GetTextSize(s, fnt);
 		id.DrawText(2, y, s, fnt);
@@ -88,21 +87,18 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 		
 	}
 	else if (type == "pool") {
-		PoolLayer& pool = dynamic_cast<PoolLayer&>(l);
 		String s;
 		s << "pooling size " <<
-			pool.width << "x" << pool.height << ", stride " << pool.stride;
+			l.width << "x" << l.height << ", stride " << l.stride;
 		txt_sz = GetTextSize(s, fnt);
 		id.DrawText(2, y, s, fnt);
 		y += txt_sz.cy;
 	}
 	else if (type == "fc") {
-		FullyConnLayer& fc = dynamic_cast<FullyConnLayer&>(l);
-		
-		int tot_params = fc.filters.GetCount() * fc.GetInputCount() + fc.filters.GetCount();
+		int tot_params = l.filters.GetCount() * l.GetInputCount() + l.filters.GetCount();
 		String s;
 		s << "parameters: "
-			<< fc.filters.GetCount() << " * " << fc.GetInputCount() << " + " << fc.filters.GetCount()
+			<< l.filters.GetCount() << " * " << l.GetInputCount() << " + " << l.filters.GetCount()
 			<< " = " << tot_params;
 		txt_sz = GetTextSize(s, fnt);
 		id.DrawText(2, y, s, fnt);
@@ -200,10 +196,8 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 	
 	// visualize filters if they are of reasonable size
 	if (type == "conv") {
-		ConvLayer& conv = dynamic_cast<ConvLayer&>(l);
-		
-		if (!conv.filters.IsEmpty() && conv.filters[0].GetWidth() > 3) {
-			int count = conv.filters.GetCount();
+		if (!l.filters.IsEmpty() && l.filters[0].GetWidth() > 3) {
+			int count = l.filters.GetCount();
 			
 			// actual weights
 			String s;
@@ -213,7 +207,7 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 			pt.x = xoff;
 			pt.y += txt_sz.cy;
 			for (int j = 0; j < count; j++) {
-				DrawActivations(id, sz, pt, conv.filters[j], 2, false, j == count-1);
+				DrawActivations(id, sz, pt, l.filters[j], 2, false, j == count-1);
 			}
 			pt.x = xoff;
 			
@@ -224,7 +218,7 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 			id.DrawText(pt.x, pt.y, s, fnt);
 			pt.y += txt_sz.cy;
 			for (int j = 0; j < count; j++) {
-				DrawActivations(id, sz, pt, conv.filters[j], 2, true, j == count-1);
+				DrawActivations(id, sz, pt, l.filters[j], 2, true, j == count-1);
 			}
 		}
 	}

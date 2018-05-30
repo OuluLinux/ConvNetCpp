@@ -62,8 +62,6 @@ public:
 	void Save();
 	void Load();
 	void LoadPretrained();
-	void LoadJSON(const String& json);
-	void StoreJSON(String& json);
 	void Pause();
 	void Resume();
 	void Refresher();

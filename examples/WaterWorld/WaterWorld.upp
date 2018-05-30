@@ -15,7 +15,7 @@ file
 	WaterWorld.iml,
 	WaterWorld.rc,
 	pretrained.brc,
-	pretrained.json;
+	pretrained.bin;
 
 mainconfig
 	"" = "GUI MT",

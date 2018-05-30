@@ -11,11 +11,10 @@ file
 	CharGen.cpp,
 	CharGen.rc,
 	CharGen.iml,
+	pretrained.bin,
 	CharGen.brc,
 	CharGen.lay,
-	input.txt,
-	pretrained.json,
-	RNNSolver.h;
+	input.txt;
 
 mainconfig
 	"" = "GUI MT",

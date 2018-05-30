@@ -13,8 +13,7 @@ file
 	PuckWorldCtrl.cpp,
 	PuckWorld.iml,
 	PuckWorld.rc,
-	pretrained.brc,
-	pretrained.json;
+	pretrained.brc;
 
 mainconfig
 	"" = "GUI MT",

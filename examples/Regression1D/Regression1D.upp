@@ -13,5 +13,6 @@ file
 	Regression1D.iml;
 
 mainconfig
-	"" = "GUI MT";
+	"" = "GUI MT",
+	"" = "GUI";
 

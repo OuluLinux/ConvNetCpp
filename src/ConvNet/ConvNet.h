@@ -68,14 +68,14 @@
 
 #include "Utilities.h"
 #include "Net.h"
-#include "Layers.h"
+#include "LayerBase.h"
 #include "Training.h"
 #include "Session.h"
-#include "Brain.h"
 #include "MetaSession.h"
-#include "MagicNet.h"
+#include "Brain.h"
 #include "Agent.h"
 #include "Recurrent.h"
 #include "RecurrentSession.h"
+#include "MagicNet.h"
 
 #endif

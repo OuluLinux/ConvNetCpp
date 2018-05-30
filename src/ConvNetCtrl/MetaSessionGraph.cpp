@@ -100,7 +100,7 @@ void MetaSessionGraph::Clear() {
 		Session& ses = mses->GetSession(i);
 		plot.data[i].SetCount(0);
 		plot.data[i]
-			.SetTitle(ses.GetTrainer()->GetKey())
+			.SetTitle(ses.GetTrainer().GetKey())
 			.SetThickness(1.0)
 			.SetColor(Rainbow((double)i / count))
 			.AddXY(0,0);

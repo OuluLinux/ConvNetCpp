@@ -11,10 +11,11 @@ inline long double log2(const long double x){
     return  log(x) * M_LOG2E;
 }
 
-class RecurrentSession {
+class RecurrentSession : public MatPool {
 	
 	
 protected:
+	friend class RecurrentBase;
 	
 	// Vector
 	Array<Array<GraphTree> > graphs;
@@ -23,8 +24,8 @@ protected:
 	Vector<HighwayModel> hw_model;
 	Vector<LSTMModel> lstm_model;
 	Vector<RNNModel> rnn_model;
-	Mat Whd, bd, Wil;
-	Mat noise_i[2];
+	MatId Whd, bd, Wil;
+	MatId noise_i[2];
 	
 	// Solver
 	Vector<Mat> step_cache;
@@ -32,12 +33,11 @@ protected:
 	double smooth_eps;
 	
 	// Session vars
-	Vector<Mat> first_hidden, first_cell;
-	Vector<Vector<Mat*> > hidden_prevs;
-	Vector<Vector<Mat*> > cell_prevs;
+	Vector<MatId> first_hidden, first_cell;
+	Vector<Vector<MatId> > hidden_prevs;
+	Vector<Vector<MatId> > cell_prevs;
 	Vector<int> hidden_sizes;
-	Array<int> index_sequence; // Array instead of vector to allow resizing
-	Mat* input;
+	MatId input;
 	Mat probs;
 	double ppl, cost;
 	double regc;
@@ -62,6 +62,8 @@ protected:
 	void Backward(int seq_end_cursor);
 	void SolverStep();
 	void ResetPrevs();
+	
+	
 public:
 	typedef RecurrentSession CLASSNAME;
 	RecurrentSession();
@@ -79,7 +81,8 @@ public:
 	double GetCost() const {return cost;}
 	double GetLearningRate() const {return learning_rate;}
 	int GetMatCount();
-	Mat& GetMat(int i);
+	MatId GetMat(int i);
+	int GetGraphCount() {return graphs.GetCount();}
 	
 	void SetInputSize(int i) {input_size = i;}
 	void SetOutputSize(int i) {output_size = i;}

@@ -7,7 +7,7 @@ namespace ConvNet {
 
 enum {ACT_LEFT, ACT_UP, ACT_RIGHT, ACT_DOWN, ACT_IDLE};
 
-class Agent {
+class Agent : public MatPool {
 	
 protected:
 	friend class GridWorldCtrl;
@@ -16,16 +16,18 @@ protected:
 	Vector<double> reward;
 	Vector<double> value; // state value function
 	Vector<bool> disable;
-	int width, height, length;
-	int action_count;
-	int start_state, stop_state;
-	int iter_sleep;
+	int width = 0, height = 0, length = 0;
+	int action_count = 0;
+	int start_state = 0, stop_state = 0;
+	int iter_sleep = 0;
 	bool running, stopped;
 	
 public:
 	typedef Agent CLASSNAME;
 	Agent();
 	virtual ~Agent();
+	
+	void Serialize(Stream& s);
 	
 	virtual void Reset();
 	virtual double Reward(int s, int a, int ns);
@@ -34,8 +36,6 @@ public:
 	virtual void Learn() = 0;
 	virtual int Act(int x, int y) = 0;
 	virtual double GetValue(int x, int y) const {return value[GetPos(x, y)];}
-	virtual void Load(const ValueMap& map);
-	virtual void Store(ValueMap& map);
 	virtual void LoadInit(const ValueMap& map);
 	virtual void SampleNextState(int x, int y, int action, int& next_state, double& reward, bool& reset_episode);
 	
@@ -47,9 +47,7 @@ public:
 	void ResetValues();
 	void AllowedActions(int x, int y, Vector<int>& actions) const;
 	int  Act(int state);
-	bool LoadJSON(const String& json);
 	bool LoadInitJSON(const String& json);
-	bool StoreJSON(String& json);
 	
 	double GetReward(int s) const {return reward[s];}
 	int GetNumStates() {return length;}
@@ -182,10 +180,10 @@ public:
 
 
 struct DQNet {
-	Mat W1;
-	Mat b1;
-	Mat W2;
-	Mat b2;
+	MatId W1;
+	MatId b1;
+	MatId W2;
+	MatId b2;
 	
 	void Load(const ValueMap& map);
 	void Store(ValueMap& map);
@@ -226,7 +224,7 @@ class DQNAgent : public Agent {
 	int t;
 	bool has_reward;
 	
-	Mat state;
+	MatId state;
 	Mat state0, state1;
 	int action0, action1;
 	double reward0;
@@ -237,10 +235,7 @@ public:
 	
 	virtual void Learn();
 	virtual int Act(int x, int y);
-	virtual void Load(const ValueMap& map);
-	virtual void Store(ValueMap& map);
 	virtual void LoadInit(const ValueMap& map);
-	virtual void StoreInit(ValueMap& map);
 	virtual void Reset();
 	
 	int GetExperienceWritePointer() const {return expi;}
@@ -257,18 +252,37 @@ public:
 	double LearnFromTuple(Mat& s0, int a0, double reward0, Mat& s1, int a1);
 	
 	void Serialize(Stream& s) {
-		if (s.IsLoading()) {
-			ValueMap map;
-			s % map;
-			Load(map);
-		}
-		else if (s.IsStoring()) {
-			ValueMap map;
-			Store(map);
-			s % map;
-		}
-		s % exp % gamma % epsilon % alpha % tderror_clamp % tderror % expi % t;
+		s % exp;
+		SerializeWithoutExperience(s);
 	}
+	
+	void SerializeWithoutExperience(Stream& s) {
+		Agent::Serialize(s);
+		s % net
+		  % G
+		  % exp
+		  % gamma % epsilon % alpha % tderror_clamp
+		  % tderror
+		  % experience_add_every % experience_size
+		  % learning_steps_per_iteration
+		  % num_hidden_units
+		  % expi
+		  % nh
+		  % ns
+		  % na
+		  % t
+		  % has_reward
+		  % state
+		  % state0 % state1
+		  % action0 % action1
+		  % reward0;
+		if (s.IsLoading())
+			FixPool();
+	}
+	
+	
+	void FixPool() {G.SetPool(*this); G.FixPool();}
+	
 };
 
 
@@ -290,7 +304,6 @@ public:
 void	RandMat(int n, int d, double mu, double std, Mat& out);
 int		SampleWeighted(Vector<double>& p);
 void	UpdateMat(Mat& m, double alpha);
-void	UpdateNet(DQNet& net, double alpha);
 
 }
 

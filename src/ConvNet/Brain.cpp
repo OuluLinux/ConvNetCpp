@@ -2,12 +2,6 @@
 
 namespace ConvNet {
 	
-inline void HeaplessCopy(Vector<double>& dest, const Vector<double>& src) {
-	int count = src.GetCount();
-	dest.SetCount(count);
-	for(int i = 0; i < count; i++)
-		dest[i] = src[i];
-}
 
 
 
@@ -150,12 +144,11 @@ void Brain::Init(int num_states, int num_actions, Vector<double>* random_action_
 		AddRegressionLayer(); // value function output
 		
 		// and finally we need a Temporal Difference Learning trainer!
-		SgdTrainer* trainer = new SgdTrainer(net);
-		owned_trainer = trainer;
-		trainer->learning_rate = 0.01;
-		trainer->momentum = 0.0;
-		trainer->batch_size = 64;
-		trainer->l2_decay = 0.01;
+		trainer.SetType(TRAINER_SGD);
+		trainer.learning_rate = 0.01;
+		trainer.momentum = 0.0;
+		trainer.batch_size = 64;
+		trainer.l2_decay = 0.01;
 	}
 	
 	
@@ -197,7 +190,7 @@ ActionValue Brain::GetPolicy(const Vector<double>& weights) {
 	// compute the value of doing any action in this state
 	// and return the argmax action and its value
 	ASSERTEXC(weights.GetCount() == net_inputs);
-	Volume svol(weights);
+	svol.Set(weights);
 	Volume& action_values = net.Forward(svol);
 	int maxk = 0;
 	double maxval = action_values.Get(0);
@@ -313,18 +306,18 @@ void Brain::Backward(double reward) {
 	// this is where the magic happens...
 	if (experience.GetCount() > start_learn_threshold) {
 		double avcost = 0.0;
-		for(int k = 0; k < owned_trainer->batch_size; k++) {
+		for(int k = 0; k < trainer.batch_size; k++) {
 			int re = Random(experience.GetCount());
 			Experience& e = experience[re];
 			ASSERTEXC(e.state0.GetCount() == net_inputs);
-			Volume x(e.state0);
+			x.Set(e.state0);
 			ActionValue maxact = GetPolicy(e.state1);
 			double r = e.reward0 + gamma * maxact.value;
-			owned_trainer->Train(x, e.action0, r);
-			double loss = owned_trainer->GetLoss();
+			trainer.Train(x, e.action0, r);
+			double loss = trainer.GetLoss();
 			avcost += loss;
 		}
-		avcost = avcost / owned_trainer->batch_size;
+		avcost = avcost / trainer.batch_size;
 		average_loss_window.Add(avcost);
 	}
 	
