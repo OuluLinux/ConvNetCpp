@@ -41,6 +41,22 @@ ClassifyImages::ClassifyImages(int loader, int type)
 					"]\n";
 			augmentation = 0;
 		}
+		else if (type == TYPE_CONV) {
+			Title("MNIST convolutive autoencoder");
+			t =		"[\n"
+					"\t{\"type\":\"input\", \"input_width\":28, \"input_height\":28, \"input_depth\":1},\n"
+					"\t{\"type\":\"conv\", \"width\":5, \"height\":5, \"filter_count\":3, \"stride\":1, \"pad\":2, \"activation\":\"relu\"},\n"
+					"\t{\"type\":\"pool\", \"width\":2, \"height\":2, \"stride\":2},\n"
+					"\t{\"type\":\"conv\", \"width\":5, \"height\":5, \"filter_count\":3, \"stride\":1, \"pad\":2, \"activation\":\"relu\"},\n"
+					"\t{\"type\":\"pool\", \"width\":2, \"height\":2, \"stride\":2},\n"
+					"\t{\"type\":\"unpool\", \"width\":2, \"height\":2, \"stride\":2},\n"
+					"\t{\"type\":\"deconv\", \"width\":5, \"height\":5, \"filter_count\":3, \"stride\":1, \"pad\":2, \"activation\":\"relu\"},\n"
+					"\t{\"type\":\"unpool\", \"width\":2, \"height\":2, \"stride\":2},\n"
+					"\t{\"type\":\"deconv\", \"width\":5, \"height\":5, \"filter_count\":1, \"stride\":1, \"pad\":2},\n"
+					"\t{\"type\":\"adadelta\", \"learning_rate\":1, \"batch_size\":50, \"l1_decay\":0.001, \"l2_decay\":0.001}\n"
+					"]\n";
+			augmentation = 0;
+		}
 		else Panic("Invalid type");
 		
 		img_sz = Size(28,28);
@@ -75,6 +91,23 @@ ClassifyImages::ClassifyImages(int loader, int type)
 					"\t{\"type\":\"fc\", \"neuron_count\":50, \"activation\": \"tanh\"},\n"
 					"\t{\"type\":\"fc\", \"neuron_count\":50, \"activation\": \"tanh\"},\n"
 					"\t{\"type\":\"regression\", \"neuron_count\":3072},\n" // 3*32*32=3072
+					"\t{\"type\":\"adadelta\", \"learning_rate\":1, \"batch_size\":50, \"l1_decay\":0.001, \"l2_decay\":0.001}\n"
+					"]\n";
+			augmentation = 0;
+			do_flip = false;
+		}
+		else if (type == TYPE_CONV) {
+			Title("CIFAR-10 convolutive autoencoder");
+			t =		"[\n"
+					"\t{\"type\":\"input\", \"input_width\":32, \"input_height\":32, \"input_depth\":1},\n"
+					"\t{\"type\":\"conv\", \"width\":5, \"height\":5, \"filter_count\":3, \"stride\":1, \"pad\":2, \"activation\":\"relu\"},\n"
+					"\t{\"type\":\"pool\", \"width\":2, \"height\":2, \"stride\":2},\n"
+					"\t{\"type\":\"conv\", \"width\":5, \"height\":5, \"filter_count\":3, \"stride\":1, \"pad\":2, \"activation\":\"relu\"},\n"
+					"\t{\"type\":\"pool\", \"width\":2, \"height\":2, \"stride\":2},\n"
+					"\t{\"type\":\"unpool\", \"width\":2, \"height\":2, \"stride\":2},\n"
+					"\t{\"type\":\"deconv\", \"width\":5, \"height\":5, \"filter_count\":3, \"stride\":1, \"pad\":2, \"activation\":\"relu\"},\n"
+					"\t{\"type\":\"unpool\", \"width\":2, \"height\":2, \"stride\":2},\n"
+					"\t{\"type\":\"deconv\", \"width\":5, \"height\":5, \"filter_count\":3, \"stride\":1, \"pad\":2},\n"
 					"\t{\"type\":\"adadelta\", \"learning_rate\":1, \"batch_size\":50, \"l1_decay\":0.001, \"l2_decay\":0.001}\n"
 					"]\n";
 			augmentation = 0;
@@ -116,6 +149,9 @@ ClassifyImages::ClassifyImages(int loader, int type)
 		aenc_view.SetSession(ses);
 		layer_view.HideGradients();
 	}
+	else {
+		v_split << layer_view;
+	}
 	
 	net_ctrl.Add(net_edit.HSizePos().VSizePos(0,30));
 	net_ctrl.Add(reload_btn.HSizePos().BottomPos(0,30));
@@ -129,9 +165,11 @@ ClassifyImages::ClassifyImages(int loader, int type)
 	apply.SetLabel("Apply");
 	save_net.SetLabel("Save network");
 	load_net.SetLabel("Load network");
+	pause.SetLabel("Pause");
 	apply <<= THISBACK(ApplySettings);
 	save_net <<= THISBACK(SaveFile);
 	load_net <<= THISBACK(OpenFile);
+	pause <<= THISBACK(Pause);
 	int row = 20;
 	settings.Add(lrate.HSizePos(4,4).TopPos(0,row));
 	settings.Add(rate.HSizePos(4,4).TopPos(1*row,row));
@@ -144,6 +182,7 @@ ClassifyImages::ClassifyImages(int loader, int type)
 	settings.Add(apply.HSizePos(4,4).TopPos(8*row,row));
 	settings.Add(save_net.HSizePos(4,4).TopPos(9*row,row));
 	settings.Add(load_net.HSizePos(4,4).TopPos(10*row,row));
+	settings.Add(pause.HSizePos(4,4).TopPos(11*row,row));
 	rate.SetData(0.01);
 	mom.SetData(0.9);
 	batch.SetData(20);
@@ -187,6 +226,13 @@ void ClassifyImages::ApplySettings() {
 	trainer.SetMomentum(mom.GetData());
 	trainer.SetBatchSize(batch.GetData());
 	trainer.SetL2Decay(decay.GetData());
+}
+
+void ClassifyImages::Pause() {
+	if (ses.IsTraining())
+		ses.StopTraining();
+	else
+		ses.StartTraining();
 }
 
 void ClassifyImages::OpenFile() {

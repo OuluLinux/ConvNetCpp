@@ -15,14 +15,14 @@ using namespace ConvNet;
 #include <Draw/iml_header.h>
 
 enum {LOADER_MNIST, LOADER_CIFAR10};
-enum {TYPE_LEARNER, TYPE_AUTOENCODER};
+enum {TYPE_LEARNER, TYPE_AUTOENCODER, TYPE_CONV};
 
 class ClassifyImages : public DockWindow {
 	ParentCtrl settings;
 	Label lrate, lmom, lbatch, ldecay;
 	EditDouble rate, mom, decay;
 	EditInt batch;
-	Button apply, save_net, load_net;
+	Button apply, save_net, load_net, pause;
 	TrainingGraph graph;
 	Label status;
 	SessionConvLayers layer_view;
@@ -62,6 +62,7 @@ public:
 	void OpenFile();
 	void SaveFile();
 	void Reload();
+	void Pause();
 	void RefreshStatus();
 	void RefreshPredictions() {pred_view.Refresh();}
 	

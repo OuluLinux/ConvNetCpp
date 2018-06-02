@@ -14,8 +14,10 @@ public:
 		ret = -1;
 		AddButton("MNIST learner",			THISBACK1(Set, 0));
 		AddButton("MNIST autoencoder",		THISBACK1(Set, 1));
-		AddButton("CIFAR-10 learner",		THISBACK1(Set, 2));
-		AddButton("CIFAR-10 autoencoder",	THISBACK1(Set, 3));
+		AddButton("MNIST convolution",		THISBACK1(Set, 2));
+		AddButton("CIFAR-10 learner",		THISBACK1(Set, 3));
+		AddButton("CIFAR-10 autoencoder",	THISBACK1(Set, 4));
+		AddButton("CIFAR-10 convolution",	THISBACK1(Set, 5));
 		AddButton("Exit",					THISBACK(Close));
 		SetRect(0,0,240,320);
 		Title("ConvNetC++ ClassifyImages open dialog");
@@ -40,8 +42,8 @@ GUI_APP_MAIN {
 		odlg.Run();
 		if (odlg.ret == -1) return;
 		int r = odlg.ret;
-		loader	= r == 0 || r == 1 ? LOADER_MNIST : LOADER_CIFAR10;
-		type	= r == 0 || r == 2 ? TYPE_LEARNER : TYPE_AUTOENCODER;
+		loader	= r == 0 || r == 1  || r == 2 ? LOADER_MNIST : LOADER_CIFAR10;
+		type	= r == 0 || r == 3 ? TYPE_LEARNER : (r == 1 || r == 4 ? TYPE_AUTOENCODER : TYPE_CONV);
 	}
 	
 	{
