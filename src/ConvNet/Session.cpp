@@ -130,7 +130,7 @@ void Session::TrainIteration() {
 	SessionData& d = Data();
 	
 	const Vector<LayerBase>& layers = net.GetLayers();
-	bool train_regression = d.is_data_result ? false : layers.Top().IsRegressionLayer();
+	bool train_regression = d.is_data_result ? false : (layers.Top().IsRegressionLayer() || layers.Top().IsDeconvLayer());
 	
 	try {
 	
@@ -433,7 +433,9 @@ bool Session::MakeLayers(const String& json) {
 			else if (type == "softmax")		AddSoftmaxLayer(REQ(class_count));
 			else if (type == "regression")	AddRegressionLayer();
 			else if (type == "conv")		AddConvLayer(REQ(width), REQ(height), REQ(filter_count), DEF(l1_decay_mul, 0.0), DEF(l2_decay_mul, 1.0), DEF(stride, 1), DEF(pad, 0), DEF(bias_pref, 0.0));
+			else if (type == "deconv")		AddDeconvLayer(REQ(width), REQ(height), REQ(filter_count), DEF(l1_decay_mul, 0.0), DEF(l2_decay_mul, 1.0), DEF(stride, 1), DEF(pad, 0), DEF(bias_pref, 0.0));
 			else if (type == "pool")		AddPoolLayer(REQ(width), REQ(height), DEF(stride, 2), DEF(pad, 0));
+			else if (type == "unpool")		AddUnpoolLayer(REQ(width), REQ(height), DEF(stride, 2), DEF(pad, 0));
 			else if (type == "relu")		AddReluLayer();
 			else if (type == "sigmoid")		AddSigmoidLayer();
 			else if (type == "tanh")		AddTanhLayer();
@@ -634,9 +636,35 @@ LayerBase& Session::AddConvLayer(int width, int height, int filter_count, double
 	return conv;
 }
 
+LayerBase& Session::AddDeconvLayer(int width, int height, int filter_count, double l1_decay_mul, double l2_decay_mul, int stride, int pad, double bias_pref) {
+	LayerBase& conv = net.AddLayer();
+	conv.layer_type = DECONV_LAYER;
+	conv.filter_count = filter_count;
+	conv.width = width;
+	conv.height = height;
+	conv.l1_decay_mul = l1_decay_mul;
+	conv.l2_decay_mul = l2_decay_mul;
+	conv.stride = stride;
+	conv.pad = pad;
+	conv.bias_pref = bias_pref;
+	net.CheckLayer();
+	return conv;
+}
+
 LayerBase& Session::AddPoolLayer(int width, int height, int stride, int pad) {
 	LayerBase& pool = net.AddLayer();
 	pool.layer_type = POOL_LAYER;
+	pool.width = width;
+	pool.height = height;
+	pool.stride = stride;
+	pool.pad = pad;
+	net.CheckLayer();
+	return pool;
+}
+
+LayerBase& Session::AddUnpoolLayer(int width, int height, int stride, int pad) {
+	LayerBase& pool = net.AddLayer();
+	pool.layer_type = UNPOOL_LAYER;
 	pool.width = width;
 	pool.height = height;
 	pool.stride = stride;

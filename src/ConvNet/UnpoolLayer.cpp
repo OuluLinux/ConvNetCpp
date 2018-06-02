@@ -3,21 +3,21 @@
 
 namespace ConvNet {
 
-void LayerBase::InitPool(int input_width, int input_height, int input_depth) {
+void LayerBase::InitUnpool(int input_width, int input_height, int input_depth) {
 	
 	// Update Output Size
 	
 	// computed
 	output_depth = input_depth;
-	output_width = (int)floor((input_width + pad * 2 - width) / (double)stride + 1);
-	output_height = (int)floor((input_height + pad * 2 - height) / (double)stride + 1);
+	output_width  = (input_width - 1)  * stride - pad * 2 + width;
+	output_height = (input_height - 1) * stride - pad * 2 + height;
 	
 	// store switches for x,y coordinates for where the max comes from, for each output neuron
 	switchx.SetCount(output_width * output_height * output_depth, 0);
 	switchy.SetCount(output_width * output_height * output_depth, 0);
 }
 
-Volume& LayerBase::ForwardPool(Volume& input, bool is_training) {
+Volume& LayerBase::ForwardUnpool(Volume& input, bool is_training) {
 	input_activation = &input;
 	
 	output_activation.Init(output_width, output_height, output_depth, 0.0);
@@ -27,18 +27,20 @@ Volume& LayerBase::ForwardPool(Volume& input, bool is_training) {
 	{
 		// WTF C# version int n = depth * output_width * output_height;
 		
-		int x = -1.0 * pad;
-		for (int ax = 0; ax < output_width; x += stride, ax++) {
-			int y = -1.0 * pad;
-			for (int ay = 0; ay < output_height; y += stride, ay++) {
+		int x = +1.0 * pad - floor(width - 1);
+		for (int ax = 0; ax < output_width; x++, ax++) {
+			int y = +1.0 * pad - floor(height - 1);
+			for (int ay = 0; ay < output_height; y++, ay++) {
 				// convolve centered at this particular location
-				double a = -DBL_MAX;
+				double a = -1;
 				int winx = -1, winy = -1;
 				
 				for (int fx = 0; fx < width; fx++) {
 					for (int fy = 0; fy < height; fy++) {
-						int oy = y + fy;
-						int ox = x + fx;
+						int oy = (y + fy) / stride;
+						int ox = (x + fx) / stride;
+						if ((y + fy) % stride != 0) continue;
+						if ((x + fx) % stride != 0) continue;
 						if (oy >= 0 && oy < input.GetHeight() && ox >= 0 && ox < input.GetWidth()) {
 							double v = input.Get(ox, oy, depth);
 							// perform max pooling and store pointers to where
@@ -64,7 +66,7 @@ Volume& LayerBase::ForwardPool(Volume& input, bool is_training) {
 	return output_activation;
 }
 
-void LayerBase::BackwardPool() {
+void LayerBase::BackwardUnpool() {
 	// pooling layers have no parameters, so simply compute
 	// gradient wrt data here
 	Volume& input = *input_activation;
@@ -88,7 +90,7 @@ void LayerBase::BackwardPool() {
 	}
 }
 
-String LayerBase::ToStringPool() const {
+String LayerBase::ToStringUnpool() const {
 	return Format("Pool: w:%d, h:%d, d:%d stride:%d pad:%d",
 		output_width, output_height, output_depth, stride, pad);
 }

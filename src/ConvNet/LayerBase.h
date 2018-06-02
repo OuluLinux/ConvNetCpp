@@ -21,7 +21,9 @@ enum {
 	SOFTMAX_LAYER,
 	REGRESSION_LAYER,
 	CONV_LAYER,
+	DECONV_LAYER,
 	POOL_LAYER,
+	UNPOOL_LAYER,
 	RELU_LAYER,
 	SIGMOID_LAYER,
 	TANH_LAYER,
@@ -141,11 +143,24 @@ public:
 	int GetStride() const {return stride;}
 	int GetPad() const {return pad;}
 	
+	// Deconvolutive layer
+	Volume& ForwardDeconv(Volume& input, bool is_training = false);
+	double BackwardDeconv();
+	double BackwardDeconv(const Vector<double>& y);
+	void InitDeconv(int input_width, int input_height, int input_depth);
+	String ToStringDeconv() const;
+	
 	// Pool layer
 	Volume& ForwardPool(Volume& input, bool is_training = false);
 	void BackwardPool();
 	void InitPool(int input_width, int input_height, int input_depth);
 	String ToStringPool() const;
+	
+	// Unpool layer
+	Volume& ForwardUnpool(Volume& input, bool is_training = false);
+	void BackwardUnpool();
+	void InitUnpool(int input_width, int input_height, int input_depth);
+	String ToStringUnpool() const;
 	
 	// Relu layer
 	Volume& ForwardRelu(Volume& input, bool is_training = false);
@@ -189,14 +204,15 @@ public:
 	double Backward(int cols, const Vector<int>& pos, const Vector<double>& y);
 	void Init(int input_width, int input_height, int input_depth);
 	Vector<ParametersAndGradients>& GetParametersAndGradients();
-	bool IsDotProductLayer() const {return layer_type == CONV_LAYER;}
+	bool IsDotProductLayer() const {return layer_type == CONV_LAYER || layer_type == DECONV_LAYER;}
 	bool IsClassificationLayer() const {return layer_type == SOFTMAX_LAYER || layer_type == SVM_LAYER;}
 	bool IsInputLayer() const {return layer_type == INPUT_LAYER;}
 	bool IsFullyConnLayer() const {return layer_type == FULLYCONN_LAYER;}
 	bool IsRegressionLayer() const {return layer_type == REGRESSION_LAYER;}
+	bool IsDeconvLayer() const {return layer_type == DECONV_LAYER;}
 	bool IsReluLayer() const {return layer_type == RELU_LAYER;}
 	bool IsSoftMaxLayer() const {return layer_type == SOFTMAX_LAYER;}
-	bool IsLastLayer() const {return layer_type == REGRESSION_LAYER || layer_type == SOFTMAX_LAYER || layer_type == SVM_LAYER;}
+	bool IsLastLayer() const {return layer_type == REGRESSION_LAYER || layer_type == SOFTMAX_LAYER || layer_type == SVM_LAYER || layer_type == DECONV_LAYER;}
 	String ToString() const;
 	String GetKey() const;
 	

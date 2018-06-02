@@ -42,20 +42,20 @@ Volume& LayerBase::ForwardConv(Volume& input, bool is_training) {
 	for (int depth = 0; depth < output_depth; depth++)
 	{
 		const Volume& filter = filters[depth];
-		double y = -1.0 * GetPad();
+		int y = -1 * GetPad();
 		
 		for (int ay = 0; ay < output_height; y += xy_stride, ay++) {
-			double x = -1.0 * GetPad();
+			int x = -1 * GetPad();
 			for (int ax = 0; ax < output_width; x += xy_stride, ax++) {
 				
 				// convolve centered at this particular location
 				double a = 0.0;
 				for (int fy = 0; fy < filter.GetHeight(); fy++) {
-					double oy = y + fy; // coordinates in the original input array coordinates
+					int oy = y + fy; // coordinates in the original input array coordinates
 					for (int fx = 0; fx < filter.GetWidth(); fx++) {
-						double ox = x + fx;
+						int ox = x + fx;
 						if (oy >= 0 && oy < volume_height && ox >= 0 && ox < volume_width) {
-							for (double fd = 0; fd < filter.GetDepth(); fd++) {
+							for (int fd = 0; fd < filter.GetDepth(); fd++) {
 								// avoid function call overhead (x2) for efficiency, compromise modularity :(
 								a += filter.Get((filter.GetWidth() * fy + fx) * filter.GetDepth() + fd) *
 									 input.Get((volume_width * oy + ox) * input.GetDepth() + fd);
@@ -87,10 +87,10 @@ void LayerBase::BackwardConv() {
 	{
 		Volume& filter = filters[depth];
 		
-		double y = -1.0 * pad;
+		int y = -1 * pad;
 		for (int ay = 0; ay < output_height; y += xy_stride, ay++) {
 			
-			double x = -1.0 * pad;
+			int x = -1 * pad;
 			for (int ax = 0; ax < output_width; x += xy_stride, ax++) {
 				
 				// convolve centered at this particular location
@@ -98,9 +98,9 @@ void LayerBase::BackwardConv() {
 				
 				// gradient from above, from chain rule
 				for (int fy = 0; fy < filter.GetHeight(); fy++) {
-					double oy = y + fy; // coordinates in the original input array coordinates
+					int oy = y + fy; // coordinates in the original input array coordinates
 					for (int fx = 0; fx < filter.GetWidth(); fx++) {
-						double ox = x + fx;
+						int ox = x + fx;
 						if (oy >= 0 && oy < volume_height && ox >= 0 && ox < volume_width) {
 							for (int fd = 0; fd < filter.GetDepth(); fd++) {
 								filter.AddGradient(fx, fy, fd, input.Get(ox, oy, fd) * chain_gradient_);

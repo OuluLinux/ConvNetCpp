@@ -55,7 +55,9 @@ Volume& LayerBase::Forward(Volume& input, bool is_training) {
 		case SOFTMAX_LAYER:		return ForwardSoftmax(input, is_training); break;
 		case REGRESSION_LAYER:	return ForwardRegression(input, is_training); break;
 		case CONV_LAYER:		return ForwardConv(input, is_training); break;
+		case DECONV_LAYER:		return ForwardDeconv(input, is_training); break;
 		case POOL_LAYER:		return ForwardPool(input, is_training); break;
+		case UNPOOL_LAYER:		return ForwardUnpool(input, is_training); break;
 		case RELU_LAYER:		return ForwardRelu(input, is_training); break;
 		case SIGMOID_LAYER:		return ForwardSigmoid(input, is_training); break;
 		case TANH_LAYER:		return ForwardTanh(input, is_training); break;
@@ -85,7 +87,9 @@ double LayerBase::Backward() {
 		//case SOFTMAX_LAYER:		BackwardSoftmax(); break;
 		//case REGRESSION_LAYER:	BackwardRegression(); break;
 		case CONV_LAYER:		BackwardConv(); return 0;
+		case DECONV_LAYER:		BackwardDeconv(); return 0;
 		case POOL_LAYER:		BackwardPool(); return 0;
+		case UNPOOL_LAYER:		BackwardUnpool(); return 0;
 		case RELU_LAYER:		BackwardRelu(); return 0;
 		case SIGMOID_LAYER:		BackwardSigmoid(); return 0;
 		case TANH_LAYER:		BackwardTanh(); return 0;
@@ -109,6 +113,7 @@ double LayerBase::Backward(int pos, double y) {
 double LayerBase::Backward(const Vector<double>& y) {
 	switch (layer_type) {
 		case REGRESSION_LAYER:	return BackwardRegression(y); break;
+		case DECONV_LAYER:		return BackwardDeconv(y); break;
 		default: Panic("Type not implemented");
 	}
 	throw Exc();
@@ -132,7 +137,9 @@ String LayerBase::ToString() const {
 		case SOFTMAX_LAYER:		return ToStringSoftmax(); break;
 		case REGRESSION_LAYER:	return ToStringRegression(); break;
 		case CONV_LAYER:		return ToStringConv(); break;
+		case DECONV_LAYER:		return ToStringDeconv(); break;
 		case POOL_LAYER:		return ToStringPool(); break;
+		case UNPOOL_LAYER:		return ToStringUnpool(); break;
 		case RELU_LAYER:		return ToStringRelu(); break;
 		case SIGMOID_LAYER:		return ToStringSigmoid(); break;
 		case TANH_LAYER:		return ToStringTanh(); break;
@@ -153,7 +160,9 @@ String LayerBase::GetKey() const {
 		case SOFTMAX_LAYER: return "softmax"; break;
 		case REGRESSION_LAYER: return "regression"; break;
 		case CONV_LAYER: return "conv"; break;
+		case DECONV_LAYER: return "deconv"; break;
 		case POOL_LAYER: return "pool"; break;
+		case UNPOOL_LAYER: return "unpool"; break;
 		case RELU_LAYER: return "relu"; break;
 		case SIGMOID_LAYER: return "sigmoid"; break;
 		case TANH_LAYER: return "tanh"; break;
@@ -187,8 +196,12 @@ void LayerBase::Init(int input_width, int input_height, int input_depth) {
 			InitRegression(input_width, input_height, input_depth); break;
 		case CONV_LAYER:
 			InitConv(input_width, input_height, input_depth); break;
+		case DECONV_LAYER:
+			InitDeconv(input_width, input_height, input_depth); break;
 		case POOL_LAYER:
 			InitPool(input_width, input_height, input_depth); break;
+		case UNPOOL_LAYER:
+			InitUnpool(input_width, input_height, input_depth); break;
 		case RELU_LAYER:
 			InitRelu(input_width, input_height, input_depth); break;
 		case SIGMOID_LAYER:
