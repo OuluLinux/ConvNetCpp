@@ -10,10 +10,8 @@ void LayerBase::InitDeconv(int input_width, int input_height, int input_depth) {
 	output_depth = filter_count;
 	
 	// interpreted from https://github.com/vdumoulin/conv_arithmetic
-	output_width  = (input_width - 1)  * stride - pad * 2 + width;
-	output_height = (input_height - 1) * stride - pad * 2 + height;
-	//output_width  = input_width  + floor(input_width /2)*(stride-1) + (input_width -1) - pad * 2 / stride + floor(pad / stride);
-	//output_height = input_height + floor(input_height/2)*(stride-1) + (input_height-1) - pad * 2 / stride + floor(pad / stride);
+	output_width  = (input_width - 1)  * stride - pad * 2 + width + (stride - 1);
+	output_height = (input_height - 1) * stride - pad * 2 + height + (stride - 1);
 	
 	// initializations
 	double bias = bias_pref;
@@ -121,59 +119,11 @@ double LayerBase::BackwardDeconv() {
 }
 
 double LayerBase::BackwardDeconv(const Vector<double>& vec) {
-	int length = output_width * output_height * output_depth;
-	if(vec.GetCount() != length)
-		throw Exc("Invalid output size in last layer");
 	
-	Volume& input = *input_activation;
-	input.ZeroGradients(); // zero out gradient wrt bottom data, we're about to fill it
+	for(int i = 0; i < vec.GetCount(); i++)
+		output_activation.SetGradient(i, vec[i]);
 	
-	int volume_width = input.GetWidth();
-	int volume_height = input.GetHeight();
-	int volumeDepth = input.GetDepth();
-	
-	
-	double loss = 0.0;
-	
-	for (int depth = 0; depth < output_depth; depth++)
-	{
-		Volume& filter = filters[depth];
-		
-		int y = +1 * pad - floor(height - 1);
-		for (int ay = 0; ay < output_height; y++, ay++) {
-			
-			int x = +1 * pad - floor(width - 1);
-			for (int ax = 0; ax < output_width; x++, ax++) {
-				
-				// convolve centered at this particular location
-				double out = output_activation.Get(ax, ay, depth);
-				double ret = Volume::Get(vec, ax, ay, depth, output_width, output_depth);
-				double chain_gradient_ = (out - ret) * 0.1;
-				
-				loss += 0.5 * chain_gradient_ * chain_gradient_;
-				
-				// gradient from above, from chain rule
-				for (int fy = 0; fy < filter.GetHeight(); fy++) {
-					if ((y + fy) % stride != 0) continue;
-					int oy = (y + fy) / stride; // coordinates in the original input array coordinates
-					for (int fx = 0; fx < filter.GetWidth(); fx++) {
-						if ((x + fx) % stride != 0) continue;
-						int ox = (x + fx) / stride;
-						if (oy >= 0 && oy < volume_height && ox >= 0 && ox < volume_width) {
-							for (int fd = 0; fd < filter.GetDepth(); fd++) {
-								filter.AddGradient(fx, fy, fd, input.Get(ox, oy, fd) * chain_gradient_);
-								input.AddGradient( ox, oy, fd, filter.Get(fx, fy, fd) * chain_gradient_);
-							}
-						}
-					}
-				}
-				
-				biases.AddGradient(depth, chain_gradient_);
-			}
-		}
-	}
-	
-	return loss;
+	return BackwardDeconv();
 }
 
 String LayerBase::ToStringDeconv() const {

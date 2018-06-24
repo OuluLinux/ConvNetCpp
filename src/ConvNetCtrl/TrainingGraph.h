@@ -39,6 +39,7 @@ public:
 	
 	void StepInterval(int num_steps);
 	void RefreshData();
+	void PostAddValue(double value) {PostCallback(THISBACK1(AddValue, value));}
 	void AddValue(double value);
 	void AddValue();
 	void Clear();

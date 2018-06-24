@@ -20,18 +20,34 @@ Volume& LayerBase::ForwardTanh(Volume& input, bool is_training) {
 	return output_activation;
 }
 
-void LayerBase::BackwardTanh() {
+double LayerBase::BackwardTanh() {
 	Volume& input = *input_activation; // we need to set dw of this
 	Volume& output = output_activation;
 	int length = input.GetLength();
 	
 	input.ZeroGradients(); // zero out gradient wrt data
 	
+	double loss = 0.0;
 	for (int i = 0; i < length; i++)
 	{
 		double v2wi = output.Get(i);
-		input.SetGradient(i, (1.0 - v2wi * v2wi) * output.GetGradient(i));
+		double dy = (1.0 - v2wi * v2wi) * output.GetGradient(i);
+		input.SetGradient(i, dy);
+		
+		loss += 0.5 * dy * dy;
 	}
+	
+	return loss;
+}
+
+double LayerBase::BackwardTanh(const Vector<double>& y) {
+	Volume& input = *input_activation; // we need to set dw of this
+	Volume& output = output_activation;
+	
+	for(int i = 0; i < y.GetCount(); i++)
+		output.SetGradient(i, y[i]);
+	
+	return BackwardTanh();
 }
 
 String LayerBase::ToStringTanh() const {

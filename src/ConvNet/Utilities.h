@@ -3,7 +3,7 @@
 
 #include <random>
 #include <Core/Core.h>
-
+#include <Draw/Draw.h>
 
 namespace ConvNet {
 using namespace Upp;
@@ -50,6 +50,7 @@ public:
 	Volume& operator=(const Volume& src);
 	Volume& Set(const Volume& src);
 	Volume& Set(const Vector<double>& src);
+	Volume& Set(int w, int h, int d, const Vector<double>& src);
 	
 	const Vector<double>& GetWeights() const {return weights;}
 	const Vector<double>& GetGradients() const {return weight_gradients;}
@@ -62,14 +63,18 @@ public:
 	void AddGradient(int i, double v);
 	void AddGradientFrom(const Volume& volume);
 	double Get(int x, int y, int d) const;
+	double TryGet(int x, int y, int d) const;
 	double GetGradient(int x, int y, int d) const;
+	double TryGetGradient(int x, int y, int d) const;
 	void Set(int x, int y, int d, double v);
 	void SetConst(double c);
 	void SetConstGradient(double c);
 	void SetGradient(int x, int y, int d, double v);
 	double Get(int i) const;
+	double TryGet(int i) const;
 	void Set(int i, double v);
 	double GetGradient(int i) const;
+	double TryGetGradient(int i) const;
 	void SetGradient(int i, double v);
 	void ZeroGradients();
 	void Serialize(Stream& s);
@@ -78,6 +83,7 @@ public:
 	void SwapData(Volume& vol);
 	
 	int GetPos(int x, int y, int d) const;
+	int TryGetPos(int x, int y, int d) const;
 	int GetWidth()  const {return width;}
 	int GetHeight() const {return height;}
 	int GetDepth()  const {return depth;}
@@ -85,6 +91,7 @@ public:
 	int GetMaxColumn() const;
 	int GetSampledColumn() const;
 	int GetCount() const {return weights.GetCount();}
+	int GetGradientCount() const {return weight_gradients.GetCount();}
 	
 	static double Get(const Vector<double>& in, int x, int y, int d, int width, int depth) {
 		ASSERT(x >= 0 && y >= 0 && d >= 0 && x < width && d < depth);
@@ -289,6 +296,24 @@ inline void HeaplessCopy(Vector<double>& dest, const Vector<double>& src) {
 	for(int i = 0; i < count; i++)
 		dest[i] = src[i];
 }
+
+
+struct OnlineAverage : Moveable<OnlineAverage> {
+	double mean;
+	int64 count;
+	OnlineAverage() : mean(0), count(0) {}
+	void Clear() {mean = 0.0; count = 0;}
+	void Add(double a) {
+		if (count == 0) {
+			mean = a;
+		} else {
+			double delta = a - mean;
+			mean += delta / count;
+		}
+		count++;
+	}
+	void Serialize(Stream& s) {s % mean % count;}
+};
 
 }
 

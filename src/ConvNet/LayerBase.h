@@ -23,7 +23,7 @@ enum {
 	CONV_LAYER,
 	DECONV_LAYER,
 	POOL_LAYER,
-	UNPOOL_LAYER,
+	UNPOOL_LAYER, // 10
 	RELU_LAYER,
 	SIGMOID_LAYER,
 	TANH_LAYER,
@@ -99,7 +99,8 @@ public:
 	// Fully connected
 	int GetInputCount() const {return input_count;}
 	Volume& ForwardFullyConn(Volume& input, bool is_training = false);
-	void BackwardFullyConn();
+	double BackwardFullyConn();
+	double BackwardFullyConn(const Vector<double>& y);
 	void InitFullyConn(int input_width, int input_height, int input_depth);
 	String ToStringFullyConn() const;
 	
@@ -170,13 +171,15 @@ public:
 	
 	// Sigmoid layer
 	Volume& ForwardSigmoid(Volume& input, bool is_training = false);
-	void BackwardSigmoid();
+	double BackwardSigmoid();
+	double BackwardSigmoid(const Vector<double>& y);
 	void InitSigmoid(int input_width, int input_height, int input_depth);
 	String ToStringSigmoid() const;
 	
 	// Tanh layer
 	Volume& ForwardTanh(Volume& input, bool is_training = false);
-	void BackwardTanh();
+	double BackwardTanh();
+	double BackwardTanh(const Vector<double>& y);
 	void InitTanh(int input_width, int input_height, int input_depth);
 	String ToStringTanh() const;
 	
@@ -212,7 +215,7 @@ public:
 	bool IsDeconvLayer() const {return layer_type == DECONV_LAYER;}
 	bool IsReluLayer() const {return layer_type == RELU_LAYER;}
 	bool IsSoftMaxLayer() const {return layer_type == SOFTMAX_LAYER;}
-	bool IsLastLayer() const {return layer_type == REGRESSION_LAYER || layer_type == SOFTMAX_LAYER || layer_type == SVM_LAYER || layer_type == DECONV_LAYER;}
+	bool IsLastLayer() const {return layer_type == REGRESSION_LAYER || layer_type == SOFTMAX_LAYER || layer_type == SVM_LAYER || layer_type == DECONV_LAYER || layer_type == SIGMOID_LAYER || layer_type == TANH_LAYER || layer_type == FULLYCONN_LAYER;}
 	String ToString() const;
 	String GetKey() const;
 	

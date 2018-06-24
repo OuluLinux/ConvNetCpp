@@ -22,16 +22,32 @@ Volume& LayerBase::ForwardSigmoid(Volume& input, bool is_training) {
 	return output_activation;
 }
 
-void LayerBase::BackwardSigmoid() {
+double LayerBase::BackwardSigmoid() {
 	Volume& input = *input_activation; // we need to set dw of this
 	Volume& output = output_activation;
 	
 	input.ZeroGradients(); // zero out gradient wrt data
 	
+	double loss = 0.0;
 	for (int i = 0; i < input.GetLength(); i++) {
 		double v2wi = output.Get(i);
-		input.SetGradient(i, v2wi * (1.0 - v2wi) * output.GetGradient(i));
+		double dy = v2wi * (1.0 - v2wi) * output.GetGradient(i);
+		input.SetGradient(i, dy);
+		
+		loss += 0.5 * dy * dy;
 	}
+	
+	return loss;
+}
+
+double LayerBase::BackwardSigmoid(const Vector<double>& y) {
+	Volume& input = *input_activation; // we need to set dw of this
+	Volume& output = output_activation;
+	
+	for(int i = 0; i < y.GetCount(); i++)
+		output.SetGradient(i, y[i]);
+	
+	return BackwardSigmoid();
 }
 
 String LayerBase::ToStringSigmoid() const {

@@ -114,6 +114,9 @@ double LayerBase::Backward(const Vector<double>& y) {
 	switch (layer_type) {
 		case REGRESSION_LAYER:	return BackwardRegression(y); break;
 		case DECONV_LAYER:		return BackwardDeconv(y); break;
+		case SIGMOID_LAYER:		return BackwardSigmoid(y); break;
+		case FULLYCONN_LAYER:	return BackwardFullyConn(y); break;
+		case TANH_LAYER:		return BackwardTanh(y); break;
 		default: Panic("Type not implemented");
 	}
 	throw Exc();

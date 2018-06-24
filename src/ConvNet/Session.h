@@ -89,7 +89,7 @@ public:
 	LayerBase&			AddTanhLayer();
 	LayerBase&			AddMaxoutLayer(int group_size);
 	LayerBase&			AddSVMLayer(int class_count);
-	
+	LayerBase&			GetLayer(int i) {return net.GetLayers()[i];}
 	
 	Net& GetNetwork();
 	LayerBase* GetInput();

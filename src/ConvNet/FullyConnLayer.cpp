@@ -43,7 +43,7 @@ Volume& LayerBase::ForwardFullyConn(Volume& input, bool is_training) {
 	return output_activation;
 }
 
-void LayerBase::BackwardFullyConn() {
+double LayerBase::BackwardFullyConn() {
 	ASSERT(input_activation);
 	Volume& input = *input_activation;
 	ASSERT(output_activation.GetLength());
@@ -62,6 +62,23 @@ void LayerBase::BackwardFullyConn() {
 		}
 		biases.SetGradient(i, biases.GetGradient(i) + chain_gradient_);
 	}
+	
+	double loss = 0;
+	for(int i = 0; i < input_count; i++) {
+		double dy = input.GetGradient(i);
+		loss += 0.5 * dy * dy;
+	}
+	return loss;
+}
+
+double LayerBase::BackwardFullyConn(const Vector<double>& y) {
+	Volume& input = *input_activation; // we need to set dw of this
+	Volume& output = output_activation;
+	
+	for(int i = 0; i < y.GetCount(); i++)
+		output.SetGradient(i, y[i]);
+	
+	return BackwardFullyConn();
 }
 
 String LayerBase::ToStringFullyConn() const {

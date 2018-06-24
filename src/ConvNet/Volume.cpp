@@ -133,6 +133,19 @@ Volume& Volume::Set(const Vector<double>& src) {
 	return *this;
 }
 
+Volume& Volume::Set(int w, int h, int d, const Vector<double>& src) {
+	width = w;
+	height = h;
+	depth = d;
+	length = w * h * d;
+	ASSERT(src.GetCount() == length);
+	HeaplessCopy(weights, src);
+	weight_gradients.SetCount(length);
+	for(int i = 0; i < length; i++)
+		weight_gradients[i] = 0;
+	return *this;
+}
+
 Volume& Volume::Init(int width, int height, int depth) {
 	ASSERT(width > 0 && height > 0 && depth > 0);
 	
@@ -205,6 +218,10 @@ Volume& Volume::Init(int width, int height, int depth, const Vector<double>& w) 
 
 int Volume::GetPos(int x, int y, int d) const {
 	ASSERT(x >= 0 && y >= 0 && d >= 0 && x < width && y < height && d < depth);
+	return ((width * y) + x) * depth + d;
+}
+
+int Volume::TryGetPos(int x, int y, int d) const {
 	return ((width * y) + x) * depth + d;
 }
 
@@ -281,8 +298,38 @@ double Volume::Get(int i) const {
 	return weights[i];
 }
 
+double Volume::TryGet(int i) const {
+	const double* d = weights.Begin() + i;
+	if (i >= 0 && i < weights.GetCount())
+		return *d;
+	return 0;
+}
+
 double Volume::GetGradient(int i) const {
 	return weight_gradients[i];
+}
+
+double Volume::TryGetGradient(int i) const {
+	const double* d = weight_gradients.Begin() + i;
+	if (i >= 0 && i < weight_gradients.GetCount())
+		return *d;
+	return 0;
+}
+
+double Volume::TryGetGradient(int x, int y, int d) const {
+	int i = TryGetPos(x,y,d);
+	const double* wg = weight_gradients.Begin() + i;
+	if (i >= 0 && i < weight_gradients.GetCount())
+		return *wg;
+	return 0;
+}
+
+double Volume::TryGet(int x, int y, int d) const {
+	int i = TryGetPos(x,y,d);
+	const double* wg = weights.Begin() + i;
+	if (i >= 0 && i < weights.GetCount())
+		return *wg;
+	return 0;
 }
 
 void Volume::SetGradient(int i, double v) {

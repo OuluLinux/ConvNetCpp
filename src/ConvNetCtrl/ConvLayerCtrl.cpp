@@ -64,7 +64,7 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 	y += txt_sz.cy;
 	
 	
-	if (type == "conv") {
+	if (type == "conv" || type == "deconv") {
 		String s = "filter size ";
 		if (!l.filters.IsEmpty()) {
 			Volume& f0 = l.filters[0];
@@ -86,7 +86,7 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 		y += txt_sz.cy;
 		
 	}
-	else if (type == "pool") {
+	else if (type == "pool" || type == "unpool") {
 		String s;
 		s << "pooling size " <<
 			l.width << "x" << l.height << ", stride " << l.stride;
@@ -143,7 +143,7 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 	
 	// visualize activations
 	Point pt(xoff, 4);
-	if (type == "regression") {
+	if (type == "regression" || type == "input") {
 		int scale = 2;
 		String s;
 		s << "Activations:";
@@ -176,7 +176,19 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 		txt_sz = GetTextSize(s, fnt);
 		id.DrawText(pt.x, pt.y, s, fnt);
 		pt.y += txt_sz.cy;
-		DrawActivations(id, sz, pt, l.output_activation, scale, false);
+		int depth = l.output_activation.GetDepth();
+		int w = sqrt((double)depth);
+		int h = w ? depth / w : 0;
+		int w_clr = sqrt((double)depth / 3);
+		int h_clr = w_clr ? depth / 3 / w_clr : 0;
+		if (w * h == depth && l.output_activation.GetWidth() == 1 && l.output_activation.GetHeight() == 1) {
+			Volume v(w, h, 1, l.output_activation);
+			DrawActivations(id, sz, pt, v, scale, false);
+		}
+		else {
+			DrawActivations(id, sz, pt, l.output_activation, scale, false);
+		}
+		//DrawActivations(id, sz, pt, l.output_activation, scale, true);
 	}
 	
 	
@@ -190,12 +202,22 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 		txt_sz = GetTextSize(s, fnt);
 		id.DrawText(pt.x, pt.y, s, fnt);
 		pt.y += txt_sz.cy;
-		DrawActivations(id, sz, pt, l.output_activation, scale, true);
+		int depth = l.output_activation.GetDepth();
+		int w = sqrt((double)depth);
+		int h = w ? depth / w : 0;
+		int w_clr = sqrt((double)depth / 3);
+		int h_clr = w_clr ? depth / 3 / w_clr : 0;
+		if (w * h == depth && l.output_activation.GetWidth() == 1 && l.output_activation.GetHeight() == 1) {
+			Volume v(w, h, 1, l.output_activation);
+			DrawActivations(id, sz, pt, v, scale, true);
+		} else {
+			DrawActivations(id, sz, pt, l.output_activation, scale, true);
+		}
 	}
 	
 	
 	// visualize filters if they are of reasonable size
-	if (type == "conv") {
+	if (type == "conv" || type == "deconv") {
 		if (!l.filters.IsEmpty() && l.filters[0].GetWidth() > 3) {
 			int count = l.filters.GetCount();
 			
@@ -245,7 +267,8 @@ void ConvLayerCtrl::DrawActivations(Draw& draw, Size& sz, Point& pt, Volume& v, 
 	double max = -DBL_MAX;
 	if (!v.GetCount()) return;
 	for(int i = 0; i < v.GetLength(); i++) {
-		double d = draw_grads ? v.GetGradient(i) : v.Get(i);
+		double d;
+		d = draw_grads ? v.TryGetGradient(i) : v.TryGet(i);
 		if (d > max) max = d;
 		if (d < min) min = d;
 	}
@@ -254,6 +277,9 @@ void ConvLayerCtrl::DrawActivations(Draw& draw, Size& sz, Point& pt, Volume& v, 
 	int W = v.GetWidth() * s;
 	int H = v.GetHeight() * s;
 	
+	bool keep_it = false;
+	if (v.GetWidth() == 1 && v.GetHeight() == 1 && v.GetDepth() > 1)
+		keep_it = true;
 	
 	// create the canvas elements, draw and add to DOM
 	bool is_color = this->is_color;
@@ -264,21 +290,22 @@ void ConvLayerCtrl::DrawActivations(Draw& draw, Size& sz, Point& pt, Volume& v, 
 	for (int d = 0; d < v.GetDepth(); d += is_color ? 3 : 1) {
 		ImageBuffer ib(W, H);
 		RGBA* it = ib.Begin();
+		int it_x = 0, it_y = 0;
 		bool has_white = false;
+		if (!v.GetCount()) break;
 		
 		for(int y = 0; y < v.GetHeight(); y++) {
 			for (int x = 0; x < v.GetWidth(); x++) {
-				if (!v.GetCount()) break;
 				
 				// Grayscale image
 				if (!is_color) {
 					byte dval;
 					if (draw_grads) {
-						dval = (v.GetGradient(x, y, d) - min) / diff * 255;
+						dval = (v.TryGetGradient(x, y, d) - min) / diff * 255;
 						if (dval > 64)
 							has_white = true;
 					} else {
-						dval = (v.Get(x, y, d) - min) / diff * 255;
+						dval = (v.TryGet(x, y, d) - min) / diff * 255;
 					}
 					
 					for (int dy = 0; dy < s; dy++) {
@@ -296,15 +323,15 @@ void ConvLayerCtrl::DrawActivations(Draw& draw, Size& sz, Point& pt, Volume& v, 
 				else {
 					byte r, g, b;
 					if (draw_grads) {
-						r = (v.GetGradient(x, y, d + 0) - min) / diff * 255;
-						g = (v.GetGradient(x, y, d + 1) - min) / diff * 255;
-						b = (v.GetGradient(x, y, d + 2) - min) / diff * 255;
+						r = (v.TryGetGradient(x, y, d + 0) - min) / diff * 255;
+						g = (v.TryGetGradient(x, y, d + 1) - min) / diff * 255;
+						b = (v.TryGetGradient(x, y, d + 2) - min) / diff * 255;
 						if (r > 64)
 							has_white = true;
 					} else {
-						r = (v.Get(x, y, d + 0) - min) / diff * 255;
-						g = (v.Get(x, y, d + 1) - min) / diff * 255;
-						b = (v.Get(x, y, d + 2) - min) / diff * 255;
+						r = (v.TryGet(x, y, d + 0) - min) / diff * 255;
+						g = (v.TryGet(x, y, d + 1) - min) / diff * 255;
+						b = (v.TryGet(x, y, d + 2) - min) / diff * 255;
 					}
 					
 					for (int dy = 0; dy < s; dy++) {
@@ -319,11 +346,10 @@ void ConvLayerCtrl::DrawActivations(Draw& draw, Size& sz, Point& pt, Volume& v, 
 					}
 				}
 				
-				it += s;
+				if (!keep_it) it += s;
 			}
-			it += (s - 1) * W;
 			
-			
+			if (!keep_it) it += (s - 1) * W;
 		}
 		
 		// Gradient images need to be cached to drawer, because it does not fit in the engine.
