@@ -48,16 +48,8 @@ double sample2() {
 		return RandomNormal()*sigma2 + mu2;
 	}
 }
-// various vis hyperparams
-int orih = 350;
-int orix0 = 10;
-int orix1 = 390;
-int transh = 250;
 
-// various learning hyperparams
-double dt = 0.02;
-double lr = 0.0001;
-double reg = 0.00001;
+#ifndef flagUSE_CONVNET
 
 
 
@@ -186,3 +178,5 @@ void SimpleGAN::Paint(Draw& w) {
 	
 	w.DrawImage(0,0,id);
 }
+
+#endif

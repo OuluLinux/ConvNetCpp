@@ -1,13 +1,16 @@
 uses
-	CtrlLib;
+	CtrlLib,
+	ConvNet;
 
 file
 	Copying,
 	SimpleGAN.h,
 	SimpleGAN.cpp,
+	ConvNetVersion.cpp,
 	main.cpp,
 	SimpleGAN.iml;
 
 mainconfig
-	"" = "GUI";
+	"" = "GUI",
+	"Use ConvNet" = "GUI USE_CONVNET";
 

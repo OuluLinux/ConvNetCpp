@@ -2,8 +2,9 @@
 #define _SimpleGAN_SimpleGAN_h
 
 #include <CtrlLib/CtrlLib.h>
-
+#include <ConvNet/ConvNet.h>
 using namespace Upp;
+using namespace ConvNet;
 
 #define IMAGEFILE <SimpleGAN/SimpleGAN.iml>
 #include <Draw/iml_header.h>
@@ -13,6 +14,8 @@ double pdf2(double t);
 double sample1();
 double sample2();
 
+
+#ifndef flagUSE_CONVNET
 // a simple 2layer Net, except we have to be careful because our inputs are 1D scalars. Must be careful with init
 class Net {
 	
@@ -101,12 +104,34 @@ public:
 		grad_param.b2 = 0;
 	}
 };
+#endif
+
 
 class SimpleGAN : public TopWindow {
 	double (*pdf)(double);
 	double (*sample)();
 	
+	#ifndef flagUSE_CONVNET
 	Net gen, disc;
+	#else
+	Session gen, disc;
+	Volume tmp_input;
+	Vector<double> tmp_ret;
+	int input_width, input_height, input_depth;
+	#endif
+	
+	// various vis hyperparams
+	int orih = 350;
+	int orix0 = 10;
+	int orix1 = 390;
+	int transh = 250;
+	
+	// various learning hyperparams
+	double dt = 0.02;
+	double lr = 0.0001;
+	double reg = 0.00001;
+
+	
 	bool running = false, stopped = true;
 	
 public:
