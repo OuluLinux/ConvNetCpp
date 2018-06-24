@@ -115,7 +115,7 @@ void GANLayer::Train() {
 	for(int i = 0; i < disc_in_grads.GetCount(); i++)
 		tmp_ret[i] = -disc_in_grads[i]; // negate
 	double gen_cost = gen_net.Backward(tmp_ret);
-	#elif 1
+	#elif 0
 	// Works better
 	tmp_ret[0] = sgen.Get(0) - 1;
 	double disc_loss = disc_net.Backward(tmp_ret);
