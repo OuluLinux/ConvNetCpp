@@ -104,7 +104,7 @@ void GANLayer::Train() {
 	// backward the generator
 	SampleInput();
 	Volume& xgen = gen_net.Forward(tmp_input, true);
-	Volume& sgen = disc_net.Forward(xgen, true);
+	Volume& sgen = disc_net.Forward(xgen, false);
 	
 	#if 0
 	// Original Simple GAN

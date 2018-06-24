@@ -45,12 +45,12 @@ ClassifyImages::ClassifyImages(int loader, int type)
 			Title("MNIST convolutive autoencoder");
 			t =		"[\n"
 					"\t{\"type\":\"input\", \"input_width\":28, \"input_height\":28, \"input_depth\":1},\n"
-					"\t{\"type\":\"conv\", \"width\":5, \"height\":5, \"filter_count\":3, \"stride\":1, \"pad\":2, \"activation\":\"relu\"},\n"
+					"\t{\"type\":\"conv\", \"width\":5, \"height\":5, \"filter_count\":1, \"stride\":1, \"pad\":2, \"activation\":\"relu\"},\n"
 					"\t{\"type\":\"pool\", \"width\":2, \"height\":2, \"stride\":2},\n"
-					"\t{\"type\":\"conv\", \"width\":5, \"height\":5, \"filter_count\":3, \"stride\":1, \"pad\":2, \"activation\":\"relu\"},\n"
+					"\t{\"type\":\"conv\", \"width\":5, \"height\":5, \"filter_count\":1, \"stride\":1, \"pad\":2, \"activation\":\"relu\"},\n"
 					"\t{\"type\":\"pool\", \"width\":2, \"height\":2, \"stride\":2},\n"
 					"\t{\"type\":\"unpool\", \"width\":2, \"height\":2, \"stride\":2},\n"
-					"\t{\"type\":\"deconv\", \"width\":5, \"height\":5, \"filter_count\":3, \"stride\":1, \"pad\":2, \"activation\":\"relu\"},\n"
+					"\t{\"type\":\"deconv\", \"width\":5, \"height\":5, \"filter_count\":1, \"stride\":1, \"pad\":2, \"activation\":\"relu\"},\n"
 					"\t{\"type\":\"unpool\", \"width\":2, \"height\":2, \"stride\":2},\n"
 					"\t{\"type\":\"deconv\", \"width\":5, \"height\":5, \"filter_count\":1, \"stride\":1, \"pad\":2},\n"
 					"\t{\"type\":\"adadelta\", \"learning_rate\":1, \"batch_size\":50, \"l1_decay\":0.001, \"l2_decay\":0.001}\n"
@@ -302,7 +302,7 @@ void ClassifyImages::RefreshStatus() {
 		s << "   Validation accuracy: " << ses.GetValidationAccuracyAverage() << "\n";
 		s << "   Examples seen: " << ses.GetStepCount();
 	}
-	else if (type == TYPE_AUTOENCODER) {
+	else if (type == TYPE_AUTOENCODER || type == TYPE_CONV) {
 		s << "   Forward time per example: " << ses.GetForwardTime() << "\n";
 		s << "   Backprop time per example: " << ses.GetBackwardTime() << "\n";
 		s << "   Regression loss: " << ses.GetLossAverage() << "\n";

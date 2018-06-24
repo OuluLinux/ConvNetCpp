@@ -1,8 +1,10 @@
 #include "GAN.h"
 #include "LoaderMNIST.h"
 
+#define IMAGECLASS GANImg
 #define IMAGEFILE <GAN/GAN.iml>
 #include <Draw/iml_source.h>
+
 
 GUI_APP_MAIN
 {

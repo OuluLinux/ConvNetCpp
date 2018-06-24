@@ -121,7 +121,7 @@ double LayerBase::BackwardDeconv() {
 double LayerBase::BackwardDeconv(const Vector<double>& vec) {
 	
 	for(int i = 0; i < vec.GetCount(); i++)
-		output_activation.SetGradient(i, vec[i]);
+		output_activation.SetGradient(i, -vec[i]);
 	
 	return BackwardDeconv();
 }

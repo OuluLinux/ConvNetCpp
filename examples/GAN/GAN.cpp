@@ -1,6 +1,9 @@
 #include "GAN.h"
 
 GAN::GAN() {
+	Icon(GANImg::icon());
+	Sizeable().MaximizeBox().MinimizeBox().Zoomable();
+	
 	CtrlLayout(panel);
 	Add(panel.LeftPos(0,300).VSizePos());
 	Add(vsplit.HSizePos(300).VSizePos());

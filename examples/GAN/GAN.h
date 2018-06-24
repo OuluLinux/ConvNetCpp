@@ -11,9 +11,10 @@ using namespace ConvNet;
 
 #define LAYOUTFILE <GAN/GAN.lay>
 #include <CtrlCore/lay.h>
-
+#define IMAGECLASS GANImg
 #define IMAGEFILE <GAN/GAN.iml>
 #include <Draw/iml_header.h>
+
 
 class GANLayer {
 	
