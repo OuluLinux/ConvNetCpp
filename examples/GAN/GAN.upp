@@ -1,0 +1,20 @@
+uses
+	CtrlLib,
+	ConvNet,
+	plugin/png,
+	ConvNetCtrl;
+
+file
+	main.cpp,
+	GAN.h,
+	GAN.cpp,
+	GANLayer.cpp,
+	GAN.iml,
+	GAN.lay,
+	LoaderMNIST.h,
+	LoaderMNIST.cpp;
+
+mainconfig
+	"" = "GUI",
+	"" = "GUI USEMALLOC";
+

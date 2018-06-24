@@ -1,0 +1,5 @@
+LAYOUT(CtrlPanel, 212, 444)
+	ITEM(ConvNet::TrainingGraph, disc_graph, HSizePosZ(0, 0).BottomPosZ(0, 172))
+	ITEM(ConvNet::TrainingGraph, gen_graph, HSizePosZ(0, 0).TopPosZ(0, 172))
+END_LAYOUT
+
