@@ -246,9 +246,10 @@ public:
 	void ClearExperience() {exp.Clear();}
 	
 	void SetEpsilon(double e) {epsilon = e;}
+	void SetGamma(double g) {gamma = g;}
 	
 	int Act(const Vector<double>& slist);
-	void Learn(double reward1);
+	void Learn(double reward1, bool force_experience=false);
 	double LearnFromTuple(Mat& s0, int a0, double reward0, Mat& s1, int a1);
 	
 	void Serialize(Stream& s) {

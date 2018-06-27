@@ -961,7 +961,7 @@ void DQNAgent::Learn() {
 	Panic("TODO");
 }
 
-void DQNAgent::Learn(double reward1) {
+void DQNAgent::Learn(double reward1, bool force_experience) {
 	
 	// perform an update on Q function
 	if (has_reward && alpha > 0 && state0.GetLength() > 0) {
@@ -970,7 +970,7 @@ void DQNAgent::Learn(double reward1) {
 		tderror = LearnFromTuple(state0, action0, reward0, state1, action1); // a measure of surprise
 		
 		// decide if we should keep this experience in the replay
-		if (t % experience_add_every == 0) {
+		if (t % experience_add_every == 0 || force_experience) {
 			if (exp.GetCount() == expi)
 				exp.Add();
 			ASSERT(state1.GetLength() > 0);
