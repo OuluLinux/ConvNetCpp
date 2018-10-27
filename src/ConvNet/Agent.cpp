@@ -12,7 +12,7 @@ namespace ConvNet {
 
 // return Mat but filled with random numbers from gaussian
 void RandMat(int n, int d, double mu, double std, Mat& m) {
-	m.Init(d, n, 0);
+	m.Init(d, n, 0.0);
 	
 	std::default_random_engine generator;
 	std::normal_distribution<double> distribution(mu, std);
@@ -1032,5 +1032,85 @@ double DQNAgent::LearnFromTuple(Mat& s0, int a0, double reward0, Mat& s1, int a1
 	return tderror;
 }
 
+void DQNAgent::Evaluate(const Vector<double>& in, Vector<double>& out) {
+	
+	// convert to a Mat column vector
+	Mat& state_mat = Get(state);
+	state_mat.Init(width, height, in);
+	
+	// greedy wrt Q function
+	//Mat& amat = ForwardQ(net, state);
+	MatId a = G.Forward(state);
+	Mat& mat = Get(a);
+	
+	out.SetCount(mat.GetLength());
+	for(int i = 0; i < mat.GetLength(); i++)
+		out[i] = mat.Get(i);
+	
+}
+
+void DQNAgent::Learn(const Vector<double>& in, const Vector<double>& out) {
+	// convert to a Mat column vector
+	Mat& state_mat = Get(state);
+	state_mat.Init(width, height, in);
+	
+	// now predict
+	MatId pred = G.Forward(state);
+	Mat& pred_mat = Get(pred);
+	
+	for(int i = 0; i < out.GetCount(); i++) {
+		double tderror = pred_mat.Get(i) - out[i];
+		double clamp = tderror_clamp;
+		if (fabs(tderror) > clamp) {  // huber loss to robustify
+			if (tderror > clamp)
+				tderror = +clamp;
+			else
+				tderror = -clamp;
+		}
+		pred_mat.SetGradient(i, tderror);
+	}
+	G.Backward(); // compute gradients on net params
+	
+	// update net
+	UpdateMat(Get(net.W1), alpha);
+	UpdateMat(Get(net.b1), alpha);
+	UpdateMat(Get(net.W2), alpha);
+	UpdateMat(Get(net.b2), alpha);
+	
+	ClearTempMat();
+	
+}
+
+void DQNAgent::Learn(double* in, double* out) {
+	// convert to a Mat column vector
+	Mat& state_mat = Get(state);
+	state_mat.Init(width, height, in);
+	
+	// now predict
+	MatId pred = G.Forward(state);
+	Mat& pred_mat = Get(pred);
+	
+	for(int i = 0; i < action_count; i++) {
+		double tderror = pred_mat.Get(i) - out[i];
+		double clamp = tderror_clamp;
+		if (fabs(tderror) > clamp) {  // huber loss to robustify
+			if (tderror > clamp)
+				tderror = +clamp;
+			else
+				tderror = -clamp;
+		}
+		pred_mat.SetGradient(i, tderror);
+	}
+	G.Backward(); // compute gradients on net params
+	
+	// update net
+	UpdateMat(Get(net.W1), alpha);
+	UpdateMat(Get(net.b1), alpha);
+	UpdateMat(Get(net.W2), alpha);
+	UpdateMat(Get(net.b2), alpha);
+	
+	ClearTempMat();
+	
+}
 
 }

@@ -166,6 +166,27 @@ Mat& Mat::Init(int width, int height, const Vector<double>& w) {
 	return *this;
 }
 
+Mat& Mat::Init(int width, int height, double* w) {
+	ASSERT(width > 0 && height > 0);
+	
+	// we were given dimensions of the vol
+	this->width = width;
+	this->height = height;
+	
+	int n = width * height;
+	
+	length = n;
+	weights.SetCount(n);
+	weight_gradients.SetCount(n);
+	
+	for (int i = 0; i < n; i++) {
+		weights[i] = w[i];
+		weight_gradients[i] = 0.0;
+	}
+	
+	return *this;
+}
+
 int Mat::GetPos(int x, int y) const {
 	ASSERT(x >= 0 && y >= 0 && x < width && y < height);
 	return (width * y) + x;

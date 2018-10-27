@@ -251,6 +251,9 @@ public:
 	int Act(const Vector<double>& slist);
 	void Learn(double reward1, bool force_experience=false);
 	double LearnFromTuple(Mat& s0, int a0, double reward0, Mat& s1, int a1);
+	void Learn(const Vector<double>& in, const Vector<double>& out);
+	void Learn(double* in, double* out);
+	void Evaluate(const Vector<double>& in, Vector<double>& out);
 	
 	void Serialize(Stream& s) {
 		s % exp;

@@ -454,7 +454,7 @@ void RecurrentSession::SolverStep() {
 		Mat& s = step_cache[k];
 		
 		if (k >= step_cache_count) {
-			s.Init(m.GetWidth(), m.GetHeight(), 0);
+			s.Init(m.GetWidth(), m.GetHeight(), 0.0);
 		}
 		
 		for (int i = 0; i < m.GetLength(); i++) {

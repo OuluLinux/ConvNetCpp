@@ -169,7 +169,7 @@ MatId RecurrentBase::ForwardRowPluck() {
 	ASSERT(chr >= 0 && chr < input.GetLength());
 	int w = input.GetWidth();
 	
-	output.Init(1, w, 0);
+	output.Init(1, w, 0.0);
 	for (int i = 0, h = w; i < h; i++) {
 		output.Set(0, i, input.Get(i, chr)); // copy over the data
 	}
@@ -402,7 +402,7 @@ MatId RecurrentBase::ForwardDot() {
 	// input1 and input2 are both column vectors
 	ASSERT(input1.GetLength() == input2.GetLength());
 	
-	output.Init(1, 1, 0);
+	output.Init(1, 1, 0.0);
 	
 	double dot = 0.0;
 	for (int i = 0; i < input1.GetLength(); i++) {

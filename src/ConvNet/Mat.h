@@ -35,6 +35,7 @@ public:
 	Mat& Init(const Mat& v, double default_value=0.0) {return Init(v.GetWidth(), v.GetHeight(), default_value);}
 	Mat& Init(int width, int height); // Mat will be filled with random numbers
 	Mat& Init(int width, int height, const Vector<double>& weights);
+	Mat& Init(int width, int height, double* weights);
 	Mat& Init(int width, int height, double default_value);
 	
 	~Mat();
