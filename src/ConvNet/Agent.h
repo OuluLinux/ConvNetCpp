@@ -254,6 +254,7 @@ public:
 	void Learn(const Vector<double>& in, const Vector<double>& out);
 	void Learn(double* in, double* out);
 	void Evaluate(const Vector<double>& in, Vector<double>& out);
+	void Evaluate(double* in, double* out);
 	
 	void Serialize(Stream& s) {
 		s % exp;

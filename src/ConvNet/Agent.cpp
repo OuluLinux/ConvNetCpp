@@ -1049,6 +1049,22 @@ void DQNAgent::Evaluate(const Vector<double>& in, Vector<double>& out) {
 	
 }
 
+void DQNAgent::Evaluate(double* in, double* out) {
+	
+	// convert to a Mat column vector
+	Mat& state_mat = Get(state);
+	state_mat.Init(width, height, in);
+	
+	// greedy wrt Q function
+	//Mat& amat = ForwardQ(net, state);
+	MatId a = G.Forward(state);
+	Mat& mat = Get(a);
+	
+	for(int i = 0; i < mat.GetLength(); i++)
+		out[i] = mat.Get(i);
+	
+}
+
 void DQNAgent::Learn(const Vector<double>& in, const Vector<double>& out) {
 	// convert to a Mat column vector
 	Mat& state_mat = Get(state);
