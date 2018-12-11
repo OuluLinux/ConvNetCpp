@@ -1,0 +1,22 @@
+description "Reinforced martingale strategy learning\377";
+
+uses
+	ConvNetCtrl,
+	PlotCtrl,
+	Docking,
+	plugin/bz2;
+
+file
+	ReinforcedLearning.h,
+	pretrained.bin,
+	ReinforcedLearning.cpp,
+	ReinforcedLearning.rc,
+	ReinforcedLearning.iml,
+	pretrained.brc,
+	Agent.cpp,
+	World.cpp;
+
+mainconfig
+	"" = "GUI MT",
+	"" = "GUI MT NOGTK";
+

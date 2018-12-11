@@ -1,0 +1,5 @@
+#ifndef _ReinforcedLearning_icpp_init_stub
+#define _ReinforcedLearning_icpp_init_stub
+#include "ConvNetCtrl/init"
+#include "PlotCtrl/init"
+#endif
