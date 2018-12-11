@@ -40,6 +40,7 @@ double LayerBase::BackwardRegression(int pos, double y) {
 	
 	// lets hope that only one number is being regressed
 	double dy = input.Get(pos) - y;
+	if (!IsFin(dy)) return 0;
 	input.SetGradient(pos, dy);
 	loss += 0.5 * dy * dy;
 	

@@ -314,6 +314,7 @@ void Brain::Backward(double reward) {
 			x.Set(e.state0);
 			ActionValue maxact = GetPolicy(e.state1);
 			double r = e.reward0 + gamma * maxact.value;
+			if (!IsFin(r)) r = 0;
 			trainer.Train(x, e.action0, r);
 			double loss = trainer.GetLoss();
 			avcost += loss;
