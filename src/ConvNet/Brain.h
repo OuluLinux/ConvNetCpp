@@ -59,8 +59,8 @@ public:
 	typedef Brain CLASSNAME;
 	Brain();
 	
-	void Init(int num_states, int num_actions, Vector<double>* random_action_distribution=NULL);
-	void Reset() {Init(num_states, num_actions);}
+	void Init(int num_states, int num_actions, Vector<double>* random_action_distribution=NULL, int learning_steps_total=100000, int random_beginning_steps=3000);
+	void Reset() {Init(num_states, num_actions, NULL, learning_steps_total, learning_steps_burnin);}
 	void Serialize(Stream& s) {
 		Session::Serialize(s);
 		s % random_action_distribution % temporal_window % net_inputs % num_states % num_actions %

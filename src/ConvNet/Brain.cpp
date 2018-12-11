@@ -49,9 +49,10 @@ Experience& Experience::Set(const Vector<double>& state0, int action0, double re
 Brain::Brain() {
 	num_states = 0;
 	num_actions = 0;
+	age = 0;
 }
 
-void Brain::Init(int num_states, int num_actions, Vector<double>* random_action_distribution) {
+void Brain::Init(int num_states, int num_actions, Vector<double>* random_action_distribution, int learning_steps_total, int random_beginning_steps) {
 	this->random_action_distribution.Clear();
 	state_window.Clear();
 	action_window.Clear();
@@ -75,10 +76,10 @@ void Brain::Init(int num_states, int num_actions, Vector<double>* random_action_
 	gamma = 0.8;
 	
 	// number of steps we will learn for
-	learning_steps_total = 100000;
+	this->learning_steps_total = learning_steps_total;
 	
 	// how many steps of the above to perform only random actions (in the beginning)?
-	learning_steps_burnin = 3000;
+	this->learning_steps_burnin = random_beginning_steps;
 	
 	// what epsilon value do we bottom out on? 0.0 => purely deterministic policy at end
 	epsilon_min = 0.05;
