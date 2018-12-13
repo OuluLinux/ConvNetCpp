@@ -174,7 +174,7 @@ struct MaxMin : Moveable<MaxMin> {
 	void Set(int mini, double minv, int maxi, double maxv);
 };
 
-class Window {
+class Window : Moveable<Window> {
 	
 	Vector<double> v;
 	double sum;

@@ -28,7 +28,8 @@ enum {
 	SIGMOID_LAYER,
 	TANH_LAYER,
 	MAXOUT_LAYER,
-	SVM_LAYER
+	SVM_LAYER,
+	HETEROSCEDASTICREGRESSION_LAYER
 };
 
 class LayerBase : Moveable<LayerBase> {
@@ -136,6 +137,14 @@ public:
 	void InitRegression(int input_width, int input_height, int input_depth);
 	String ToStringRegression() const;
 	
+	// Heteroscedastic regression layer
+	Volume& ForwardHeteroscedasticRegression(Volume& input, bool is_training = false);
+	double BackwardHeteroscedasticRegression(const Vector<double>& y);
+	double BackwardHeteroscedasticRegression(int pos, double y);
+	double BackwardHeteroscedasticRegression(int cols, const Vector<int>& posv, const Vector<double>& yv);
+	void InitHeteroscedasticRegression(int input_width, int input_height, int input_depth);
+	String ToStringHeteroscedasticRegression() const;
+	
 	// Convolutive layer
 	Volume& ForwardConv(Volume& input, bool is_training = false);
 	void BackwardConv();
@@ -211,11 +220,11 @@ public:
 	bool IsClassificationLayer() const {return layer_type == SOFTMAX_LAYER || layer_type == SVM_LAYER;}
 	bool IsInputLayer() const {return layer_type == INPUT_LAYER;}
 	bool IsFullyConnLayer() const {return layer_type == FULLYCONN_LAYER;}
-	bool IsRegressionLayer() const {return layer_type == REGRESSION_LAYER;}
+	bool IsRegressionLayer() const {return layer_type == REGRESSION_LAYER || layer_type == HETEROSCEDASTICREGRESSION_LAYER;}
 	bool IsDeconvLayer() const {return layer_type == DECONV_LAYER;}
 	bool IsReluLayer() const {return layer_type == RELU_LAYER;}
 	bool IsSoftMaxLayer() const {return layer_type == SOFTMAX_LAYER;}
-	bool IsLastLayer() const {return layer_type == REGRESSION_LAYER || layer_type == SOFTMAX_LAYER || layer_type == SVM_LAYER || layer_type == DECONV_LAYER || layer_type == SIGMOID_LAYER || layer_type == TANH_LAYER || layer_type == FULLYCONN_LAYER;}
+	bool IsLastLayer() const {return layer_type == REGRESSION_LAYER || layer_type == SOFTMAX_LAYER || layer_type == SVM_LAYER || layer_type == DECONV_LAYER || layer_type == SIGMOID_LAYER || layer_type == TANH_LAYER || layer_type == FULLYCONN_LAYER || layer_type == HETEROSCEDASTICREGRESSION_LAYER;}
 	String ToString() const;
 	String GetKey() const;
 	

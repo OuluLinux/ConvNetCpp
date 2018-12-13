@@ -37,10 +37,7 @@ Volume& LayerBase::ForwardDropOut(Volume& input, bool is_training) {
 	else {
 		// scale the activations during prediction
 		for (int i = 0; i < length; i++) {
-			// NOTE:
-			//  in direct C# version translation: output->Set(i, output.Get(i) * (1 - drop_prob));
-			//  but in original JS version was V2.w[i]*=drop_prob;
-			output.Set(i, output.Get(i) * drop_prob);
+			output.Set(i, output.Get(i) * (1 - drop_prob));
 		}
 	}
 	

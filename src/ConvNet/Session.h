@@ -80,6 +80,7 @@ public:
 	LayerBase&			AddInputLayer(int input_width, int input_height, int input_depth);
 	LayerBase&			AddSoftmaxLayer(int class_count);
 	LayerBase&			AddRegressionLayer();
+	LayerBase&			AddHeteroscedasticRegressionLayer();
 	LayerBase&			AddConvLayer(int width, int height, int filter_count, double l1_decay_mul=0.0, double l2_decay_mul=1.0, int stride=1, int pad=0, double bias_pref=0.0);
 	LayerBase&			AddDeconvLayer(int width, int height, int filter_count, double l1_decay_mul=0.0, double l2_decay_mul=1.0, int stride=1, int pad=0, double bias_pref=0.0);
 	LayerBase&			AddPoolLayer(int width, int height, int stride=2, int pad=0);

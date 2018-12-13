@@ -410,7 +410,7 @@ bool Session::MakeLayers(const String& json) {
 				AddFullyConnLayer(REQ(class_count));
 			}
 			
-			if(type == "regression") {
+			if(type == "regression" || type == "heteroscedastic_regression") {
 				// add an fc layer here, there is no reason the user should
 				// have to worry about this and we almost always want to
 				//new_defs.push({type:'fc', neuron_count: def.neuron_count});
@@ -432,6 +432,7 @@ bool Session::MakeLayers(const String& json) {
 			else if (type == "input")		AddInputLayer(REQ(input_width), REQ(input_height), REQ(input_depth));
 			else if (type == "softmax")		AddSoftmaxLayer(REQ(class_count));
 			else if (type == "regression")	AddRegressionLayer();
+			else if (type == "heteroscedastic_regression")	AddHeteroscedasticRegressionLayer();
 			else if (type == "conv")		AddConvLayer(REQ(width), REQ(height), REQ(filter_count), DEF(l1_decay_mul, 0.0), DEF(l2_decay_mul, 1.0), DEF(stride, 1), DEF(pad, 0), DEF(bias_pref, 0.0));
 			else if (type == "deconv")		AddDeconvLayer(REQ(width), REQ(height), REQ(filter_count), DEF(l1_decay_mul, 0.0), DEF(l2_decay_mul, 1.0), DEF(stride, 1), DEF(pad, 0), DEF(bias_pref, 0.0));
 			else if (type == "pool")		AddPoolLayer(REQ(width), REQ(height), DEF(stride, 2), DEF(pad, 0));
@@ -617,6 +618,13 @@ LayerBase& Session::AddSoftmaxLayer(int class_count) {
 LayerBase& Session::AddRegressionLayer() {
 	LayerBase& reg = net.AddLayer();
 	reg.layer_type = REGRESSION_LAYER;
+	net.CheckLayer();
+	return reg;
+}
+
+LayerBase& Session::AddHeteroscedasticRegressionLayer() {
+	LayerBase& reg = net.AddLayer();
+	reg.layer_type = HETEROSCEDASTICREGRESSION_LAYER;
 	net.CheckLayer();
 	return reg;
 }

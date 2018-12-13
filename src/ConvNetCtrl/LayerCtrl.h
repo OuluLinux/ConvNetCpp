@@ -28,6 +28,9 @@ class LayerView : public Ctrl {
 	// tmp vars
 	int x_off, y_off, count, lix, d0, d1, vis_len, density, density_2;
 	
+	VectorMap<double, Window> sum_y, sum_y_sq, sum_sigma2;
+	Vector<Point> polygon;
+	
 	void PaintInputX(Draw& d);
 	void PaintInputXY(Draw& d);
 	void PaintInputImage(Draw& d);

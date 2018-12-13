@@ -54,6 +54,8 @@ Volume& LayerBase::Forward(Volume& input, bool is_training) {
 		case INPUT_LAYER:		return ForwardInput(input, is_training); break;
 		case SOFTMAX_LAYER:		return ForwardSoftmax(input, is_training); break;
 		case REGRESSION_LAYER:	return ForwardRegression(input, is_training); break;
+		case HETEROSCEDASTICREGRESSION_LAYER:
+								return ForwardHeteroscedasticRegression(input, is_training); break;
 		case CONV_LAYER:		return ForwardConv(input, is_training); break;
 		case DECONV_LAYER:		return ForwardDeconv(input, is_training); break;
 		case POOL_LAYER:		return ForwardPool(input, is_training); break;
@@ -104,6 +106,7 @@ double LayerBase::Backward(int pos, double y) {
 	switch (layer_type) {
 		case SOFTMAX_LAYER:		return BackwardSoftmax(pos, y); break;
 		case REGRESSION_LAYER:	return BackwardRegression(pos, y); break;
+		case HETEROSCEDASTICREGRESSION_LAYER:	return BackwardHeteroscedasticRegression(pos, y); break;
 		case SVM_LAYER:			return BackwardSVM(pos, y); break;
 		default: Panic("Type not implemented");
 	}
@@ -113,6 +116,7 @@ double LayerBase::Backward(int pos, double y) {
 double LayerBase::Backward(const Vector<double>& y) {
 	switch (layer_type) {
 		case REGRESSION_LAYER:	return BackwardRegression(y); break;
+		case HETEROSCEDASTICREGRESSION_LAYER:	return BackwardHeteroscedasticRegression(y); break;
 		case DECONV_LAYER:		return BackwardDeconv(y); break;
 		case SIGMOID_LAYER:		return BackwardSigmoid(y); break;
 		case FULLYCONN_LAYER:	return BackwardFullyConn(y); break;
@@ -139,6 +143,7 @@ String LayerBase::ToString() const {
 		case INPUT_LAYER:		return ToStringInput(); break;
 		case SOFTMAX_LAYER:		return ToStringSoftmax(); break;
 		case REGRESSION_LAYER:	return ToStringRegression(); break;
+		case HETEROSCEDASTICREGRESSION_LAYER:	return ToStringHeteroscedasticRegression(); break;
 		case CONV_LAYER:		return ToStringConv(); break;
 		case DECONV_LAYER:		return ToStringDeconv(); break;
 		case POOL_LAYER:		return ToStringPool(); break;
@@ -162,6 +167,7 @@ String LayerBase::GetKey() const {
 		case INPUT_LAYER: return "input"; break;
 		case SOFTMAX_LAYER: return "softmax"; break;
 		case REGRESSION_LAYER: return "regression"; break;
+		case HETEROSCEDASTICREGRESSION_LAYER: return "heteroscedastic_regression"; break;
 		case CONV_LAYER: return "conv"; break;
 		case DECONV_LAYER: return "deconv"; break;
 		case POOL_LAYER: return "pool"; break;
@@ -215,6 +221,8 @@ void LayerBase::Init(int input_width, int input_height, int input_depth) {
 			InitMaxout(input_width, input_height, input_depth); break;
 		case SVM_LAYER:
 			InitSVM(input_width, input_height, input_depth); break;
+		case HETEROSCEDASTICREGRESSION_LAYER:
+			InitHeteroscedasticRegression(input_width, input_height, input_depth); break;
 		default: Panic("Type not implemented");
 	}
 }

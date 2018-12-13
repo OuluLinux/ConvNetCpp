@@ -30,6 +30,7 @@ file
 	InputLayer.cpp,
 	SoftmaxLayer.cpp,
 	RegressionLayer.cpp,
+	HeteroscedasticRegressionLayer.cpp,
 	ConvLayer.cpp,
 	DeconvLayer.cpp,
 	PoolLayer.cpp,

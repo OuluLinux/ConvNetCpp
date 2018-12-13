@@ -11,6 +11,9 @@ void LayerView::ClearCache() {
 	volumes.Clear();
 	tmp_imgs.Clear();
 	lbl_colors.Clear();
+	sum_y.Clear();
+	sum_y_sq.Clear();
+	sum_sigma2.Clear();
 }
 	
 void LayerView::Paint(Draw& d) {
@@ -106,7 +109,7 @@ void LayerView::PaintInputX(Draw& id) {
 	id.DrawLine(X(0) - 1, 0, X(0) - 1, sz.cy, 3, GrayColor());
 	
 	// draw decisions in the grid
-	double density= 5.0;
+	int density = 5;
 	bool draw_neuron_outputs = true;
 	
 	// draw final decision
@@ -125,6 +128,15 @@ void LayerView::PaintInputX(Draw& id) {
 		Volume& a = net.Forward(netx);
 		double y = Y(a.Get(0));
 		
+		if (a.GetCount() == 2) {
+			double y = a.Get(0);
+			double ls2 = a.Get(1);
+			sum_y.GetAdd(x).Add(y);
+			sum_y_sq.GetAdd(x).Add(y*y);
+			double sigma2 = exp(ls2);
+			sum_sigma2.GetAdd(x).Add(sigma2);
+		}
+		
 		// draw individual neurons on first layer
 		if (draw_neuron_outputs) {
 			Volume& out = layer.output_activation;
@@ -133,6 +145,27 @@ void LayerView::PaintInputX(Draw& id) {
 		}
 		
 		tmp_pts1.Add(Pointf(x, y));
+	}
+	
+	if (!sum_y.IsEmpty()) {
+		for(int i = 4; i >= 1; i--) {
+			polygon.SetCount(0);
+			for (double x = 0.0; x <= sz.cx; x += density) {
+				double mean = sum_y.Get(x).GetAverage();
+				double std = sqrt(sum_y_sq.Get(x).GetAverage() - mean * mean + sum_sigma2.Get(x).GetAverage());
+				mean += 2*std * i/4;
+				double y = Y(mean);
+				polygon.Add(Point(x, y));
+			}
+			for (double x = sz.cx - sz.cx % density; x >= 0; x -= density) {
+				double mean = sum_y.Get(x).GetAverage();
+				double std = sqrt(sum_y_sq.Get(x).GetAverage() - mean * mean + sum_sigma2.Get(x).GetAverage());
+				mean -= 2*std * i/4;
+				double y = Y(mean);
+				polygon.Add(Point(x, y));
+			}
+			id.DrawPolygon(polygon, GrayColor(i * 40));
+		}
 	}
 	
 	for(int i = 0; i < tmp_pts2.GetCount(); i++)
