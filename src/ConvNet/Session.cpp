@@ -528,7 +528,6 @@ void Session::Xmlize(XmlIO& xml) {
 void Session::ClearData() {
 	Enter();
 	Data().ClearData();
-	step_num = 0;
 	Leave();
 }
 
@@ -542,6 +541,7 @@ void Session::Reset() {
 	l2_loss_window.Clear();
 	train_window.Clear();
 	accuracy_window.Clear();
+	step_num = 0;
 	
 	for(int i = 0; i < net.GetLayers().GetCount(); i++) {
 		net.GetLayers()[i].Reset();

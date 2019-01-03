@@ -129,6 +129,11 @@ void LayerView::PaintInputX(Draw& id) {
 		double y = Y(a.Get(0));
 		
 		if (a.GetCount() == 2) {
+			if (sum_y.Find(x) == -1) {
+				sum_y.Add(x).Init(100);
+				sum_y_sq.Add(x).Init(100);
+				sum_sigma2.Add(x).Init(100);
+			}
 			double y = a.Get(0);
 			double ls2 = a.Get(1);
 			sum_y.GetAdd(x).Add(y);
