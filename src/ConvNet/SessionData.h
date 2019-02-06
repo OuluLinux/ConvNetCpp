@@ -56,7 +56,13 @@ public:
 	SessionData& SetTestData(int i, int col, double value) {test_data[i].Set(col, value); return *this;}
 	SessionData& SetTestLabel(int i, int label) {test_labels[i] = label; return *this;}
 	SessionData& SetClass(int i, const String& cls) {classes[i] = cls; return *this;}
+	SessionData& SetData(int i, int x, int y, int z, double value) {data[i].Set(GetPos(x,y,z), value); return *this;}
+	SessionData& SetResult(int i, int x, int y, int z, double value) {result_data[i].Set(GetPos(x,y,z), value); return *this;}
 	
+	int GetPos(int x, int y, int d) const {
+		ASSERT(x >= 0 && y >= 0 && d >= 0 && x < data_w && y < data_h && d < data_d);
+		return ((data_w * y) + x) * data_d + d;
+	}
 	
 	
 	void BeginDataClass(int cls_count, int count, int width, int height, int depth, int test_count=0);
