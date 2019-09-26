@@ -268,9 +268,9 @@ int Brain::Forward(const Vector<double>& input_array) {
 	
 	// remember the state and action we took for backward pass
 	net_window.Remove(0);
-	net_window.Add(net_input);
+	net_window.Add() <<= net_input;
 	state_window.Remove(0);
-	state_window.Add(input_array);
+	state_window.Add() <<= input_array;
 	action_window.Remove(0);
 	action_window.Add(action);
 	

@@ -95,6 +95,8 @@ public:
 	Vector<int> switchx;
 	Vector<int> switchy;
 	
+	// Deconv
+	SimpleVolume ghost_image, ghost_gradients;
 	
 	
 	// Fully connected

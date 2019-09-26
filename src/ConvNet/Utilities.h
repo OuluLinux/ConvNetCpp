@@ -315,6 +315,48 @@ struct OnlineAverage : Moveable<OnlineAverage> {
 	void Serialize(Stream& s) {s % mean % count;}
 };
 
+
+
+
+struct SimpleVolume {
+	Vector<double> data;
+	int w = 0, h = 0, d = 0;
+	
+	
+	void SetSize(int width, int height, int depth) {
+		w = width;
+		h = height;
+		d = depth;
+		data.SetCount(w * h * d);
+	}
+	
+	void Zero() {
+		for(int i = 0; i < data.GetCount(); i++) data[i] = 0.0;
+	}
+	
+	void Set(int x, int y, int z, double v) {
+		data[((z) * h + y) * w + x] = v;
+	}
+	
+	void Add(int x, int y, int z, double v) {
+		data[((z) * h + y) * w + x] += v;
+	}
+	
+	double Get(int x, int y, int z) const {
+		return data[((z) * h + y) * w + x];
+	}
+	
+	double Get(int i) const {
+		return data[i];
+	}
+	
+	int GetCount() const {return data.GetCount();}
+	
+	int GetPos(int x, int y, int z) {
+		return ((z) * h + y) * w + x;
+	}
+};
+
 }
 
 

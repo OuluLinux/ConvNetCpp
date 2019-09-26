@@ -89,7 +89,7 @@ void Regression1D::Regenerate() {
 	int N = min(1000, max(2, (int)pointcount.GetData()));
 	
 	SessionData& d = ses.Data();
-	d.BeginDataResult(2, N, 1, 0);
+	d.BeginDataResult(2, N+1, 1, 0);
 	
 	function = min(2, max(0, funcs.GetIndex()));
 	
@@ -106,6 +106,10 @@ void Regression1D::Regenerate() {
 		d.SetResult(i, 0, y);
 		d.SetResult(i, 1, y);
 	}
+	
+	d.SetData(N, 0, 0);
+	d.SetResult(N, 0, -1);
+	d.SetResult(N, 1, 0);
 	
 	d.EndData();
 	

@@ -43,7 +43,7 @@ ClassifyImages::ClassifyImages(int loader, int type)
 		}
 		else if (type == TYPE_CONV) {
 			Title("MNIST convolutive autoencoder");
-			t =		"[\n"
+			/*t =		"[\n"
 					"\t{\"type\":\"input\", \"input_width\":28, \"input_height\":28, \"input_depth\":1},\n"
 					"\t{\"type\":\"conv\", \"width\":5, \"height\":5, \"filter_count\":1, \"stride\":1, \"pad\":2, \"activation\":\"relu\"},\n"
 					"\t{\"type\":\"pool\", \"width\":2, \"height\":2, \"stride\":2},\n"
@@ -53,6 +53,16 @@ ClassifyImages::ClassifyImages(int loader, int type)
 					"\t{\"type\":\"deconv\", \"width\":5, \"height\":5, \"filter_count\":1, \"stride\":1, \"pad\":2, \"activation\":\"relu\"},\n"
 					"\t{\"type\":\"unpool\", \"width\":2, \"height\":2, \"stride\":2},\n"
 					"\t{\"type\":\"deconv\", \"width\":5, \"height\":5, \"filter_count\":1, \"stride\":1, \"pad\":2},\n"
+					"\t{\"type\":\"regression\", \"neuron_count\":784},\n"
+					"\t{\"type\":\"adadelta\", \"learning_rate\":1, \"batch_size\":50, \"l1_decay\":0.001, \"l2_decay\":0.001}\n"
+					"]\n";*/
+			t =		"[\n"
+					"\t{\"type\":\"input\", \"input_width\":28, \"input_height\":28, \"input_depth\":1},\n"
+					"\t{\"type\":\"conv\", \"width\":8, \"height\":8, \"filter_count\":1, \"stride\":2, \"pad\":5, \"activation\":\"tanh\"},\n"
+					"\t{\"type\":\"conv\", \"width\":8, \"height\":8, \"filter_count\":1, \"stride\":2, \"pad\":5, \"activation\":\"tanh\"},\n"
+					"\t{\"type\":\"deconv\", \"width\":8, \"height\":8, \"filter_count\":1, \"stride\":2, \"pad\":5, \"activation\":\"tanh\"},\n"
+					"\t{\"type\":\"deconv\", \"width\":8, \"height\":8, \"filter_count\":1, \"stride\":2, \"pad\":5},\n"
+					"\t{\"type\":\"regression\", \"neuron_count\":784},\n"
 					"\t{\"type\":\"adadelta\", \"learning_rate\":1, \"batch_size\":50, \"l1_decay\":0.001, \"l2_decay\":0.001}\n"
 					"]\n";
 			augmentation = 0;
@@ -84,7 +94,7 @@ ClassifyImages::ClassifyImages(int loader, int type)
 		else if (type == TYPE_AUTOENCODER) {
 			Title("CIFAR-10 autoencoder");
 			t =		"[\n"
-					"\t{\"type\":\"input\", \"input_width\":32, \"input_height\":32, \"input_depth\":1},\n"
+					"\t{\"type\":\"input\", \"input_width\":32, \"input_height\":32, \"input_depth\":3},\n"
 					"\t{\"type\":\"fc\", \"neuron_count\":50, \"activation\": \"tanh\"},\n"
 					"\t{\"type\":\"fc\", \"neuron_count\":50, \"activation\": \"tanh\"},\n"
 					"\t{\"type\":\"fc\", \"neuron_count\":2},\n"
@@ -98,16 +108,26 @@ ClassifyImages::ClassifyImages(int loader, int type)
 		}
 		else if (type == TYPE_CONV) {
 			Title("CIFAR-10 convolutive autoencoder");
-			t =		"[\n"
-					"\t{\"type\":\"input\", \"input_width\":32, \"input_height\":32, \"input_depth\":1},\n"
-					"\t{\"type\":\"conv\", \"width\":5, \"height\":5, \"filter_count\":3, \"stride\":1, \"pad\":2, \"activation\":\"relu\"},\n"
+			/*t =		"[\n"
+					"\t{\"type\":\"input\", \"input_width\":32, \"input_height\":32, \"input_depth\":3},\n"
+					"\t{\"type\":\"conv\", \"width\":5, \"height\":5, \"filter_count\":3, \"stride\":1, \"pad\":2, \"activation\":\"tanh\"},\n"
 					"\t{\"type\":\"pool\", \"width\":2, \"height\":2, \"stride\":2},\n"
-					"\t{\"type\":\"conv\", \"width\":5, \"height\":5, \"filter_count\":3, \"stride\":1, \"pad\":2, \"activation\":\"relu\"},\n"
+					"\t{\"type\":\"conv\", \"width\":5, \"height\":5, \"filter_count\":3, \"stride\":1, \"pad\":2, \"activation\":\"tanh\"},\n"
 					"\t{\"type\":\"pool\", \"width\":2, \"height\":2, \"stride\":2},\n"
 					"\t{\"type\":\"unpool\", \"width\":2, \"height\":2, \"stride\":2},\n"
-					"\t{\"type\":\"deconv\", \"width\":5, \"height\":5, \"filter_count\":3, \"stride\":1, \"pad\":2, \"activation\":\"relu\"},\n"
+					"\t{\"type\":\"deconv\", \"width\":5, \"height\":5, \"filter_count\":3, \"stride\":1, \"pad\":2, \"activation\":\"tanh\"},\n"
 					"\t{\"type\":\"unpool\", \"width\":2, \"height\":2, \"stride\":2},\n"
 					"\t{\"type\":\"deconv\", \"width\":5, \"height\":5, \"filter_count\":3, \"stride\":1, \"pad\":2},\n"
+					"\t{\"type\":\"regression\", \"neuron_count\":3072},\n" // 3*32*32=3072
+					"\t{\"type\":\"adadelta\", \"learning_rate\":1, \"batch_size\":50, \"l1_decay\":0.001, \"l2_decay\":0.001}\n"
+					"]\n";*/
+			t =		"[\n"
+					"\t{\"type\":\"input\", \"input_width\":32, \"input_height\":32, \"input_depth\":3},\n"
+					"\t{\"type\":\"conv\", \"width\":5, \"height\":5, \"filter_count\":3, \"stride\":2, \"pad\":2, \"activation\":\"tanh\"},\n"
+					"\t{\"type\":\"conv\", \"width\":5, \"height\":5, \"filter_count\":3, \"stride\":2, \"pad\":2, \"activation\":\"tanh\"},\n"
+					"\t{\"type\":\"deconv\", \"width\":5, \"height\":5, \"filter_count\":3, \"stride\":2, \"pad\":2, \"activation\":\"tanh\"},\n"
+					"\t{\"type\":\"deconv\", \"width\":8, \"height\":8, \"filter_count\":3, \"stride\":2, \"pad\":2},\n"
+					"\t{\"type\":\"regression\", \"neuron_count\":3072},\n" // 3*32*32=3072
 					"\t{\"type\":\"adadelta\", \"learning_rate\":1, \"batch_size\":50, \"l1_decay\":0.001, \"l2_decay\":0.001}\n"
 					"]\n";
 			augmentation = 0;

@@ -31,7 +31,7 @@ void Net::CheckLayer() {
 	}
 	
 	if (layer.IsRegressionLayer()) {
-		if (!last_layer->IsFullyConnLayer()) {
+		if (!last_layer->IsFullyConnLayer() && !last_layer->IsDeconvLayer()) {
 			throw ArgumentException("Previously added layer should be a FullyConnLayer");
 		}
 	}

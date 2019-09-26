@@ -414,7 +414,10 @@ bool Session::MakeLayers(const String& json) {
 				// add an fc layer here, there is no reason the user should
 				// have to worry about this and we almost always want to
 				//new_defs.push({type:'fc', neuron_count: def.neuron_count});
-				AddFullyConnLayer(REQ(neuron_count));
+				if (net.GetLayers().GetCount() && net.GetLayers().Top().IsDeconvLayer())
+					;
+				else
+					AddFullyConnLayer(REQ(neuron_count));
 			}
 			
 			if((type == "fc" || type == "conv") && bias_pref.IsNull()) {

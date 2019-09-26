@@ -22,35 +22,40 @@ Volume& LayerBase::ForwardUnpool(Volume& input, bool is_training) {
 	
 	output_activation.Init(output_width, output_height, output_depth, 0.0);
 	
+	int input_width = input.GetWidth();
+	int input_height = input.GetHeight();
+	
 	int n = 0; // a counter for switches
 	for (int depth = 0; depth < output_depth; depth++)
 	{
 		// WTF C# version int n = depth * output_width * output_height;
 		
 		int x = +1.0 * pad - floor(width - 1);
-		for (int ax = 0; ax < output_width; x++, ax++) {
+		for (int ax = 0; ax < output_width; ax++) {
 			int y = +1.0 * pad - floor(height - 1);
-			for (int ay = 0; ay < output_height; y++, ay++) {
+			for (int ay = 0; ay < output_height; ay++) {
 				// convolve centered at this particular location
-				double a = -1;
+				double a = -DBL_MAX;
 				int winx = -1, winy = -1;
 				
 				for (int fx = 0; fx < width; fx++) {
+					int ox = x + fx;
+					if (ox < 0) continue;
+					else if (ox >= input_width) continue;
+					
 					for (int fy = 0; fy < height; fy++) {
-						int oy = (y + fy) / stride;
-						int ox = (x + fx) / stride;
-						if ((y + fy) % stride != 0) continue;
-						if ((x + fx) % stride != 0) continue;
-						if (oy >= 0 && oy < input.GetHeight() && ox >= 0 && ox < input.GetWidth()) {
-							double v = input.Get(ox, oy, depth);
-							// perform max pooling and store pointers to where
-							// the max came from. This will speed up backprop
-							// and can help make nice visualizations in future
-							if (v > a) {
-								a = v;
-								winx = ox;
-								winy = oy;
-							}
+						int oy = y + fy;
+						if (oy < 0) continue;
+						else if (oy >= input_height) continue;
+						
+						double v = input.Get(ox, oy, depth);
+						// perform max pooling and store pointers to where
+						// the max came from. This will speed up backprop
+						// and can help make nice visualizations in future
+						if (v > a) {
+							a = v;
+							winx = ox;
+							winy = oy;
 						}
 					}
 				}
@@ -59,7 +64,11 @@ Volume& LayerBase::ForwardUnpool(Volume& input, bool is_training) {
 				switchy[n] = winy;
 				n++;
 				output_activation.Set(ax, ay, depth, a);
+				
+				if ((ay % stride) == (stride-1)) y++;
 			}
+			
+			if ((ax % stride) == (stride-1)) x++;
 		}
 	}
 	

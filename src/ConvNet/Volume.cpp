@@ -337,6 +337,7 @@ void Volume::SetGradient(int i, double v) {
 }
 
 void Volume::AddGradient(int i, double v) {
+	ASSERT(IsFin(v));
 	weight_gradients[i] += v;
 }
 
