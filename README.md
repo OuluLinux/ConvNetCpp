@@ -16,9 +16,9 @@ It currently supports:
 ## Example code
 
 Screenshot of [a CIFAR-10 classification example](http://cs.stanford.edu/people/karpathy/convnetjs/demo/cifar10.html) translated to ConvNetC++. 
-![Classify CIFAR-10 example](https://github.com/sppp/ConvNetCpp/raw/master/docs/classifycifar10.jpg)
+![Classify CIFAR-10 example](https://github.com/OuluLinux/ConvNetCpp/raw/master/docs/classifycifar10.jpg)
 
-##### For screenshots of examples, see [the gallery](https://github.com/sppp/ConvNetCpp/blob/master/GALLERY.md).
+##### For screenshots of examples, see [the gallery](https://github.com/OuluLinux/ConvNetCpp/blob/master/GALLERY.md).
 
 ConvNetC++ includes all original examples from ConvNetJS and also examples from RecurrentJS and ReinforceJS, even tough they were separate libraries originally.
 
