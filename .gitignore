@@ -28,3 +28,7 @@ bin/
 # PlantUML generated PNG files
 docs/*.png
 *.png
+
+# Other
+trash/
+tmp/
