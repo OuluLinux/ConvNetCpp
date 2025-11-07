@@ -1,0 +1,20 @@
+{
+	"name": "ConvNetCppTests",
+	"include": [
+		"src/ConvNet",
+		"src/ConvNetCtrl",
+		"upptst"
+	],
+	"defs": [],
+	"libs": [],
+	"out": "bin/tests",
+	"src": [
+		"upptst/TestMain.cpp"
+	],
+	"precompile": false,
+	"console": true,
+	"upp": [
+		"Core",
+		"ConvNet"
+	]
+}

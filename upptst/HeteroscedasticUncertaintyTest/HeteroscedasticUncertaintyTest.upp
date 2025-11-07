@@ -1,0 +1,9 @@
+uses
+	Core,
+	ConvNet;
+
+file
+	HeteroscedasticUncertaintyTest.cpp;
+
+mainconfig
+	"" = "";

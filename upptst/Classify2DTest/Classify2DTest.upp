@@ -1,0 +1,9 @@
+uses
+	Core,
+	ConvNet;
+
+file
+	Classify2DTest.cpp;
+
+mainconfig
+	"" = "";
