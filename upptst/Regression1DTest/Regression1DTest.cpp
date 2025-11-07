@@ -25,7 +25,7 @@ CONSOLE_APP_MAIN
     LOG("Regression1D network setup test:");
     LOG("  Network creation success: " << (success ? "true" : "false"));
     ASSERT(success);
-    ASSERT(ses.GetLayerCount() == 5);  // Should have 5 layers
+    ASSERT(ses.GetLayerCount() == 7);  // Should have 7 layers (input + fc + relu + fc + sigmoid + fc_for_regression + regression)
     
     // Test training with simple y = 2*x function
     SessionData& d = ses.Data();

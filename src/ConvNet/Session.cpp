@@ -298,6 +298,38 @@ void Session::TrainOnce(Volume& x, const Vector<double>& y) {
 	
 }
 
+void Session::Tick() {
+	TrainIteration();
+}
+
+Vector<double> Session::Predict(const Vector<double>& input) {
+	Vector<double> result;
+	
+	// Create a temporary volume with the input data
+	Volume temp_vol;
+	if (input.GetCount() == 1) {
+		// Assume it's a single value that needs to be set as 1x1x1 volume
+		temp_vol.Init(1, 1, 1, 0.0);
+		temp_vol.Set(0, input[0]);
+	} else {
+		// Convert 1D input vector to a volume (assuming width=input.size(), height=1, depth=1)
+		temp_vol.Init(input.GetCount(), 1, 1);
+		for (int i = 0; i < input.GetCount(); i++) {
+			temp_vol.Set(i, input[i]);
+		}
+	}
+	
+	// Forward pass through network
+	Volume& output = net.Forward(temp_vol, false); // false = not training
+	
+	// Convert output Volume to Vector<double>
+	for (int i = 0; i < output.GetLength(); i++) {
+		result.Add(output.Get(i));
+	}
+	
+	return result;
+}
+
 Net& Session::GetNetwork() {
 	return net;
 }

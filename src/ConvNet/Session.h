@@ -91,6 +91,9 @@ public:
 	LayerBase&			AddMaxoutLayer(int group_size);
 	LayerBase&			AddSVMLayer(int class_count);
 	LayerBase&			GetLayer(int i) {return net.GetLayers()[i];}
+	int					GetLayerCount() const {return net.GetLayers().GetCount();}
+	void				Tick();
+	Vector<double>		Predict(const Vector<double>& input);
 	
 	Net& GetNetwork();
 	LayerBase* GetInput();

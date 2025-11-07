@@ -24,7 +24,7 @@ CONSOLE_APP_MAIN
     LOG("Classify2D network setup test:");
     LOG("  Network creation success: " << (success ? "true" : "false"));
     ASSERT(success);
-    ASSERT(session.GetLayerCount() == 5);  // Should have 5 layers
+    ASSERT(session.GetLayerCount() == 7);  // Should have 7 layers (input + fc + tanh + fc + tanh + fc_for_softmax + softmax)
     
     // Test with simple binary classification data
     SessionData& d = session.Data();
