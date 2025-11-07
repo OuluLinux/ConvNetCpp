@@ -22,3 +22,6 @@ For UML diagrams, see: [UML_DIAGRAMS.md](UML_DIAGRAMS.md)
 
 ## Commit Rules
 - QWEN cannot be marked as a co-author in git commits
+
+## Coding Conventions
+- Use U++ conventions: std::unique_ptr translates to Upp::One<> + Upp::Ptr<> + Upp::Pte<>. No std classes unless required because of accelerators.

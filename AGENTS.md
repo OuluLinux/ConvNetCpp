@@ -45,3 +45,6 @@ This document captures important architectural insights about the evolution of t
 - Maintain clear documentation of architectural changes
 - Ensure tests match current implementation behavior or vice versa
 - Be cautious with fundamental changes to object model and layer creation logic
+
+## Rules for Implementation
+- Use U++ conventions: std::unique_ptr translates to Upp::One<> + Upp::Ptr<> + Upp::Pte<>. No std classes unless required because of accelerators.
