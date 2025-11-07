@@ -22,6 +22,9 @@ cmake-build-*/
 .DS_Store
 Thumbs.db
 
+# Binaries and build output
+bin/
+
 # PlantUML generated PNG files
 docs/*.png
 *.png

@@ -112,7 +112,7 @@ class SimpleGAN : public TopWindow {
 	double (*sample)();
 	
 	#ifndef flagUSE_CONVNET
-	Net gen, disc;
+	::Net gen, disc;
 	#else
 	Session gen, disc;
 	Volume tmp_input;

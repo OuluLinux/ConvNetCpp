@@ -94,12 +94,12 @@ void GridWorldCtrl::Paint(Draw& w) {
 			// write reward texts
 			double rv = agent->reward[s];
 			if (rv != 0) {
-				String rstr = "R " + FormatDoubleFix(rv, 1, FD_ZEROS);
+				String rstr = "R " + FormatDoubleFix(rv, 1);
 				id.DrawText(x0 + 4, y0 + cs - small_fnt_h - 2, rstr, small_fnt);
 			}
 			
 			// write value
-			id.DrawText(x0 + 4, y0 + 4, FormatDoubleFix(tv, 2, FD_ZEROS), med_fnt);
+			id.DrawText(x0 + 4, y0 + 4, FormatDoubleFix(tv, 2), med_fnt);
 			
 			// update policy arrows
 			for (int a = 0; a < 4; a++) {
