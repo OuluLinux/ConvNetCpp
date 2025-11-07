@@ -1,0 +1,9 @@
+uses
+	Core,
+	ConvNet;
+
+file
+	CrtpTest0.cpp;
+
+mainconfig
+	"" = "";

@@ -194,3 +194,4 @@ Remember to move task from TODO to DONE when you are ready.
 3. **Agents Framework Defined** - Outlined specialized agents for development
 4. **Verify Regression1DTest builds and runs successfully** - Ensure Regression1DTest package compiles and executes without errors
 5. **Verify Classify2DTest builds and runs successfully** - Ensure Classify2DTest package compiles and executes without errors
+6. **New CRTP Architecture Implementation** - Design CRTP-based layer architecture with type-erased wrappers for maximum performance and scripting flexibility

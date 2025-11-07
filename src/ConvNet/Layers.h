@@ -11,6 +11,18 @@ typedef Exc Exception;
 
 #define ASSERTEXC(x) if (!(x)) {throw Exception();}
 
+// Forward declaration for classes that may use it
+// LastLayerBase - Base class for layers that can be last in the network
+class LastLayerBase : public LayerBase {
+public:
+    LastLayerBase() = default;
+    
+    // Virtual functions that can be overridden by subclasses
+    virtual double Backward(int pos, double y) { return 0.0; }
+    virtual double Backward(const Volume& y) { return 0.0; }  // Changed from Volume to Volume
+    virtual double Backward(int cols, const Vector<int>& pos, const Vector<double>& y) { return 0.0; }
+};
+
 
 class IClassificationLayer {
 	
@@ -201,7 +213,7 @@ public:
 	RegressionLayer(ValueMap values) {Load(values);}
 	
 	virtual double Backward(int pos, double y);
-	virtual double Backward(const VolumeDataBase& y);
+	virtual double Backward(const Volume& y);
 	virtual double Backward(int cols, const Vector<int>& pos, const Vector<double>& y);
 	virtual Volume& Forward(Volume& input, bool is_training = false);
 	virtual void Backward();
@@ -271,7 +283,7 @@ public:
 	SoftmaxLayer(ValueMap values) {Load(values);}
 	
 	virtual double Backward(int pos, double y);
-	virtual double Backward(const VolumeDataBase& y);
+	virtual double Backward(const Volume& y);
 	virtual double Backward(int cols, const Vector<int>& pos, const Vector<double>& y) {Panic("Not implemented"); return 0;}
 	virtual Volume& Forward(Volume& input, bool is_training = false);
 	virtual void Backward();
@@ -293,7 +305,7 @@ public:
 	SvmLayer(ValueMap values) {Load(values);}
 	
 	virtual double Backward(int pos, double y);
-	virtual double Backward(const VolumeDataBase& y);
+	virtual double Backward(const Volume& y);
 	virtual double Backward(int cols, const Vector<int>& pos, const Vector<double>& y) {Panic("Not implemented"); return 0;}
 	virtual Volume& Forward(Volume& input, bool is_training = false);
 	virtual void Backward();
@@ -346,3 +358,7 @@ public:
 }
 
 #endif
+
+// Include the new CRTP layer definitions
+#include "CrtpLayers.h"
+
