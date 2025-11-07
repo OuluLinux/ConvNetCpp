@@ -1,4 +1,6 @@
 #!/usr/bin/sh
+# Build script for ConvNetCpp
+# Note: If you encounter Color constructor errors in PlotLib, run patch_plotlib.sh first
 if [ "$1" = "--clean" ]; then
     umk examples,tutorial,src,$HOME/upp/bazaar,$HOME/upp/uppsrc "$1" ~/.config/u++/theide/CLANG.bm -bdsa +GUI,DEBUG_FULL "bin/${1}"
 else
