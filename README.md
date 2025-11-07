@@ -81,5 +81,7 @@ LOG("probability that x is class 0: " << probability_volume2.GetWeights()[0]);
 ConvNetC++ requires the cross-platform library [Ultimate++](https://sourceforge.net/projects/upp/files/upp/2015.2/), which works in all platforms (Windows, Linux, OSX, FreeBSD). Even Windows XP is 
 supported, because the U++ version 9251 and Windows 7 SDK are the minimum requirements. Getting this to work in OSX is probably easier with wine, than with native solution, which is incomplete.
 
+**Note for U++ users**: The "vanilla" Ultimate++ distribution no longer includes PlotCtrl (which was previously in the bazaar directory). Users should use the fork [github.com/OuluBSD/ai-upp](https://github.com/OuluBSD/ai-upp), which has the same authors as this repository and includes the necessary components.
+
 After you have installed the Ultimate++, create a new assembly for the ConvNetC++ by looking included assemblies as examples.
 You can compile examples with the included MINGW compiler, but compiling them with the Visual Studio compiler makes it a lot faster.
