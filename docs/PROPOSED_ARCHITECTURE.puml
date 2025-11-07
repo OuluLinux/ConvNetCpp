@@ -1,0 +1,159 @@
+@startuml Proposed_Architecture
+!theme plain
+title Proposed ConvNetCpp Architecture
+
+package "ConvNet Namespace" {
+  
+  abstract class LayerBase {
+    +output_activation: Volume
+    +input_activation: Volume*
+    +output_width: int
+    +output_height: int
+    +output_depth: int
+    ..
+    +Forward(input: Volume, is_training: bool): Volume&
+    +Backward()
+    +Init(input_width: int, input_height: int, input_depth: int)
+    +GetParametersAndGradients(): Vector<ParametersAndGradients>&
+    +Serialize(s: Stream)
+  }
+
+  interface IWeightedLayer {
+    +biases: Volume
+    +filters: Vector<Volume>
+    +l1_decay_mul: double
+    +l2_decay_mul: double
+  }
+
+  interface IActivationLayer {
+    +Forward(input: Volume, is_training: bool): Volume&
+    +Backward()
+  }
+
+  interface INormalizationLayer {
+    +Forward(input: Volume, is_training: bool): Volume&
+    +Backward()
+  }
+
+  interface IAttentionLayer {
+    +ForwardWithKeysValues(queries: Volume, keys: Volume, values: Volume): Volume&
+    +BackwardWithKeysValues()
+  }
+
+  class ConvLayer {
+    +width: int
+    +height: int
+    +filter_count: int
+    +stride: int
+    +pad: int
+  }
+
+  class FullyConnLayer {
+    +neuron_count: int
+  }
+
+  class ReluLayer {
+    +Forward(input: Volume, is_training: bool): Volume&
+    +Backward()
+  }
+
+  class LayerNormLayer {
+    +epsilon: double
+  }
+
+  class MultiHeadAttentionLayer {
+    +num_heads: int
+    +d_model: int
+    +d_k: int
+    +d_v: int
+    +W_q, W_k, W_v, W_o: Vector<Volume>
+  }
+
+  class TransformerBlockLayer {
+    -attention: MultiHeadAttentionLayer
+    -feed_forward: PositionWiseFeedForwardLayer
+    -layer_norm1, layer_norm2: LayerNormLayer
+  }
+
+  class PositionWiseFeedForwardLayer {
+    +d_model: int
+    +d_ff: int
+    +W1, W2: Volume
+    +b1, b2: Volume
+  }
+
+  class Net {
+    -layers: Vector<LayerBase>
+    ..
+    +AddLayer(layer: LayerBase): LayerBase&
+    +Forward(input: Volume, is_training: bool): Volume&
+    +Backward(y: Vector<double>): double
+    +GetParametersAndGradients(): Vector<ParametersAndGradients>&
+  }
+
+  class Volume {
+    -weights: Vector<double>
+    -gradients: Vector<double>
+    -width, height, depth: int
+    ..
+    +Get(x, y, z): double
+    +Set(x, y, z, value): void
+    +GetGradient(x, y, z): double
+    +SetGradient(x, y, z, value): double
+    +ZeroGradients(): void
+  }
+
+  class Session {
+    -net: Net
+    -trainer: TrainerBase
+    -x: Volume
+    ..
+    +StartTraining()
+    +TrainOnce(x: Volume, y: Vector<double>)
+    +AddConvLayer(...)
+    +AddTransformerBlock(...)
+    +GetNetwork(): Net&
+  }
+
+  ' Inheritance relationships
+  LayerBase <|-- ConvLayer : extends
+  LayerBase <|-- FullyConnLayer : extends
+  LayerBase <|-- ReluLayer : extends
+  LayerBase <|-- LayerNormLayer : extends
+  LayerBase <|-- MultiHeadAttentionLayer : extends
+  LayerBase <|-- TransformerBlockLayer : extends
+
+  ' Interface implementations
+  IWeightedLayer <|-- ConvLayer : implements
+  IWeightedLayer <|-- FullyConnLayer : implements
+  IActivationLayer <|-- ReluLayer : implements
+  INormalizationLayer <|-- LayerNormLayer : implements
+  IAttentionLayer <|-- MultiHeadAttentionLayer : implements
+
+  ' Composition relationships
+  Net *-- "1..*" LayerBase : contains
+  Net *-- Volume : returns output
+  LayerBase *-- Volume : input/output activations
+  IWeightedLayer *-- Volume : biases
+  IWeightedLayer *-- "1..*" Volume : filters
+  MultiHeadAttentionLayer *-- "4" Volume : weight matrices
+  TransformerBlockLayer *-- MultiHeadAttentionLayer : contains
+  TransformerBlockLayer *-- PositionWiseFeedForwardLayer : contains
+  TransformerBlockLayer *-- "2" LayerNormLayer : contains
+
+  Session *-- Net : contains
+  Session *-- Volume : input/output
+
+  note right of LayerBase
+    Clean abstract interface
+    Each layer only has
+    necessary member variables
+  end note
+
+  note bottom of MultiHeadAttentionLayer
+    Transformer-specific layer
+    with multiple inputs/outputs
+  end note
+}
+
+@enduml

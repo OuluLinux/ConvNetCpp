@@ -1,0 +1,134 @@
+@startuml Current_Architecture
+title Current ConvNetCpp Architecture
+
+namespace ConvNet {
+
+  abstract class LayerBase {
+    +output_activation: Volume
+    +input_activation: Volume*
+    +output_depth: int
+    +output_width: int
+    +output_height: int
+    +input_depth: int
+    +input_width: int
+    +input_height: int
+    +input_count: int
+    +layer_type: int
+    +biases: Volume
+    +filters: Vector<Volume>
+    +neuron_count: int
+    +width: int
+    +height: int
+    +filter_count: int
+    +stride: int
+    +pad: int
+    +drop_prob: double
+    +dropped: Vector<bool>
+    +switches: Vector<int>
+    +switchx: Vector<int>
+    +switchy: Vector<int>
+    +es: Vector<double>
+    +S_cache: Volume
+    +k: double
+    +alpha: double
+    +beta: double
+    +n: int
+    ..
+    +Forward(input: Volume, is_training: bool): Volume&
+    +Backward(): double
+    +Backward(pos: int, y: double): double
+    +Backward(y: Vector<double>): double
+    +Init(input_width: int, input_height: int, input_depth: int)
+    +GetParametersAndGradients(): Vector<ParametersAndGradients>&
+  }
+
+  interface IDotProductLayer {
+    +bias_pref: double
+  }
+
+  interface IClassificationLayer {
+    +class_count: int
+  }
+
+  class Net {
+    -layers: Vector<LayerBase>
+    ..
+    +AddLayer(): LayerBase&
+    +Forward(input: Volume, is_training: bool): Volume&
+    +Backward(y: Vector<double>): double
+    +GetParametersAndGradients(): Vector<ParametersAndGradients>&
+  }
+
+  class Volume {
+    -weights: Vector<double>
+    -gradients: Vector<double>
+    -width: int
+    -height: int
+    -depth: int
+    ..
+    +Get(x, y, z): double
+    +Set(x, y, z, value: double): void
+    +GetGradient(x, y, z): double
+    +SetGradient(x, y, z, value: double): void
+    +ZeroGradients(): void
+  }
+
+  class Session {
+    -net: Net
+    -trainer: TrainerBase
+    -x: Volume
+    ..
+    +StartTraining(): void
+    +TrainOnce(x: Volume, y: Vector<double>): void
+    +AddConvLayer(...): LayerBase&
+    +AddFullyConnLayer(...): LayerBase&
+    +AddReluLayer(): LayerBase&
+    +GetNetwork(): Net&
+  }
+
+  abstract class TrainerBase {
+    -net: Net&
+    -learning_rate: double
+    -batch_size: int
+    ..
+    +Train(x: Volume, pos: int, y: double): void
+    +TrainImplem(): void
+  }
+
+  class SgdTrainer {
+    -momentum: double
+    -velocity: Vector<Volume>
+  }
+
+  class AdamTrainer {
+    -beta1: double
+    -beta2: double
+    -m: Vector<Volume>
+    -v: Vector<Volume>
+    -t: int
+  }
+
+  ' Associations
+  Net *-- "1..*" LayerBase : contains
+  Net --> Volume : returns output
+  LayerBase --> Volume : input/output activations
+  LayerBase *-- "0..*" Volume : filters
+  LayerBase --> Volume : biases
+  LayerBase ..|> IDotProductLayer : implements
+  LayerBase ..|> IClassificationLayer : implements
+  
+  Session *-- Net : contains
+  Session *-- TrainerBase : uses
+  Session --> Volume : input/output
+  TrainerBase --> Net : trains
+  TrainerBase <|-- SgdTrainer : extends
+  TrainerBase <|-- AdamTrainer : extends
+
+  note right of LayerBase
+    Monolithic design: contains
+    member variables for ALL
+    possible layer types
+  end note
+}
+
+@enduml

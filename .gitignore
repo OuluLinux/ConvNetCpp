@@ -1,0 +1,27 @@
+# Build and IDE files
+*.o
+*.obj
+*.exe
+*.out
+*.app
+*.dll
+*.so
+*.dylib
+*.lib
+
+# IDE specific
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+build/
+cmake-build-*/
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# PlantUML generated PNG files
+docs/*.png
+*.png

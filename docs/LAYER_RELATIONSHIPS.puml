@@ -1,0 +1,131 @@
+@startuml Layer_Relationships
+!theme plain
+title ConvNetCpp Layer Relationships
+
+package "LayerBase and Specializations" {
+  
+  abstract class LayerBase {
+    +Forward(input: Volume, is_training: bool): Volume&
+    +Backward()
+    +Init(input_width: int, input_height: int, input_depth: int)
+  }
+
+  class InputLayer {
+    +Forward(input: Volume, is_training: bool): Volume&
+    +Backward()
+  }
+
+  class ConvLayer {
+    +Forward(input: Volume, is_training: bool): Volume&
+    +Backward()
+    +biases: Volume
+    +filters: Vector<Volume>
+    +width, height: int
+    +filter_count: int
+    +stride, pad: int
+  }
+
+  class FullyConnLayer {
+    +Forward(input: Volume, is_training: bool): Volume&
+    +Backward()
+    +neuron_count: int
+    +biases: Volume
+    +filters: Vector<Volume>
+  }
+
+  class PoolLayer {
+    +Forward(input: Volume, is_training: bool): Volume&
+    +Backward()
+    +width, height: int
+    +stride, pad: int
+    +switchx, switchy: Vector<int>
+  }
+
+  class ReluLayer {
+    +Forward(input: Volume, is_training: bool): Volume&
+    +Backward()
+  }
+
+  class SigmoidLayer {
+    +Forward(input: Volume, is_training: bool): Volume&
+    +Backward()
+  }
+
+  class TanhLayer {
+    +Forward(input: Volume, is_training: bool): Volume&
+    +Backward()
+  }
+
+  class DropOutLayer {
+    +Forward(input: Volume, is_training: bool): Volume&
+    +Backward()
+    +drop_prob: double
+    +dropped: Vector<bool>
+  }
+
+  class SoftmaxLayer {
+    +Forward(input: Volume, is_training: bool): Volume&
+    +Backward(pos: int, y: double): double
+    +class_count: int
+    +es: Vector<double>
+  }
+
+  class RegressionLayer {
+    +Forward(input: Volume, is_training: bool): Volume&
+    +Backward(y: Vector<double>): double
+  }
+
+  ' LayerBase inheritance
+  LayerBase <|-- InputLayer
+  LayerBase <|-- ConvLayer
+  LayerBase <|-- FullyConnLayer
+  LayerBase <|-- PoolLayer
+  LayerBase <|-- ReluLayer
+  LayerBase <|-- SigmoidLayer
+  LayerBase <|-- TanhLayer
+  LayerBase <|-- DropOutLayer
+  LayerBase <|-- SoftmaxLayer
+  LayerBase <|-- RegressionLayer
+
+  ' Data flow through layers
+  Volume ||--|| Volume : connects layers
+
+  ' Each layer has input/output volumes
+  LayerBase ||--o{ Volume : has input/output
+  LayerBase ||--|| Volume : has output_activation
+
+  note top of LayerBase
+    Current monolithic implementation
+    Each layer specialization has only
+    relevant member variables set
+    but all possible variables exist
+  end note
+}
+
+package "Net and Session" {
+  
+  class Net {
+    -layers: Vector<LayerBase>
+    +Forward(input: Volume, is_training: bool): Volume&
+    +Backward(y: Vector<double>): double
+  }
+
+  class Session {
+    -net: Net
+    -trainer: TrainerBase
+    +StartTraining()
+    +TrainOnce(x: Volume, y: Vector<double>)
+  }
+
+  class Volume {
+    -weights: Vector<double>
+    -gradients: Vector<double>
+  }
+
+  Net ||--o{ LayerBase : contains
+  Session ||--|| Net : contains
+  Net ||--|| Volume : input/output
+  Session ||--|| Volume : training data
+}
+
+@enduml
