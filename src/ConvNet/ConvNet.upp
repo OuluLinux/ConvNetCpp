@@ -58,5 +58,7 @@ file
 	Recurrent.cpp,
 	Mat.h,
 	Mat.cpp,
+	MemoryPool.h,
+	MemoryPool.cpp,
 	DQN.h;
 

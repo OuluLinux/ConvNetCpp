@@ -77,5 +77,6 @@
 #include "Recurrent.h"
 #include "RecurrentSession.h"
 #include "MagicNet.h"
+#include "MemoryPool.h"
 
 #endif
