@@ -76,7 +76,8 @@
 #include "Agent.h"
 #include "Recurrent.h"
 #include "RecurrentSession.h"
-#include "MagicNet.h"
 #include "MemoryPool.h"
+#include "RuntimeFlexibility.h"
+#include "MagicNet.h"
 
 #endif

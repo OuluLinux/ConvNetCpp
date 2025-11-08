@@ -60,5 +60,6 @@ file
 	Mat.cpp,
 	MemoryPool.h,
 	MemoryPool.cpp,
+	RuntimeFlexibility.h,
 	DQN.h;
 
