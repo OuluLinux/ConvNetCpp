@@ -53,9 +53,9 @@ CONSOLE_APP_MAIN
     LOG("  Output size: " << output_size);
     LOG("  Epoch size: " << epoch_size);
     
-    ASSERT(vocab.GetCount() == 6);  // h,e,l,o,w,r,d (duplicates removed)
-    ASSERT(input_size == 7);        // vocab size + 1 (for START token)
-    ASSERT(output_size == 7);       // vocab size + 1 (for END token)
+    ASSERT(vocab.GetCount() == 7);  // h,e,l,o,w,r,d (duplicates removed)
+    ASSERT(input_size == 8);        // vocab size + 1 (for START token)
+    ASSERT(output_size == 8);       // vocab size + 1 (for END token)
     ASSERT(epoch_size == 2);        // 2 sentences
     
     // Test RecurrentSession with LSTM configuration

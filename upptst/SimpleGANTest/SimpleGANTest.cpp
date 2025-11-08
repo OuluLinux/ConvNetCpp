@@ -17,8 +17,8 @@ double RandomNormal() {
     return x1 * c;
 }
 
-// Custom Net class - from SimpleGAN example (simplified for testing)
-class Net {
+// Custom SimpleGANNet class - from SimpleGAN example (simplified for testing)
+class SimpleGANNet {
 
     struct Data {
         Vector<double> w1, b1, w2;
@@ -105,8 +105,8 @@ CONSOLE_APP_MAIN
     
     LOG("SimpleGAN custom Net test:");
     
-    // Test the custom Net class implementation (as used in SimpleGAN)
-    Net net;
+    // Test the custom SimpleGANNet class implementation (as used in SimpleGAN)
+    SimpleGANNet net;
     
     // Initialize with 10 hidden units and weight scale of 0.5
     net.Init(10, 0.5);

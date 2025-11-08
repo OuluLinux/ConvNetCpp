@@ -59,7 +59,11 @@ CONSOLE_APP_MAIN
     ASSERT(abs(disc_sum - 1.0) < 0.01);
     
     // Test forward pass through discriminator with generated data
-    Vector<double> fake_data = generated_output; // Use generated output as fake data
+    Vector<double> fake_data;
+    fake_data.SetCount(generated_output.GetCount());
+    for(int i = 0; i < generated_output.GetCount(); i++) {
+        fake_data[i] = generated_output[i];
+    } // Use generated output as fake data
     Vector<double> disc_fake_output = disc.Predict(fake_data);
     
     LOG("  Discriminator with fake data: [" << fake_data[0] << "] -> [" 
