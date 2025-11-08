@@ -78,6 +78,7 @@
 #include "RecurrentSession.h"
 #include "MemoryPool.h"
 #include "RuntimeFlexibility.h"
+#include "CrtpLayers.h"
 #include "MagicNet.h"
 
 #endif

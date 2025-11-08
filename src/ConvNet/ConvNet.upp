@@ -61,5 +61,6 @@ file
 	MemoryPool.h,
 	MemoryPool.cpp,
 	RuntimeFlexibility.h,
+	CrtpLayers.h,
 	DQN.h;
 
