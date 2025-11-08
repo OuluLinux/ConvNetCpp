@@ -24,7 +24,7 @@ CONSOLE_APP_MAIN
     // Test SGD optimizer
     String sgd_net = net_template;
     sgd_net.Replace("\"optimizer_placeholder\"", 
-        "{\"type\":\"sgd\", \"learning_rate\":0.1, \"momentum\":0.9, \"batch_size\":1, \"l2_decay\":0.001}");
+        "{\"type\":\"sgd\", \"learning_rate\":0.01, \"momentum\":0.1, \"batch_size\":10, \"l2_decay\":0.001}");
     
     bool sgd_success = sgd_session.MakeLayers(sgd_net);
     LOG("  SGD network creation: " << (sgd_success ? "success" : "failed"));
@@ -59,7 +59,7 @@ CONSOLE_APP_MAIN
     
     for (int i = 0; i < 3; i++) {
         SessionData& d = sessions[i]->Data();
-        d.BeginDataResult(2, 2, 1, 0);  // 2 inputs, 2 samples, 1 output
+        d.BeginDataResult(1, 2, 2, 0);  // 1 output, 2 samples, 2 inputs
         
         d.SetData(0, 0, 0.5).SetData(0, 1, 0.3).SetResult(0, 0, 0.8);
         d.SetData(1, 0, 0.2).SetData(1, 1, 0.7).SetResult(1, 0, 0.9);

@@ -30,7 +30,7 @@ CONSOLE_APP_MAIN
     // Create simple test data (state -> action value prediction) following Regression1DTest pattern
     SessionData& d = session.Data();
     LOG("  Setting up training data...");
-    d.BeginDataResult(16, 4, 4, 0);  // 16 state inputs, 4 samples, 4 action outputs
+    d.BeginDataResult(4, 4, 16, 0);  // 4 action outputs, 4 samples, 16 state inputs
 
     // Create multiple samples of simple state representation (one-hot for position in 4x4 grid)
     for (int sample = 0; sample < 4; sample++) {

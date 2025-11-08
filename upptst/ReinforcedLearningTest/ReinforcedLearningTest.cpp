@@ -31,7 +31,7 @@ CONSOLE_APP_MAIN
     
     // Create experience replay data (state, action, reward, next_state)
     SessionData& d = q_network.Data();
-    d.BeginDataResult(4, 2, 3, 0);  // 4 state inputs, 2 samples, 3 action outputs (Q-values)
+    d.BeginDataResult(3, 2, 4, 0);  // 3 action outputs, 2 samples, 4 state inputs
     
     // Experience 1: state -> Q-values
     d.SetData(0, 0, 0.1).SetData(0, 1, 0.2).SetData(0, 2, 0.3).SetData(0, 3, 0.4);

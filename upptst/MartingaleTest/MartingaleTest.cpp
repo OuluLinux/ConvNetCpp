@@ -30,7 +30,7 @@ CONSOLE_APP_MAIN
     
     // Create simple time series data (random walk)
     SessionData& d = session.Data();
-    d.BeginDataResult(10, 3, 1, 0);  // 10 inputs, 3 samples, 1 output
+    d.BeginDataResult(1, 3, 10, 0);  // 1 output, 3 samples, 10 inputs
     
     for (int s = 0; s < 3; s++) {  // 3 different sequences
         double value = 100.0;  // Starting value

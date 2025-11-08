@@ -29,7 +29,7 @@ CONSOLE_APP_MAIN
     
     // Create training data simulating water world environment
     SessionData& d = agent_network.Data();
-    d.BeginDataResult(8, 2, 2, 0);  // 8 state inputs, 2 samples, 2 action outputs
+    d.BeginDataResult(2, 2, 8, 0);  // 2 action outputs, 2 samples, 8 state inputs
     
     // Sample 1: [agent_x, agent_y, target_x, target_y, other_x, other_y, feature1, feature2]
     d.SetData(0, 0, 0.2).SetData(0, 1, 0.3).SetData(0, 2, 0.8).SetData(0, 3, 0.7);  // agent, target

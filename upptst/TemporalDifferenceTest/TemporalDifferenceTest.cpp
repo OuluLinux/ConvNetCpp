@@ -29,7 +29,7 @@ CONSOLE_APP_MAIN
     
     // Create temporal difference learning data (state -> value)
     SessionData& d = value_network.Data();
-    d.BeginDataResult(5, 3, 1, 0);  // 5 state inputs, 3 samples, 1 value output
+    d.BeginDataResult(1, 3, 5, 0);  // 1 value output, 3 samples, 5 state inputs
     
     // Sample states with their true values (for TD training)
     // In TD learning, we train on (V(s_t) ≈ r_t + γ*V(s_t+1))

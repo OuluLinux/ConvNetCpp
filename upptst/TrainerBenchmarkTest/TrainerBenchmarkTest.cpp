@@ -24,7 +24,7 @@ CONSOLE_APP_MAIN
     // SGD trainer
     String sgd_net = base_net;
     sgd_net.Replace("\"trainer_placeholder\"", 
-        "{\"type\":\"sgd\", \"learning_rate\":0.01, \"momentum\":0.9, \"batch_size\":1, \"l2_decay\":0.001}");
+        "{\"type\":\"sgd\", \"learning_rate\":0.01, \"momentum\":0.1, \"batch_size\":10, \"l2_decay\":0.001}");
     bool sgd_success = sgd_session.MakeLayers(sgd_net);
     
     // Adam trainer  
@@ -52,7 +52,7 @@ CONSOLE_APP_MAIN
     
     for (int i = 0; i < 3; i++) {
         SessionData& d = sessions[i]->Data();
-        d.BeginDataResult(3, 4, 1, 0);  // 3 inputs, 4 samples, 1 output
+        d.BeginDataResult(1, 4, 3, 0);  // 1 output, 4 samples, 3 inputs
         
         for (int j = 0; j < 4; j++) {
             d.SetData(j, 0, 0.1 + j*0.1).SetData(j, 1, 0.2 + j*0.1).SetData(j, 2, 0.3 - j*0.05);

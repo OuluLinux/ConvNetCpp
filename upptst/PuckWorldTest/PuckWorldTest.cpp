@@ -30,7 +30,7 @@ CONSOLE_APP_MAIN
     
     // Create simple test data representing puck world state
     SessionData& d = session.Data();
-    d.BeginDataResult(6, 2, 2, 0);  // 6 state inputs, 2 samples, 2 action outputs
+    d.BeginDataResult(2, 2, 6, 0);  // 2 action outputs, 2 samples, 6 state inputs
     
     // Sample 1: puck at (0.2, 0.3) moving to (0.25, 0.35), agent at (0.8, 0.7)
     d.SetData(0, 0, 0.2).SetData(0, 1, 0.3).SetData(0, 2, 0.05).SetData(0, 3, 0.05).SetData(0, 4, 0.8).SetData(0, 5, 0.7);
