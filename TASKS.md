@@ -6,129 +6,123 @@ Remember to move task from TODO to DONE when you are ready.
 
 ## {TODO}
 
-1. **Performance Testing Framework (High Priority)**
-   - Create benchmarks comparing old vs new architecture performance
-   - Test with various network sizes and configurations
-   - Verify no performance regression in critical paths
-   - Measure memory usage improvements
-
-2. **Accelerator Memory Management (High Priority)**
+1. **Accelerator Memory Management (High Priority)**
    - Design memory pools for GPU (CUDA/OpenCL) targets
    - Implement Parallella-specific memory management
    - Create unified interface for cross-platform memory operations
    - Optimize data transfer between CPU and accelerators
 
-3. **Network Builder for New Architecture (High Priority)**
+2. **Network Builder for New Architecture (High Priority)**
    - Update network creation from JSON configurations to use new system
    - Maintain compatibility with existing network definitions
    - Implement layer creation and connection logic
    - Ensure all existing examples can be converted
 
-4. **Serialization Updates (High Priority)**
+3. **Serialization Updates (High Priority)**
    - Update save/load functionality for new architecture
    - Maintain backward compatibility where possible
    - Implement new serialization format for external memory pools
    - Test with existing pretrained models
 
-5. **Validation and Verification (High Priority)**
+4. **Validation and Verification (High Priority)**
    - Run all tests to ensure correctness
    - Compare outputs between old and new systems
    - Profile performance improvements
    - Verify accelerator targets work correctly
 
-6. **Backward Compatibility Layer (High Priority)**
+5. **Backward Compatibility Layer (High Priority)**
     - Create compatibility layer for existing integrations
     - Provide migration path for users of current API
     - Maintain critical interface compatibility
     - Document breaking changes and migration steps
 
-7. **Test Suite Migration (High Priority)**
+6. **Test Suite Migration (High Priority)**
     - Convert all existing tests (upptst/) to new architecture
     - Ensure all tests pass with new implementation
     - Update expected values and layer counts as needed
     - Verify mathematical correctness of all operations
 
-8. **Example Conversion (High Priority)**
+7. **Example Conversion (High Priority)**
     - Convert all existing examples to new architecture
     - Update CharGen, Classify2D, ClassifyImages, etc.
     - Ensure performance is maintained or improved
     - Update build configurations and dependencies
 
-9. **Documentation Updates (High Priority)**
+8. **Documentation Updates (High Priority)**
     - Update all architectural documentation
     - Create migration guide from old to new system
     - Update UML diagrams to reflect new design
     - Document performance characteristics and usage patterns
 
-10. **Verify GridWorldTest builds and runs successfully** - Ensure GridWorldTest package compiles and executes without errors
+9. **Verify GridWorldTest builds and runs successfully** - Ensure GridWorldTest package compiles and executes without errors
 
-11. **Verify MartingaleTest builds and runs successfully** - Ensure MartingaleTest package compiles and executes without errors
+10. **Verify MartingaleTest builds and runs successfully** - Ensure MartingaleTest package compiles and executes without errors
 
-12. **Verify NetworkOptimizationTest builds and runs successfully** - Ensure NetworkOptimizationTest package compiles and executes without errors
+11. **Verify NetworkOptimizationTest builds and runs successfully** - Ensure NetworkOptimizationTest package compiles and executes without errors
 
-13. **Verify PuckWorldTest builds and runs successfully** - Ensure PuckWorldTest package compiles and executes without errors
+12. **Verify PuckWorldTest builds and runs successfully** - Ensure PuckWorldTest package compiles and executes without errors
 
-14. **Verify ReinforcedLearningTest builds and runs successfully** - Ensure ReinforcedLearningTest package compiles and executes without errors
+13. **Verify ReinforcedLearningTest builds and runs successfully** - Ensure ReinforcedLearningTest package compiles and executes without errors
 
-15. **Verify TemporalDifferenceTest builds and runs successfully** - Ensure TemporalDifferenceTest package compiles and executes without errors
+14. **Verify TemporalDifferenceTest builds and runs successfully** - Ensure TemporalDifferenceTest package compiles and executes without errors
 
-16. **Verify TrainerBenchmarkTest builds and runs successfully** - Ensure TrainerBenchmarkTest package compiles and executes without errors
+15. **Verify TrainerBenchmarkTest builds and runs successfully** - Ensure TrainerBenchmarkTest package compiles and executes without errors
 
-17. **Verify WaterWorldTest builds and runs successfully** - Ensure WaterWorldTest package compiles and executes without errors
+16. **Verify WaterWorldTest builds and runs successfully** - Ensure WaterWorldTest package compiles and executes without errors
 
-18. **GAN Implementation Fix** - Investigating and fixing issues in current GAN implementations
+17. **GAN Implementation Fix** - Investigating and fixing issues in current GAN implementations
     - Analyzing GAN.cpp and SimpleGAN.cpp for training instabilities
     - Reviewing discriminator-generator training balance
     - Testing with MNIST dataset
 
-19. **Transformer Backend Implementation**
+18. **Transformer Backend Implementation**
     - Implement multi-head attention mechanism
     - Create encoder layer with feed-forward networks
     - Create decoder layer with masked attention
     - Implement positional encoding
     - Design transformer model class structure
 
-20. **Transformer GUI Tester**
+19. **Transformer GUI Tester**
     - Create visualization for attention weights
     - Develop model training interface
     - Add sequence input/output display
     - Implement performance metrics display
 
-21. **GPT Backend Implementation**
+20. **GPT Backend Implementation**
     - Build autoregressive transformer model
     - Implement tokenization system
     - Create context window management
     - Design sampling methods (greedy, top-k, nucleus)
 
-22. **GPT GUI Tester**
+21. **GPT GUI Tester**
     - Develop text input interface
     - Create real-time text generation display
     - Add hyperparameter controls
     - Implement continuation examples
 
-23. **GAN Enhancement**
+22. **GAN Enhancement**
     - Add support for different loss functions
     - Implement progressive growing techniques
     - Add conditional GAN capabilities
     - Improve training stability
 
-24. **Model Serialization Improvements**
+23. **Model Serialization Improvements**
     - Enhanced save/load for complex models
     - Version compatibility for transformer/GPT models
     - Compression options
 
-25. **Performance Optimization**
+24. **Performance Optimization**
     - Memory optimization for large models
     - Parallel training capabilities
 
-26. **Hardware Acceleration (Low Priority)**
+25. **Hardware Acceleration (Low Priority)**
     - Plan for GPU acceleration (OpenGL/DirectX)
     - Plan for C++ AMP support (deprecated but educational)
     - Plan for OpenCL implementation
     - Plan for CUDA implementation
     - Plan for OpenMP parallelization
 
-27. **Parallella Support (High Priority)**
+26. **Parallella Support (High Priority)**
     - Investigate Parallella Epiphany architecture compatibility
     - Implement basic parallel computing framework for Epiphany processors
     - Create optimized kernels for neural network operations
@@ -160,3 +154,4 @@ Remember to move task from TODO to DONE when you are ready.
 14. **Verify HeteroscedasticUncertaintyTest builds and runs successfully** - Ensure HeteroscedasticUncertaintyTest package compiles and executes without errors
 15. **Runtime Flexibility Layer (High Priority)** - Implemented scripting-compatible wrapper layer using type erasure with RuntimeLayer interface, type-erased wrappers, and RuntimeNet class for dynamic dispatch without performance loss in optimized paths
 16. **CRTP Layer Implementations (High Priority)** - Implemented CRTP-based layer architecture with template base class, compile-time optimized forward/backward methods, and type-safe layer implementations for Conv, FullyConn, Activation, Pool, Softmax, Dropout, and Input layers
+17. **Performance Testing Framework (High Priority)** - Created comprehensive benchmarking system with PerfCounter, BenchmarkResult, PerfBenchmark, and NetworkPerfBenchmark for performance comparison between old and new architectures, memory usage tracking, and automated benchmark execution
