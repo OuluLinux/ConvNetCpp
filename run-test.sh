@@ -7,7 +7,7 @@ echo "Running specific ConvNetCpp unit tests..."
 if [ $# -eq 0 ]; then
     echo "Usage: $0 <TestName>"
     echo "Example: $0 Classify2DTest"
-    echo "Available tests: CharGenTest, Regression1DTest, Classify2DTest, SimpleGANTest, GANTest, RegressionPainterTest, ClassifyImagesTest, GridWorldTest, HeteroscedasticUncertaintyTest, MartingaleTest, NetworkOptimizationTest, PuckWorldTest, ReinforcedLearningTest, TemporalDifferenceTest, TrainerBenchmarkTest, WaterWorldTest"
+    echo "Available tests: CharGenTest, Regression1DTest, Classify2DTest, SimpleGANTest, GANTest, RegressionPainterTest, ClassifyImagesTest, GridWorldTest, HeteroscedasticUncertaintyTest, MartingaleTest, NetworkOptimizationTest, PuckWorldTest, ReinforcedLearningTest, TemporalDifferenceTest, TrainerBenchmarkTest, WaterWorldTest, GGUFTest"
     exit 1
 fi
 
@@ -21,7 +21,7 @@ echo "Running $TEST_NAME..."
 echo "========================================"
 
 if [ -f "bin/$TEST_NAME" ]; then
-    "./bin/$TEST_NAME"
+    LD_LIBRARY_PATH=/home/sblo/Dev/ConvNetCpp/src/llama.cpp/build/bin:$LD_LIBRARY_PATH "./bin/$TEST_NAME"
     result=$?
     if [ $result -eq 0 ]; then
         echo "✓ $TEST_NAME PASSED"
