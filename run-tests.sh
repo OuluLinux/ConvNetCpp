@@ -7,7 +7,7 @@ echo "Running ALL ConvNetCpp unit tests..."
 mkdir -p bin
 
 # Run each test executable
-TESTS=("CharGenTest" "Regression1DTest" "Classify2DTest" "SimpleGANTest" "GANTest" "RegressionPainterTest" "ClassifyImagesTest" "GridWorldTest" "HeteroscedasticUncertaintyTest" "MartingaleTest" "NetworkOptimizationTest" "PuckWorldTest" "ReinforcedLearningTest" "TemporalDifferenceTest" "TrainerBenchmarkTest" "WaterWorldTest")
+TESTS=("CharGenTest" "Regression1DTest" "Classify2DTest" "SimpleGANTest" "GANTest" "RegressionPainterTest" "ClassifyImagesTest" "GridWorldTest" "HeteroscedasticUncertaintyTest" "MartingaleTest" "NetworkOptimizationTest" "PuckWorldTest" "ReinforcedLearningTest" "TemporalDifferenceTest" "TrainerBenchmarkTest" "WaterWorldTest" "GGUFTest")
 
 for test in "${TESTS[@]}"; do
     echo "========================================"

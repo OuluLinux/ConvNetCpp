@@ -9,7 +9,8 @@
 	"libs": [],
 	"out": "bin/tests",
 	"src": [
-		"upptst/TestMain.cpp"
+		"upptst/TestMain.cpp",
+		"upptst/GGUFTest/GGUFTest.cpp"
 	],
 	"precompile": false,
 	"console": true,
