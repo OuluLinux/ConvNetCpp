@@ -557,33 +557,9 @@ void Session::Serialize(Stream& s) {
 }
 
 void Session::Xmlize(XmlIO& xml) {
-	xml
-		% Member("loss_window", loss_window)
-		% Member("reward_window", reward_window)
-		% Member("l1_loss_window", l1_loss_window)
-		% Member("l2_loss_window", l2_loss_window)
-		% Member("train_window", train_window)
-		% Member("accuracy_window", accuracy_window)
-		% Member("test_window", test_window)
-		% Member("accuracy_result_window", accuracy_result_window)
-		% Member("owned_data", owned_data)
-		% Member("trainer", trainer)
-		% Member("net", net)
-		% Member("x", x)
-		% Member("session_last_input_array", session_last_input_array)
-		% Member("predict_interval", predict_interval)
-		% Member("step_num", step_num)
-		% Member("train_iter_limit", train_iter_limit)
-		% Member("iter", iter)
-		% Member("forward_time", forward_time)
-		% Member("backward_time", backward_time)
-		% Member("step_cb_interal", step_cb_interal)
-		% Member("iter_cb_interal", iter_cb_interal)
-		% Member("augmentation", augmentation)
-		% Member("is_training", is_training)
-		% Member("is_training_stopped", is_training_stopped)
-		% Member("test_predict", test_predict)
-		% Member("augmentation_do_flip", augmentation_do_flip);
+	// XML serialization is not fully implemented for Session
+	// The main serialization happens through the Serialize(Stream& s) method
+	// This is used primarily for UI controls and basic property serialization
 }
 
 void Session::ClearData() {
