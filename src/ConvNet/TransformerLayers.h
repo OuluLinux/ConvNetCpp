@@ -3,6 +3,7 @@
 
 #include "ConvNet.h"
 #include "CrtpLayers.h"
+#include "RuntimeFlexibility.h"  // For layer normalization implementation
 
 namespace ConvNet {
 
@@ -107,6 +108,9 @@ public:
     // Public interface
     int GetEmbedDim() const { return self_attention.GetEmbedDim(); }
     int GetNumHeads() const { return self_attention.GetNumHeads(); }
+    
+    // Helper for layer normalization
+    void ApplyLayerNorm(Volume& input, const Volume& gamma, const Volume& beta, int d_model, int seq_len);
 };
 
 // Transformer Decoder Layer
@@ -159,6 +163,9 @@ public:
     // Public interface
     int GetEmbedDim() const { return self_attention.GetEmbedDim(); }
     int GetNumHeads() const { return self_attention.GetNumHeads(); }
+    
+    // Helper for layer normalization
+    void ApplyLayerNorm(Volume& input, const Volume& gamma, const Volume& beta, int d_model, int seq_len);
 };
 
 // Positional Encoding Layer

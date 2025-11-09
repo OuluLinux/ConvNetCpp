@@ -594,6 +594,368 @@ public:
     int GetLength() const { return length; }
 };
 
+#ifdef flagGPU // Define this flag to enable GPU support
+
+// GPU memory pool for efficient allocation and deallocation of GPU tensors
+class GPUMemoryPool {
+private:
+    struct GPUChunk {
+        void* ptr;
+        size_t size;
+        bool used;
+
+        GPUChunk(void* p, size_t s) : ptr(p), size(s), used(false) {}
+    };
+
+    // Memory blocks for different sizes (powers of 2 for efficient allocation)
+    std::unordered_map<size_t, std::vector<GPUChunk>> size_pools;
+    std::unordered_map<void*, size_t> allocated_blocks; // Track currently allocated blocks
+    SpinLock lock;
+
+    // Default pool sizes - powers of 2 from 1KB to 16MB
+    static const std::vector<size_t> DEFAULT_SIZES;
+
+public:
+    GPUMemoryPool();
+    ~GPUMemoryPool();
+
+    // Allocate GPU memory of specified size
+    void* Allocate(size_t size);
+
+    // Deallocate GPU memory back to pool
+    void Deallocate(void* ptr);
+
+    // Clear all pools (free GPU memory)
+    void Clear();
+
+    // Get memory statistics
+    size_t GetAllocatedMemory() const;
+    size_t GetPooledMemory() const;
+    size_t GetTotalMemoryUsed() const;
+
+    // Pre-allocate a specific size pool if needed
+    void PreAllocate(size_t size, int count);
+
+    // Get memory usage details
+    String GetMemoryUsageInfo() const;
+
+    // Copy data from host to device
+    static bool CopyToGPU(void* gpu_ptr, const void* host_ptr, size_t size);
+
+    // Copy data from device to host
+    static bool CopyFromGPU(void* host_ptr, const void* gpu_ptr, size_t size);
+    
+    // Static access method for singleton or thread-local pool
+    static GPUMemoryPool& Get();
+};
+
+// GPU-compatible Matrix class
+class GPUMat {
+private:
+    void* gpu_weights;      // Pointer to GPU memory
+    void* gpu_gradients;    // Pointer to GPU memory for gradients
+    int width;
+    int height;
+    int length;
+
+public:
+    GPUMat() : gpu_weights(nullptr), gpu_gradients(nullptr), width(0), height(0), length(0) {}
+
+    GPUMat(int width, int height) : gpu_weights(nullptr), gpu_gradients(nullptr), width(0), height(0), length(0) {
+        Init(width, height);
+    }
+
+    GPUMat(int width, int height, double default_value) : gpu_weights(nullptr), gpu_gradients(nullptr), width(0), height(0), length(0) {
+        Init(width, height, default_value);
+    }
+
+    GPUMat(const Vector<double>& src_weights) : gpu_weights(nullptr), gpu_gradients(nullptr), width(1), height(src_weights.GetCount()), length(src_weights.GetCount()) {
+        Init(width, height);
+        CopyFromHost(src_weights, 0.0);
+    }
+
+    GPUMat(const PoolMat& pool_mat) : gpu_weights(nullptr), gpu_gradients(nullptr), width(pool_mat.GetWidth()), height(pool_mat.GetHeight()), length(pool_mat.GetLength()) {
+        Init(width, height);
+        CopyFromHost(pool_mat);
+    }
+
+    ~GPUMat() {
+        if (gpu_weights) {
+            GPUMemoryPool::Get().Deallocate(gpu_weights);
+            gpu_weights = nullptr;
+        }
+        if (gpu_gradients) {
+            GPUMemoryPool::Get().Deallocate(gpu_gradients);
+            gpu_gradients = nullptr;
+        }
+    }
+
+    GPUMat& Init(int width, int height) {
+        ASSERT(width > 0 && height > 0);
+
+        if (gpu_weights) {
+            GPUMemoryPool::Get().Deallocate(gpu_weights);
+            gpu_weights = nullptr;
+        }
+        if (gpu_gradients) {
+            GPUMemoryPool::Get().Deallocate(gpu_gradients);
+            gpu_gradients = nullptr;
+        }
+
+        this->width = width;
+        this->height = height;
+        length = width * height;
+
+        gpu_weights = GPUMemoryPool::Get().Allocate(sizeof(double) * length);
+        gpu_gradients = GPUMemoryPool::Get().Allocate(sizeof(double) * length);
+
+        ZeroWeights();
+        ZeroGradients();
+
+        return *this;
+    }
+
+    GPUMat& Init(int width, int height, double default_value) {
+        Init(width, height);
+        SetConst(default_value);
+        return *this;
+    }
+
+    void ZeroWeights() {
+        // Initialize GPU weights to zero
+        Vector<double> zeros(length, 0.0);
+        CopyFromHost(zeros, 0.0);
+    }
+
+    void ZeroGradients() {
+        // Initialize GPU gradients to zero
+        Vector<double> zeros(length, 0.0);
+        CopyFromHostGradients(zeros);
+    }
+
+    int GetWidth() const { return width; }
+    int GetHeight() const { return height; }
+    int GetLength() const { return length; }
+
+    // Copy data from host Vector to GPU
+    bool CopyFromHost(const Vector<double>& host_data, double default_value = 0.0) {
+        if (host_data.GetCount() != length) return false;
+
+        return GPUMemoryPool::CopyToGPU(gpu_weights, host_data.Begin(), sizeof(double) * length);
+    }
+
+    // Copy data from another GPUMat to this one
+    bool CopyFromHost(const GPUMat& other) {
+        if (other.GetLength() != length) return false;
+
+        bool success = GPUMemoryPool::CopyToGPU(gpu_weights, other.gpu_weights, sizeof(double) * length);
+        if (success) {
+            success = GPUMemoryPool::CopyToGPU(gpu_gradients, other.gpu_gradients, sizeof(double) * length);
+        }
+        return success;
+    }
+
+    // Copy data from PoolMat to GPU
+    bool CopyFromHost(const PoolMat& pool_mat) {
+        if (pool_mat.GetLength() != length) return false;
+
+        // Create temporary host vector
+        Vector<double> host_data;
+        host_data.SetCount(length);
+        for (int i = 0; i < length; i++) {
+            host_data[i] = pool_mat.Get(i);
+        }
+
+        return CopyFromHost(host_data, 0.0);
+    }
+
+    // Copy gradients from host Vector to GPU
+    bool CopyFromHostGradients(const Vector<double>& host_gradients) {
+        if (host_gradients.GetCount() != length) return false;
+
+        return GPUMemoryPool::CopyToGPU(gpu_gradients, host_gradients.Begin(), sizeof(double) * length);
+    }
+
+    // Copy data from GPU to host Vector
+    bool CopyToHost(Vector<double>& host_data) const {
+        host_data.SetCount(length);
+        return GPUMemoryPool::CopyFromGPU(host_data.Begin(), gpu_weights, sizeof(double) * length);
+    }
+
+    // Copy gradients from GPU to host Vector
+    bool CopyGradientsToHost(Vector<double>& host_gradients) const {
+        host_gradients.SetCount(length);
+        return GPUMemoryPool::CopyFromGPU(host_gradients.Begin(), gpu_gradients, sizeof(double) * length);
+    }
+
+    void SetConst(double c);
+    void AddFrom(const GPUMat& mat);
+    void AddFromScaled(const GPUMat& mat, double scale);
+    void AddGradientFrom(const GPUMat& mat);
+    void AddGradientFromScaled(const GPUMat& mat, double scale);
+};
+
+// GPU-compatible Volume class (3D tensor)
+class GPUVolume {
+private:
+    void* gpu_weights;      // Pointer to GPU memory
+    void* gpu_gradients;    // Pointer to GPU memory for gradients
+    int width;
+    int height;
+    int depth;
+    int length;
+
+public:
+    GPUVolume() : gpu_weights(nullptr), gpu_gradients(nullptr), width(0), height(0), depth(0), length(0) {}
+
+    GPUVolume(int width, int height, int depth) : gpu_weights(nullptr), gpu_gradients(nullptr), width(0), height(0), depth(0), length(0) {
+        Init(width, height, depth);
+    }
+
+    GPUVolume(int width, int height, int depth, double default_value) : gpu_weights(nullptr), gpu_gradients(nullptr), width(0), height(0), depth(0), length(0) {
+        Init(width, height, depth, default_value);
+    }
+
+    GPUVolume(const Vector<double>& src_weights) : gpu_weights(nullptr), gpu_gradients(nullptr), width(1), height(1), depth(src_weights.GetCount()), length(src_weights.GetCount()) {
+        Init(width, height, depth);
+        CopyFromHost(src_weights, 0.0);
+    }
+
+    GPUVolume(const PoolVolume& pool_volume) : gpu_weights(nullptr), gpu_gradients(nullptr), width(pool_volume.GetWidth()), height(pool_volume.GetHeight()), depth(pool_volume.GetDepth()), length(pool_volume.GetLength()) {
+        Init(width, height, depth);
+        CopyFromHost(pool_volume);
+    }
+
+    ~GPUVolume() {
+        if (gpu_weights) {
+            GPUMemoryPool::Get().Deallocate(gpu_weights);
+            gpu_weights = nullptr;
+        }
+        if (gpu_gradients) {
+            GPUMemoryPool::Get().Deallocate(gpu_gradients);
+            gpu_gradients = nullptr;
+        }
+    }
+
+    GPUVolume& Init(int width, int height, int depth) {
+        ASSERT(width > 0 && height > 0 && depth > 0);
+
+        if (gpu_weights) {
+            GPUMemoryPool::Get().Deallocate(gpu_weights);
+            gpu_weights = nullptr;
+        }
+        if (gpu_gradients) {
+            GPUMemoryPool::Get().Deallocate(gpu_gradients);
+            gpu_gradients = nullptr;
+        }
+
+        this->width = width;
+        this->height = height;
+        this->depth = depth;
+        length = width * height * depth;
+
+        gpu_weights = GPUMemoryPool::Get().Allocate(sizeof(double) * length);
+        gpu_gradients = GPUMemoryPool::Get().Allocate(sizeof(double) * length);
+
+        ZeroWeights();
+        ZeroGradients();
+
+        return *this;
+    }
+
+    GPUVolume& Init(int width, int height, int depth, double default_value) {
+        Init(width, height, depth);
+        SetConst(default_value);
+        return *this;
+    }
+
+    void ZeroWeights() {
+        // Initialize GPU weights to zero
+        Vector<double> zeros(length, 0.0);
+        CopyFromHost(zeros, 0.0);
+    }
+
+    void ZeroGradients() {
+        // Initialize GPU gradients to zero
+        Vector<double> zeros(length, 0.0);
+        CopyFromHostGradients(zeros);
+    }
+
+    int GetWidth() const { return width; }
+    int GetHeight() const { return height; }
+    int GetDepth() const { return depth; }
+    int GetLength() const { return length; }
+
+    // Copy data from host Vector to GPU
+    bool CopyFromHost(const Vector<double>& host_data, double default_value = 0.0) {
+        if (host_data.GetCount() != length) return false;
+
+        return GPUMemoryPool::CopyToGPU(gpu_weights, host_data.Begin(), sizeof(double) * length);
+    }
+
+    // Copy data from another GPUVolume to this one
+    bool CopyFromHost(const GPUVolume& other) {
+        if (other.GetLength() != length) return false;
+
+        bool success = GPUMemoryPool::CopyToGPU(gpu_weights, other.gpu_weights, sizeof(double) * length);
+        if (success) {
+            success = GPUMemoryPool::CopyToGPU(gpu_gradients, other.gpu_gradients, sizeof(double) * length);
+        }
+        return success;
+    }
+
+    // Copy data from PoolVolume to GPU
+    bool CopyFromHost(const PoolVolume& pool_volume) {
+        if (pool_volume.GetLength() != length) return false;
+
+        // Create temporary host vector
+        Vector<double> host_data;
+        host_data.SetCount(length);
+        for (int i = 0; i < length; i++) {
+            host_data[i] = pool_volume.Get(i);
+        }
+
+        return CopyFromHost(host_data, 0.0);
+    }
+
+    // Copy gradients from host Vector to GPU
+    bool CopyFromHostGradients(const Vector<double>& host_gradients) {
+        if (host_gradients.GetCount() != length) return false;
+
+        return GPUMemoryPool::CopyToGPU(gpu_gradients, host_gradients.Begin(), sizeof(double) * length);
+    }
+
+    // Copy data from GPU to host Vector
+    bool CopyToHost(Vector<double>& host_data) const {
+        host_data.SetCount(length);
+        return GPUMemoryPool::CopyFromGPU(host_data.Begin(), gpu_weights, sizeof(double) * length);
+    }
+
+    // Copy gradients from GPU to host Vector
+    bool CopyGradientsToHost(Vector<double>& host_gradients) const {
+        host_gradients.SetCount(length);
+        return GPUMemoryPool::CopyFromGPU(host_gradients.Begin(), gpu_gradients, sizeof(double) * length);
+    }
+
+    void SetConst(double c);
+    void AddFrom(const GPUVolume& volume);
+    void AddFromScaled(const GPUVolume& volume, double scale);
+    void AddGradientFrom(const GPUVolume& volume);
+    void AddGradientFromScaled(const GPUVolume& volume, double scale);
+};
+
+// Thread-local GPU memory pool
+class ThreadLocalGPUMemoryPool {
+private:
+    static thread_local std::unique_ptr<GPUMemoryPool> thread_pool;
+
+public:
+    static GPUMemoryPool& Get();
+    static void Reset();
+};
+
+#endif // flagGPU
+
 } // namespace ConvNet
 
 #endif

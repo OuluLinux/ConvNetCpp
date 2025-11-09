@@ -22,6 +22,9 @@ private:
     Vector<DecoderLayerCRTP> decoder_layers;  // Multiple decoder layers (though simplified for GPT)
     PositionalEncodingCRTP positional_encoding;  // For positional information
     
+    // Transformer core
+    std::unique_ptr<TransformerCRTP> transformer;  // Core transformer used for computation
+    
     // Embedding layers
     Volume token_embeddings;  // Input token embeddings
     Volume output_weights;    // Output projection weights (often tied to input embeddings)

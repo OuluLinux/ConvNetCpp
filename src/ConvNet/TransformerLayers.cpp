@@ -180,6 +180,89 @@ Volume& MultiHeadAttentionCRTP::ScaledDotProductAttention(Volume& query, Volume&
     return output;
 }
 
+// Helper method implementations
+void EncoderLayerCRTP::ApplyLayerNorm(Volume& input, const Volume& gamma, const Volume& beta, int d_model, int seq_len) {
+    double eps = 1e-6; // Small epsilon for numerical stability
+    
+    // Perform layer normalization across the embedding dimension for each sequence position
+    for (int seq_idx = 0; seq_idx < seq_len; seq_idx++) {
+        // Calculate mean for this sequence position
+        double mean = 0.0;
+        for (int dim = 0; dim < d_model; dim++) {
+            int idx = seq_idx * d_model + dim;
+            if (idx < input.GetLength()) {
+                mean += input.Get(idx);
+            }
+        }
+        mean /= d_model;
+        
+        // Calculate variance for this sequence position
+        double var = 0.0;
+        for (int dim = 0; dim < d_model; dim++) {
+            int idx = seq_idx * d_model + dim;
+            if (idx < input.GetLength()) {
+                double diff = input.Get(idx) - mean;
+                var += diff * diff;
+            }
+        }
+        var /= d_model;
+        
+        // Normalize, scale, and shift for this sequence position
+        for (int dim = 0; dim < d_model; dim++) {
+            int idx = seq_idx * d_model + dim;
+            if (idx < input.GetLength()) {
+                double normalized = (input.Get(idx) - mean) / sqrt(var + eps);
+                int param_idx = dim % gamma.GetLength(); // Handle parameter indexing
+                if (param_idx < gamma.GetLength() && param_idx < beta.GetLength()) {
+                    double scaled_shifted = normalized * gamma.Get(param_idx) + beta.Get(param_idx);
+                    input.Set(idx, scaled_shifted);
+                }
+            }
+        }
+    }
+}
+
+void DecoderLayerCRTP::ApplyLayerNorm(Volume& input, const Volume& gamma, const Volume& beta, int d_model, int seq_len) {
+    double eps = 1e-6; // Small epsilon for numerical stability
+    
+    // Perform layer normalization across the embedding dimension for each sequence position
+    for (int seq_idx = 0; seq_idx < seq_len; seq_idx++) {
+        // Calculate mean for this sequence position
+        double mean = 0.0;
+        for (int dim = 0; dim < d_model; dim++) {
+            int idx = seq_idx * d_model + dim;
+            if (idx < input.GetLength()) {
+                mean += input.Get(idx);
+            }
+        }
+        mean /= d_model;
+        
+        // Calculate variance for this sequence position
+        double var = 0.0;
+        for (int dim = 0; dim < d_model; dim++) {
+            int idx = seq_idx * d_model + dim;
+            if (idx < input.GetLength()) {
+                double diff = input.Get(idx) - mean;
+                var += diff * diff;
+            }
+        }
+        var /= d_model;
+        
+        // Normalize, scale, and shift for this sequence position
+        for (int dim = 0; dim < d_model; dim++) {
+            int idx = seq_idx * d_model + dim;
+            if (idx < input.GetLength()) {
+                double normalized = (input.Get(idx) - mean) / sqrt(var + eps);
+                int param_idx = dim % gamma.GetLength(); // Handle parameter indexing
+                if (param_idx < gamma.GetLength() && param_idx < beta.GetLength()) {
+                    double scaled_shifted = normalized * gamma.Get(param_idx) + beta.Get(param_idx);
+                    input.Set(idx, scaled_shifted);
+                }
+            }
+        }
+    }
+}
+
 // EncoderLayerCRTP implementation
 EncoderLayerCRTP::EncoderLayerCRTP(int embed_dim, int num_heads, int ff_dim, double dropout_rate)
     : self_attention(embed_dim, num_heads), 

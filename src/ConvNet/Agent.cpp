@@ -91,7 +91,7 @@ void Agent::Serialize(Stream& s) {
 	  % action_count
 	  % start_state % stop_state
 	  % iter_sleep
-	  % running, stopped;
+	  % running % stopped;
 }
 
 void Agent::Init(int width, int height, int action_count) {

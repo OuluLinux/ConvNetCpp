@@ -191,6 +191,44 @@ public:
         layers.Clear();
     }
     
+    // Serialization support
+    void Serialize(Stream& s) {
+        int layer_count = layers.GetCount();
+        s % layer_count;
+        
+        // Serialize each layer
+        for (int i = 0; i < layers.GetCount(); i++) {
+            ValueMap layer_map;
+            layers[i]->Store(layer_map);
+            
+            // Convert ValueMap to string for serialization via Stream
+            String layer_data = AsJSON(layer_map);
+            s % layer_data;
+        }
+    }
+    
+    void LoadFromStream(Stream& s) {
+        // Clear existing layers
+        Clear();
+        
+        int layer_count = 0;
+        s % layer_count;
+        
+        // Load each layer - note: this requires a factory system to recreate the specific layer types
+        // For now, we'll just recreate empty layers. A full implementation would require 
+        // a factory with knowledge of all possible layer types
+        for (int i = 0; i < layer_count; i++) {
+            String layer_data;
+            s % layer_data;
+            
+            Value parsed = ParseJSON(layer_data);
+            if (!parsed.IsNull()) {
+                // In a full implementation: create the appropriate layer type from the parsed data
+                // For now, we'll skip loading layer data
+            }
+        }
+    }
+    
     ~RuntimeNet() {
         // Clean up memory - this assumes we own the layers
         // In a real implementation, ownership would need to be carefully managed
@@ -394,6 +432,68 @@ public:
         }
 
         return session;
+    }
+    
+    // Serialization support for the runtime session
+    void Serialize(Stream& s) {
+        // Serialize network if available
+        bool has_network = network != nullptr;
+        s % has_network;
+        if (has_network && network) {
+            // Runtime network serialization
+            // This would serialize the structure and parameters of the network
+            ValueMap net_map;
+            network->Store(net_map);
+            
+            // Convert ValueMap to string for serialization via Stream
+            String net_data = AsJSON(net_map);
+            s % net_data;
+        }
+        
+        // Serialize trainer if available
+        bool has_trainer = trainer != nullptr;
+        s % has_trainer;
+        if (has_trainer && trainer) {
+            // Runtime trainer serialization
+            ValueMap trainer_map;
+            trainer->Store(trainer_map);
+            
+            // Convert ValueMap to string for serialization via Stream
+            String trainer_data = AsJSON(trainer_map);
+            s % trainer_data;
+        }
+    }
+    
+    void LoadFromStream(Stream& s) {
+        // Load network if available
+        bool has_network = false;
+        s % has_network;
+        if (has_network) {
+            String net_data;
+            s % net_data;
+            
+            Value parsed = ParseJSON(net_data);
+            if (!parsed.IsNull()) {
+                ValueMap net_map;
+                // In a complete implementation, we would convert the parsed Value back to ValueMap
+                // For now, we'll recreate an empty network
+                network = std::make_unique<RuntimeNet>();
+            }
+        }
+        
+        // Load trainer if available
+        bool has_trainer = false;
+        s % has_trainer;
+        if (has_trainer) {
+            String trainer_data;
+            s % trainer_data;
+            
+            Value parsed = ParseJSON(trainer_data);
+            if (!parsed.IsNull()) {
+                // In a complete implementation, we would create the trainer from the parsed data
+                // For now, we'll skip loading the trainer
+            }
+        }
     }
 };
 
