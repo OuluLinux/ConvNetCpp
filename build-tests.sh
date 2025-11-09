@@ -14,7 +14,7 @@ if [ $# -gt 0 ]; then
     TESTS=("$@")
     echo "Building specific test(s): ${TESTS[*]} (clean=$CLEAN)"
 else
-    TESTS=("CharGenTest" "Regression1DTest" "Classify2DTest" "SimpleGANTest" "GANTest" "RegressionPainterTest" "ClassifyImagesTest" "GridWorldTest" "HeteroscedasticUncertaintyTest" "MartingaleTest" "NetworkOptimizationTest" "PuckWorldTest" "ReinforcedLearningTest" "TemporalDifferenceTest" "TrainerBenchmarkTest" "WaterWorldTest")
+    TESTS=("CharGenTest" "Regression1DTest" "Classify2DTest" "SimpleGANTest" "GANTest" "RegressionPainterTest" "ClassifyImagesTest" "GridWorldTest" "HeteroscedasticUncertaintyTest" "MartingaleTest" "NetworkOptimizationTest" "PuckWorldTest" "ReinforcedLearningTest" "TemporalDifferenceTest" "TrainerBenchmarkTest" "WaterWorldTest" "GGUFTest")
     echo "Building all ConvNetCpp unit tests... (clean=$CLEAN)"
 fi
 
@@ -23,7 +23,7 @@ for test in "${TESTS[@]}"; do
     if [ -d "upptst/$test" ]; then
         if command -v umk >/dev/null 2>&1; then
             # Use umk to build the test - call from project root with path to .upp file
-            umk upptst,$HOME/upp/uppsrc,$HOME/upp/bazaar,src $test ~/.config/u++/theide/CLANG.bm -bds${CLEAN} +CONSOLE,DEBUG_FULL "bin/${test}"
+            umk upptst,$HOME/upp/uppsrc,$HOME/upp/bazaar,src $test ./CLANG.bm -bdsa${CLEAN} +CONSOLE,DEBUG_FULL "bin/${test}"
             if [ $? -eq 0 ]; then
                 echo "  ✓ $test built successfully"
             else

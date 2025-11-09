@@ -1,0 +1,28 @@
+{
+	"name": "GGUFGUI",
+	"include": [
+		"src/ConvNet",
+		"src/ConvNetCtrl",
+		"src/llama.cpp/ggml/include",
+		"src/llama.cpp/include",
+		"src/llama.cpp/src",
+		"src/llama.cpp/common"
+	],
+	"defs": [
+		"GGML_USE_CPU",
+		"LLAMA_BUILD"
+	],
+	"libs": ["stdc++", "m", "pthread"],
+	"out": "bin/examples",
+	"src": [
+		"examples/GGUFGUI/GGUFGUI.cpp"
+	],
+	"precompile": false,
+	"console": false,
+	"upp": [
+		"Core",
+		"CtrlCore",
+		"ConvNet",
+		"CtrlLib"
+	]
+}

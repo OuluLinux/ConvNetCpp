@@ -1,0 +1,28 @@
+uses
+	Core,
+	ConvNet;
+
+file
+	GGUFTest.cpp,
+	../TestMain.cpp;
+
+pre
+	"src/ConvNet",
+	"src/ConvNetCtrl",
+	"upptst",
+	"src/llama.cpp/ggml/include",
+	"src/llama.cpp/include";
+
+def
+	GGML_USE_CPU;
+
+library
+	"stdc++",
+	"m",
+	"pthread",
+	"/home/sblo/Dev/ConvNetCpp/src/llama.cpp/build/bin/libggml-base.so",
+	"/home/sblo/Dev/ConvNetCpp/src/llama.cpp/build/bin/libggml-cpu.so",
+	"/home/sblo/Dev/ConvNetCpp/src/llama.cpp/build/bin/libggml.so";
+
+mainconfig
+	"" = "";
