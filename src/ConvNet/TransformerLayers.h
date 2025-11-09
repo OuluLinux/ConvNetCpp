@@ -37,6 +37,11 @@ private:
     Vector<Volume> values;      // Values for each head
     Vector<Volume> attention_scores;  // Attention weights for each head
     Vector<Volume> attention_outputs; // Output from each head
+    
+    // Temporary volumes for attention computation
+    Volume scores;              // Attention scores (Q*K^T)
+    Volume attention_weights;   // Softmax output
+    Volume output;              // Final attention output
 
     // Internal implementation methods
     Volume& ForwardImpl(Volume& input, bool is_training);
@@ -245,6 +250,7 @@ public:
     // Serialization
     void Store(ValueMap& map) const;
     void Load(const ValueMap& map);
+    void Serialize(Stream& s);
     
     // Public interface
     int GetEmbedDim() const { return embed_dim; }

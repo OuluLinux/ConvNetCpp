@@ -213,6 +213,29 @@ void GPTModel::Load(const ValueMap& map) {
     // Load transformer parameters
     transformer->Load(map);
     
+void GPTModel::Serialize(Stream& s) {
+    // Serialize model configuration
+    s % vocab_size;
+    s % embed_dim;
+    s % num_heads;
+    s % num_layers;
+    s % ff_dim;
+    s % max_seq_len;
+    s % dropout_rate;
+    
+    // Serialize core components
+    if (transformer) {
+        s % (int)1;  // flag indicating transformer exists
+        transformer->Serialize(s);
+    } else {
+        s % (int)0;  // flag indicating no transformer
+    }
+    
+    // Serialize embedding layers
+    s % token_embeddings;
+    s % output_weights;
+}
+
     // Load output weights
     // This would require a deserialization method for Volume
 }

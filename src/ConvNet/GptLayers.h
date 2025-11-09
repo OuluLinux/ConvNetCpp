@@ -56,6 +56,7 @@ public:
     // Serialization
     void Store(ValueMap& map) const;
     void Load(const ValueMap& map);
+    void Serialize(Stream& s);
     
     // Public interface
     int GetVocabSize() const { return vocab_size; }

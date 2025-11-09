@@ -153,29 +153,82 @@ String MultiHeadAttentionCRTP::ToStringImpl() const {
 Volume& MultiHeadAttentionCRTP::ScaledDotProductAttention(Volume& query, Volume& key, Volume& value, 
                                                         const Volume* mask) {
     // Compute attention scores: Q * K^T / sqrt(d_k)
-    int d_k = query.GetWidth();  // dimension of keys/queries
+    int d_k = query.GetDepth();  // dimension of keys/queries (depth dimension)
     double scale = sqrt(d_k);
     
-    // Simplified matrix multiplication representation
-    // Actual implementation would require actual matrix multiplication logic
-    Volume scores = query;  // Placeholder for attention scores
+    // Initialize scores matrix: [seq_len_q, seq_len_k]
+    int seq_len_q = query.GetWidth();   // Assuming width is sequence length for query
+    int seq_len_k = key.GetWidth();     // Assuming width is sequence length for key
+    scores.Init(seq_len_q, seq_len_k, 1); // Initialize scores volume
     
-    // Apply scaling
-    scores.Mul(1.0 / scale);
+    // Compute Q * K^T (matrix multiplication)
+    // For each position in query and key, compute dot product
+    for (int i = 0; i < seq_len_q; i++) {
+        for (int j = 0; j < seq_len_k; j++) {
+            double dot_product = 0.0;
+            // Compute dot product of query[i] and key[j] vectors (over depth dimension)
+            for (int k_idx = 0; k_idx < d_k; k_idx++) {
+                dot_product += query.Get(i, 0, k_idx) * key.Get(j, 0, k_idx);
+            }
+            scores.Set(i, j, 0, dot_product / scale);  // Apply scaling
+        }
+    }
     
     // Apply mask if provided (for causal attention in decoder)
     if (mask != nullptr) {
         // Add large negative value to masked positions
         // This would effectively zero out those positions after softmax
+        for (int i = 0; i < seq_len_q; i++) {
+            for (int j = 0; j < seq_len_k; j++) {
+                if (mask->Get(i, j, 0) != 0) { // Assuming mask indicates positions to mask
+                    scores.Set(i, j, 0, -1e9); // Large negative value to zero out after softmax
+                }
+            }
+        }
     }
     
     // Apply softmax to get attention weights
-    // This would require softmax implementation on the scores volume
-    Volume attention_weights = scores;  // Placeholder
+    // Softmax over the key dimension (dim=1)
+    attention_weights.Init(seq_len_q, seq_len_k, 1);
+    for (int i = 0; i < seq_len_q; i++) {
+        // Compute row-wise softmax
+        double max_val = -INFINITY;
+        // Find max for numerical stability
+        for (int j = 0; j < seq_len_k; j++) {
+            double val = scores.Get(i, j, 0);
+            if (val > max_val) max_val = val;
+        }
+        
+        // Compute exp and sum
+        double sum = 0.0;
+        for (int j = 0; j < seq_len_k; j++) {
+            double exp_val = exp(scores.Get(i, j, 0) - max_val);
+            sum += exp_val;
+            attention_weights.Set(i, j, 0, exp_val);
+        }
+        
+        // Normalize by sum
+        for (int j = 0; j < seq_len_k; j++) {
+            double val = attention_weights.Get(i, j, 0) / sum;
+            attention_weights.Set(i, j, 0, val);
+        }
+    }
     
     // Compute output: attention_weights * V
-    // This would be another matrix multiplication
-    Volume output = value;  // Placeholder
+    int d_v = value.GetDepth();  // value depth dimension
+    int seq_len_v = value.GetWidth();  // value sequence length (should be same as seq_len_k)
+    
+    output.Init(seq_len_q, 1, d_v); // Output: [seq_len_q, d_v]
+    
+    for (int i = 0; i < seq_len_q; i++) {
+        for (int k = 0; k < d_v; k++) {
+            double sum = 0.0;
+            for (int j = 0; j < seq_len_v; j++) {
+                sum += attention_weights.Get(i, j, 0) * value.Get(j, 0, k);
+            }
+            output.Set(i, 0, k, sum);
+        }
+    }
     
     return output;
 }
@@ -720,6 +773,30 @@ void TransformerCRTP::Load(const ValueMap& map) {
     num_heads = map.GetValue(map.Find("num_heads"));
     
     // Load embeddings, layers, etc.
+}
+
+void TransformerCRTP::Serialize(Stream& s) {
+    // Serialize basic parameters
+    s % src_vocab_size;
+    s % tgt_vocab_size;
+    s % embed_dim;
+    s % num_heads;
+    
+    // Serialize all the layers
+    s % encoder_layers;
+    s % decoder_layers;
+    
+    // Serialize embeddings
+    s % src_embedding;
+    s % tgt_embedding;
+    s % output_projection;
+    
+    // Serialize layer normalization parameters
+    s % final_norm_weights;
+    s % final_norm_biases;
+    
+    // Serialize positional encoding
+    s % positional_encoding;
 }
 
 Volume& TransformerCRTP::GenerateSubsequentMask(int size) {
