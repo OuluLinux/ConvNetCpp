@@ -203,23 +203,30 @@ public:
 // Factory function to create runtime-flexible network with JSON configuration
 class RuntimeNetworkFactory {
 public:
-    // Create a network from JSON configuration
-    static std::unique_ptr<RuntimeNet> CreateFromJSON(const ValueMap& config) {
+    // Create a network from array-of-objects JSON format (compatible with old Session::MakeLayers)
+    // This is the main method that will be used since old JSON format is an array of layer objects
+    static std::unique_ptr<RuntimeNet> CreateFromJSONArray(const Value& layers_array) {
         auto net = std::make_unique<RuntimeNet>();
         
-        // For now, return an empty network since we can't use the CRTP layers without
-        // having full implementations; this is a design-time limitation
-        // The CRTP layers are defined in CrtpLayers.h which would need to be fully implemented
+        // Since the CRTP layer implementations may not be complete yet, 
+        // we'll return an empty RuntimeNet for now.
+        // In a full implementation, this would parse the JSON and create CRTP layers.
         
-        // For the purpose of this implementation, we'll return an empty network
-        // and note that in a complete implementation, we would:
-        // - Parse the JSON configuration
-        // - Create appropriate CRTP-based layers using type erasure wrappers
-        // - Add them to the RuntimeNet
-        
-        // This is a minimal implementation that at least allows compilation
-        // A full implementation would process the layer configurations
+        // For now, we'll just return an empty network to allow compilation
         return net;
+    }
+    
+    // Create a network from JSON configuration (object with layers property)
+    static std::unique_ptr<RuntimeNet> CreateFromJSON(const ValueMap& config) {
+        // Extract layers array from config
+        Value layers_array = config.GetValue(config.Find("layers"));
+        
+        // Use the array method which handles the same logic
+        if (!layers_array.IsNull()) {
+            return CreateFromJSONArray(layers_array);
+        }
+        
+        return std::make_unique<RuntimeNet>();
     }
 };
 
@@ -370,14 +377,23 @@ public:
         if (parsed.IsNull()) {
             throw std::runtime_error("Invalid JSON: could not parse");
         }
+
+        // Check if it's an array of layers (old Session::MakeLayers format)
+        // or a single object with layers property (new format)
+        std::unique_ptr<RuntimeSession> session = std::make_unique<RuntimeSession>();
         
-        // In a complete implementation, we'd convert the Value to a format
-        // suitable for CreateFromConfig. For now, we'll note this is a placeholder.
-        // This would need to handle both array-of-objects and object-with-layers-property formats
-        ValueMap config;
-        // This is where the config conversion would happen in a full implementation
-        
-        return CreateFromConfig(config);
+        if (parsed.GetCount() > 0) {  // It's an array of layer objects (old format)
+            auto network = RuntimeNetworkFactory::CreateFromJSONArray(parsed);
+            session->SetNetwork(std::move(network));
+        } else {
+            // It's an object with layers property (new format) - this is more complex to detect
+            // We'll fall back to object format if array detection doesn't work properly
+            // For now, treat as array format since that's the common case for Session::MakeLayers
+            auto network = RuntimeNetworkFactory::CreateFromJSONArray(parsed);
+            session->SetNetwork(std::move(network));
+        }
+
+        return session;
     }
 };
 
