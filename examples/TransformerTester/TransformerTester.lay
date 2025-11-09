@@ -1,0 +1,35 @@
+// TransformerTester.lay
+#define LAYOUTFILE <TransformerTester/TransformerTester.lay>
+#include "CtrlCore/lay.h"
+
+static Layout<> TransformerTesterLayout()
+{
+	Size sz(800, 600);
+	
+	TransformerTesterLayout <<= Table(sz.cx, sz.cy).Black();
+	
+	TransformerTesterLayout(0, 0, 1, 1) =  Splitter().Vert().Name("splitter");
+	
+	TransformerTesterLayout(0, 0, 1, 1).Left() =  PanelCtrl().Name("controls");
+	
+	TransformerTesterLayout(0, 0, 1, 1).Right() =  PanelCtrl().Name("visualization");
+	
+	// Controls panel
+	TransformerTesterLayout(0, 0, 1, 1).Left() = 
+		Column(
+			Bar(TransformerTesterLayout.Name("trainBtn"), "<Train Model").Tip("Train the transformer model"),
+			Bar(TransformerTesterLayout.Name("testBtn"), "<Test Model").Tip("Test the transformer model"),
+			Bar(TransformerTesterLayout.Name("visualizeBtn"), "<Visualize Attention").Tip("Visualize attention weights"),
+			Bar(TransformerTesterLayout.Name("inputEdit"), "Input:").Tip("Enter input sequence"),
+			Bar(TransformerTesterLayout.Name("outputEdit"), "Output:").Tip("Model output sequence")
+		).VSizePos(20).HSizePos(10);
+	
+	// Visualization panel
+	TransformerTesterLayout(0, 0, 1, 1).Right().Top() = 
+		TransformerTesterLayout.Name("attentionVis").VSizePos(0, 300).HSizePos();
+	
+	TransformerTesterLayout(0, 0, 1, 1).Right().Bottom() = 
+		TransformerTesterLayout.Name("modelMetrics").VSizePos(300).HSizePos();
+	
+	return TransformerTesterLayout;
+}

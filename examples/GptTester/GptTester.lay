@@ -1,0 +1,45 @@
+// GptTester.lay
+#define LAYOUTFILE <GptTester/GptTester.lay>
+#include "CtrlCore/lay.h"
+
+static Layout<> GptTesterLayout()
+{
+	Size sz(800, 600);
+	
+	GptTesterLayout <<= Table(sz.cx, sz.cy).Black();
+	
+	// Main layout
+	GptTesterLayout(0, 0, 1, 1) =  Splitter().Vert().Name("mainSplitter");
+	
+	// Top section for controls
+	GptTesterLayout(0, 0, 1, 1).Top() =  PanelCtrl().Name("controlPanel");
+	
+	// Bottom section for output display
+	GptTesterLayout(0, 0, 1, 1).Bottom() =  PanelCtrl().Name("outputPanel");
+	
+	// Control panel layout
+	GptTesterLayout(0, 0, 1, 1).Top() = 
+		Column(
+			Bar(GptTesterLayout.Name("promptEdit"), "Prompt:").Tip("Enter your text prompt"),
+			Row(
+				Bar(GptTesterLayout.Name("generateBtn"), "Generate").Tip("Generate text based on prompt"),
+				Bar(GptTesterLayout.Name("clearBtn"), "Clear").Tip("Clear the prompt and generated text")
+			),
+			Row(
+				Bar(GptTesterLayout.Name("temperatureCtrl"), "Temp:").Tip("Sampling temperature (higher = more random)"),
+				Bar(GptTesterLayout.Name("topKEnable"), "Top-K").Tip("Enable Top-K sampling"),
+				Bar(GptTesterLayout.Name("topKCtrl"), "K:").Tip("Top-K parameter")
+			),
+			Row(
+				Bar(GptTesterLayout.Name("nucleusEnable"), "Nucleus").Tip("Enable Nucleus (top-p) sampling"),
+				Bar(GptTesterLayout.Name("nucleusPCtrl"), "p:").Tip("Top-p parameter"),
+				Bar(GptTesterLayout.Name("maxTokensCtrl"), "Max:").Tip("Maximum tokens to generate")
+			)
+		).VSizePos(20).HSizePos(10);
+	
+	// Output panel - this will hold the text display
+	GptTesterLayout(0, 0, 1, 1).Bottom().Top() = 
+		GptTesterLayout.Name("textDisplay").VSizePos(0).HSizePos();
+	
+	return GptTesterLayout;
+}

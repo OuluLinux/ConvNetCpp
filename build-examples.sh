@@ -11,7 +11,7 @@ total_count=0
 
 # List of examples that are known to build successfully
 # SimpleGAN works because it has minimal external dependencies
-working_examples=("SimpleGAN")
+working_examples=("SimpleGAN" "TransformerTester" "GptTester")
 
 # List of examples that are known to have external dependencies that cause build issues
 # These fail due to:

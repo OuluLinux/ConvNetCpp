@@ -1,0 +1,5 @@
+<target name="TransformerTester" type="exe" use="ConvNet CtrlLib">
+	<file name="TransformerTester.cpp"/>
+	<file name="TransformerTester.iml"/>
+	<file name="TransformerTester.lay"/>
+</target>

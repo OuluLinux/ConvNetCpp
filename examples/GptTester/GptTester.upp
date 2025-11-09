@@ -1,0 +1,6 @@
+<target name="GptTester" type="exe" use="ConvNet CtrlLib">
+	<file name="GptTester.cpp"/>
+	<file name="main.cpp"/>
+	<file name="GptTester.iml"/>
+	<file name="GptTester.lay"/>
+</target>
