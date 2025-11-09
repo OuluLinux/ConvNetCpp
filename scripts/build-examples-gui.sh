@@ -61,7 +61,7 @@ for example_dir in "$EXAMPLES_DIR"/*/; do
                         # Try to run with virtual framebuffer for headless GUI building
                         if command -v xvfb-run >/dev/null 2>&1; then
                             echo "Using xvfb-run for headless GUI build..."
-                            if timeout 120s xvfb-run -a umk examples,$HOME/upp/uppsrc,$HOME/upp/bazaar,src "$example_name" ./CLANG.bm -bds${CLEAN_FLAG} +GUI,DEBUG_FULL "bin/${example_name}"; then
+                            if timeout 120s xvfb-run -a umk examples,$HOME/upp/uppsrc,$HOME/upp/bazaar,src "$example_name" CLANG.bm -bds${CLEAN_FLAG} +GUI,DEBUG_FULL "bin/${example_name}"; then
                                 echo "✓ Successfully built GUI: $example_name"
                                 success_count=$((success_count + 1))
 
@@ -79,7 +79,7 @@ for example_dir in "$EXAMPLES_DIR"/*/; do
                             fi
                         else
                             echo "xvfb-run not available, attempting GUI build directly..."
-                            if timeout 120s umk examples,$HOME/upp/uppsrc,$HOME/upp/bazaar,src "$example_name" ./CLANG.bm -bds${CLEAN_FLAG} +GUI,DEBUG_FULL "bin/${example_name}"; then
+                            if timeout 120s umk examples,$HOME/upp/uppsrc,$HOME/upp/bazaar,src "$example_name" CLANG.bm -bds${CLEAN_FLAG} +GUI,DEBUG_FULL "bin/${example_name}"; then
                                 echo "✓ Successfully built GUI: $example_name"
                                 success_count=$((success_count + 1))
 
@@ -112,7 +112,7 @@ for example_dir in "$EXAMPLES_DIR"/*/; do
                     # Use umk to build the example as console application
                     if command -v umk >/dev/null 2>&1; then
                         echo "Attempting build of $example_name as CONSOLE..."
-                        if timeout 120s umk examples,$HOME/upp/uppsrc,$HOME/upp/bazaar,src "$example_name" ./CLANG.bm -bds${CLEAN_FLAG} +CONSOLE,DEBUG_FULL "bin/${example_name}"; then
+                        if timeout 120s umk examples,$HOME/upp/uppsrc,$HOME/upp/bazaar,src "$example_name" CLANG.bm -bds${CLEAN_FLAG} +CONSOLE,DEBUG_FULL "bin/${example_name}"; then
                             echo "✓ Successfully built CONSOLE: $example_name"
                             success_count=$((success_count + 1))
 

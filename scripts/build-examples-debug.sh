@@ -100,7 +100,7 @@ for example_dir in "$EXAMPLES_DIR"/*/; do
                     # Use umk to build the example as console application
                     if command -v umk >/dev/null 2>&1; then
                         echo "Attempting build of $example_name as CONSOLE (even with known issues)..."
-                        if timeout 120s umk examples,$HOME/upp/uppsrc,$HOME/upp/bazaar,src "$example_name" ./CLANG.bm -bds${CLEAN_FLAG} +CONSOLE,DEBUG_FULL "bin/${example_name}"; then
+                        if timeout 120s umk examples,$HOME/upp/uppsrc,$HOME/upp/bazaar,src "$example_name" CLANG.bm -bds${CLEAN_FLAG} +CONSOLE,DEBUG_FULL "bin/${example_name}"; then
                             echo "✓ Successfully built: $example_name"
                             success_count=$((success_count + 1))
 
@@ -115,7 +115,7 @@ for example_dir in "$EXAMPLES_DIR"/*/; do
                             # The main issue is that many "console" examples are actually GUI examples
                             # Let's try to build it as GUI instead if it contains GUI configurations
                             echo "  (Attempting to build as GUI app instead...)"
-                            if timeout 120s umk examples,$HOME/upp/uppsrc,$HOME/upp/bazaar,src "$example_name" ./CLANG.bm -bds${CLEAN_FLAG} +GUI,DEBUG_FULL "bin/${example_name}"; then
+                            if timeout 120s umk examples,$HOME/upp/uppsrc,$HOME/upp/bazaar,src "$example_name" CLANG.bm -bds${CLEAN_FLAG} +GUI,DEBUG_FULL "bin/${example_name}"; then
                                 echo "✓ Successfully built: $example_name (as GUI app)"
                                 success_count=$((success_count + 1))
 

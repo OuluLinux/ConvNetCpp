@@ -23,7 +23,7 @@ for test in "${TESTS[@]}"; do
     if [ -d "upptst/$test" ]; then
         if command -v umk >/dev/null 2>&1; then
             # Use umk to build the test - call from project root with path to .upp file
-            umk upptst,$HOME/upp/uppsrc,$HOME/upp/bazaar,src $test ./CLANG.bm -bdsa${CLEAN} +CONSOLE,DEBUG_FULL "bin/${test}"
+            umk upptst,$HOME/upp/uppsrc,$HOME/upp/bazaar,src $test CLANG.bm -bdsa${CLEAN} +CONSOLE,DEBUG_FULL "bin/${test}"
             if [ $? -eq 0 ]; then
                 echo "  ✓ $test built successfully"
             else

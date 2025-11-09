@@ -12,4 +12,6 @@ for arg in "$@"; do
     fi
 done
 
-umk upptst,examples,tutorial,src,$HOME/upp/bazaar,$HOME/upp/uppsrc "$TARGET" ./CLANG.bm -bds${CLEAN_FLAG} +GUI,DEBUG_FULL "bin/$TARGET"
+echo umk upptst,examples,tutorial,src,$HOME/ai-upp/bazaar,$HOME/ai-upp/uppsrc "$TARGET" CLANG.bm -bds${CLEAN_FLAG} +GUI,DEBUG_FULL "bin/$TARGET"
+
+umk upptst,examples,tutorial,src,$HOME/ai-upp/bazaar,$HOME/ai-upp/uppsrc "$TARGET" CLANG.bm -bds${CLEAN_FLAG} +GUI,DEBUG_FULL "bin/$TARGET"
