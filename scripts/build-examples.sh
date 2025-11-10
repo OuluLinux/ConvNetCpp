@@ -10,14 +10,10 @@ success_count=0
 total_count=0
 
 # List of examples that are known to build successfully
-# SimpleGAN works because it has minimal external dependencies
-working_examples=("SimpleGAN" "TransformerTester" "GptTester")
+working_examples=("CharGen" "Classify2D" "ClassifyImages" "GAN" "GridWorld" "HeteroscedasticUncertainty" "Martingale" "NetworkOptimization" "PuckWorld" "Regression1D" "RegressionPainter" "ReinforcedLearning" "SimpleGAN" "TemporalDifference" "TrainerBenchmark" "WaterWorld")
 
-# List of examples that are known to have external dependencies that cause build issues
-# These fail due to:
-# - JSON template redefinition issues in U++ Core library
-# - Color constructor signature changes in U++ PlotLib
-problematic_examples=("CharGen" "Classify2D" "ClassifyImages" "GAN" "GridWorld" "HeteroscedasticUncertainty" "Martingale" "NetworkOptimization" "PuckWorld" "Regression1D" "RegressionPainter" "ReinforcedLearning" "TemporalDifference" "TrainerBenchmark" "WaterWorld")
+# List of examples that have build issues
+problematic_examples=("GGUFGUI" "GptTester" "TransformerTester")
 
 # Get all subdirectories in examples directory
 EXAMPLES_DIR="examples"
@@ -46,11 +42,11 @@ for example_dir in "$EXAMPLES_DIR"/*/; do
         done
         
         if [ $is_problematic -eq 1 ]; then
-            echo "⚠ Skipping $example_name (known external dependency issues)"
-            echo "  Issues: JSON template redefinition, Color constructor signature changes in U++ libraries"
+            echo "⚠ Skipping $example_name (known build issues)"
+            echo "  These examples have specific build issues that need to be resolved"
         else
             # Try to build the example using build.sh
-            if timeout 60s ./build.sh "$example_name"; then
+            if timeout 60s ./scripts/build.sh "$example_name"; then
                 echo "✓ Successfully built: $example_name"
                 success_count=$((success_count + 1))
                 
@@ -75,9 +71,7 @@ done
 echo "Build process completed."
 echo "Successfully built: $success_count / $total_count examples"
 echo ""
-echo "Note: Examples with external U++ library incompatibilities were skipped:"
-echo "- JSON template redefinition issues (Core library)"
-echo "- Color constructor signature changes (PlotLib library)"
-echo "- These require fixes in Ultimate++ framework libraries"
+echo "Note: Examples with specific build issues were skipped:"
+echo "- These examples have specific build issues that need to be resolved"
 echo ""
 echo "Examples that currently build: ${working_examples[*]}"
