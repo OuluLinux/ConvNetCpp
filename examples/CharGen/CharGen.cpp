@@ -168,14 +168,14 @@ void CharGen::SetLearningRate() {
 	double value = learning_rate_slider.GetData();
 	value *= 0.00001;
 	ses.SetLearningRate(value);
-	lbl_learning_rate.SetLabel(FormatDoubleFix(value, 5, FD_ZEROS));
+	lbl_learning_rate.SetLabel(FormatDoubleFix(value, 5));
 }
 
 void CharGen::SetSampleTemperature() {
 	double value = temp.GetData();
 	value *= 0.01;
 	sample_softmax_temperature = value;
-	lbl_temp.SetLabel(FormatDoubleFix(value, 2, FD_ZEROS));
+	lbl_temp.SetLabel(FormatDoubleFix(value, 2));
 }
 
 void CharGen::Save() {
@@ -350,7 +350,7 @@ void CharGen::Tick() {
 }
 
 void CharGen::SetStats(double epoch, double ppl, int time) {
-	lbl_epoch.SetLabel("epoch: " + FormatDoubleFix(epoch, 2, FD_ZEROS));
-	lbl_perp.SetLabel("perplexity: " + FormatDoubleFix(ppl, 2, FD_ZEROS));
+	lbl_epoch.SetLabel("epoch: " + FormatDoubleFix(epoch, 2));
+	lbl_perp.SetLabel("perplexity: " + FormatDoubleFix(ppl, 2));
 	lbl_time.SetLabel("forw/bwd time per example: " + FormatDoubleFix(time, 1) + "ms");
 }
