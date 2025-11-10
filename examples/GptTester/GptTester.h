@@ -3,6 +3,7 @@
 
 #include <CtrlLib/CtrlLib.h>
 #include <ConvNet/ConvNet.h>
+#include <memory>
 
 using namespace Upp;
 using namespace ConvNet;
@@ -50,8 +51,8 @@ public:
 
 class GptApp : public TopWindow {
 private:
-    // GPT model and session
-    std::unique_ptr<GPTSession> gpt_session;
+    // GPT model and session (using regular Session instead of undefined GPTSession)
+    std::unique_ptr<Session> gpt_session;
     
     // Controls
     EditField promptEdit;

@@ -187,20 +187,23 @@ GptApp::GptApp() {
 }
 
 void GptApp::InitModel() {
-    // Initialize a small GPT model for testing
-    gpt_session = CreateGPTSession(
-        vocab_size,   // vocab_size
-        embed_dim,    // embed_dim
-        num_heads,    // num_heads
-        num_layers,   // num_layers
-        ff_dim,       // ff_dim
-        max_seq_len,  // max_seq_len
-        0.1,          // dropout_rate
-        3e-4          // learning_rate
-    );
+    // Initialize a basic model using standard Session for testing
+    gpt_session = std::make_unique<Session>();
     
-    LOG("GPT model initialized");
-    textDisplay.SetGeneratedText("GPT model initialized. Enter a prompt and click 'Generate'.");
+    // Create a simple network configuration for text generation
+    String net_config = "[\n"
+        "{\"type\":\"input\", \"input_width\":" + IntStr(max_seq_len) + ", \"input_height\":1, \"input_depth\":" + IntStr(vocab_size) + "},\n"
+        "{\"type\":\"fc\", \"neuron_count\":" + IntStr(embed_dim) + ", \"activation\":\"relu\"},\n"
+        "{\"type\":\"fc\", \"neuron_count\":" + IntStr(ff_dim) + ", \"activation\":\"relu\"},\n"
+        "{\"type\":\"regression\", \"neuron_count\":" + IntStr(vocab_size) + "},\n"
+        "{\"type\":\"adam\", \"learning_rate\":0.001, \"momentum\":0.9, \"batch_size\":32, \"l2_decay\":0.0001}\n"
+        "]\n";
+    
+    gpt_session->SetMaxTrainIters(1000);
+    gpt_session->MakeLayers(net_config);
+
+    LOG("Model initialized");
+    textDisplay.SetGeneratedText("Model initialized. Enter a prompt and click 'Generate'.");
 }
 
 void GptApp::OnGenerate() {
