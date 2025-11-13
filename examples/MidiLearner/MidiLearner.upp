@@ -1,0 +1,18 @@
+description "MIDI Learning and Generation with Attention";
+
+uses
+	CtrlLib,
+	ConvNet,
+	Docking,
+	plugin/png;
+
+file
+	main.cpp,
+	MidiLearner.h,
+	MidiLearner.cpp,
+	MidiLearner.rc,
+	MidiLearner.iml;
+
+mainconfig
+	"" = "GUI MT",
+	"" = "GUI";
