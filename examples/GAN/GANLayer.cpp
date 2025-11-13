@@ -1,5 +1,4 @@
 #include "GAN.h"
-#include <Math.h>
 
 
 
@@ -58,12 +57,11 @@ void GANLayer::Train() {
 
 	// Generate fake image
 	Volume& fake_image = gen_net.Forward(gen_input_vol, true); // Enable gradient tracking for generator
-	fake_image.Reshape(28, 28, 1); // Reshape to 28x28x1 (MNIST format)
 
 	// Sample real image
 	SessionData& data = disc.Data();
 	int real_idx = Random(data.GetDataCount());
-	Vector<double> real_image_vec = data.Get(real_idx);
+	const Vector<double>& real_image_vec = data.Get(real_idx); // Use reference to avoid copy
 	Volume real_image;
 	real_image.Set(28, 28, 1, real_image_vec);
 
@@ -72,14 +70,15 @@ void GANLayer::Train() {
 	Volume& real_output = disc_net.Forward(real_image, true);
 	Vector<double> real_target(1);
 	real_target[0] = 0.9; // Label smoothing: use 0.9 instead of 1
-	double real_disc_loss = disc_net.Backward(real_output, real_target);
+	double real_disc_loss = disc_net.Backward(real_target);
 	disc_cost_av.Add(real_disc_loss);
 
 	// Discriminator on fake data (should output 0)
-	Volume& fake_output = disc_net.Forward(fake_image, true);
+	Volume& fake_output_from_gen = gen_net.Forward(gen_input_vol, false); // Generate fake data with no gradient tracking
+	Volume& fake_output = disc_net.Forward(fake_output_from_gen, true); // Discriminator on fake data
 	Vector<double> fake_target(1);
 	fake_target[0] = 0.1; // Label smoothing: use 0.1 instead of 0
-	double fake_disc_loss = disc_net.Backward(fake_output, fake_target);
+	double fake_disc_loss = disc_net.Backward(fake_target);
 	disc_cost_av.Add(fake_disc_loss);
 
 	// Update discriminator
@@ -90,8 +89,7 @@ void GANLayer::Train() {
 	for (int i = 0; i < 100; i++) {
 		gen_input_vol.Set(i, 0, 0, 2.0 * Randomf() - 1.0);
 	}
-	Volume& fake_image_gen = gen_net.Forward(gen_input_vol, true);
-	fake_image_gen.Reshape(28, 28, 1);
+	Volume& fake_image_gen = gen_net.Forward(gen_input_vol, true); // Generate with gradient tracking
 
 	// Get discriminator's output on fake image
 	Volume& disc_on_fake = disc_net.Forward(fake_image_gen, false); // No gradient tracking on discriminator
@@ -99,7 +97,7 @@ void GANLayer::Train() {
 	// Update generator to make discriminator think fake images are real
 	Vector<double> gen_target(1);
 	gen_target[0] = 0.9; // Try to fool discriminator
-	double gen_loss = gen_net.Backward(disc_on_fake, gen_target);
+	double gen_loss = gen_net.Backward(gen_target);
 	gen_cost_av.Add(gen_loss);
 
 	// Update generator
@@ -117,6 +115,5 @@ void GANLayer::SampleOutput() {
 Volume& GANLayer::Generate(Volume& input) {
 	Net& gen_net = gen.GetNetwork();
 	Volume& xgen = gen_net.Forward(input, false);
-	xgen.Reshape(28, 28, 1); // Ensure proper image format
 	return xgen;
 }
