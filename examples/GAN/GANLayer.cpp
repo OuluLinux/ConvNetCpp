@@ -17,12 +17,12 @@ void GANLayer::Init(int stride) {
 
 	String disc_t =	"[\n"
 					"\t{\"type\":\"input\", \"input_width\":" + IntStr(input_width) + ", \"input_height\":" + IntStr(input_height) + ", \"input_depth\":" + IntStr(input_depth) + "},\n"
-					"\t{\"type\":\"fc\", \"neuron_count\":512, \"activation\":\"leaky_relu\"},\n"
+					"\t{\"type\":\"fc\", \"neuron_count\":512, \"activation\":\"relu\"},\n"
 					"\t{\"type\":\"dropout\", \"drop_prob\":0.3},\n"
-					"\t{\"type\":\"fc\", \"neuron_count\":256, \"activation\":\"leaky_relu\"},\n"
+					"\t{\"type\":\"fc\", \"neuron_count\":256, \"activation\":\"relu\"},\n"
 					"\t{\"type\":\"dropout\", \"drop_prob\":0.3},\n"
 					"\t{\"type\":\"fc\", \"neuron_count\":1, \"activation\":\"sigmoid\"},\n"
-					"\t{\"type\":\"adam\", \"learning_rate\":0.0002, \"beta1\":0.5, \"batch_size\":128}\n"
+					"\t{\"type\":\"adam\", \"learning_rate\":0.0002, \"beta1\":0.5, \"batch_size\":128, \"l2_decay\":0.0001}\n"
 					"]\n";
 
 	if (!disc.MakeLayers(disc_t))
@@ -31,13 +31,10 @@ void GANLayer::Init(int stride) {
 	String gen_t =	"[\n"
 					"\t{\"type\":\"input\", \"input_width\":" + IntStr(noise_size) + ", \"input_height\":1, \"input_depth\":1},\n"
 					"\t{\"type\":\"fc\", \"neuron_count\":256, \"activation\":\"relu\"},\n"
-					"\t{\"type\":\"batch_normalization\"},\n"
 					"\t{\"type\":\"fc\", \"neuron_count\":512, \"activation\":\"relu\"},\n"
-					"\t{\"type\":\"batch_normalization\"},\n"
 					"\t{\"type\":\"fc\", \"neuron_count\":1024, \"activation\":\"relu\"},\n"
-					"\t{\"type\":\"batch_normalization\"},\n"
 					"\t{\"type\":\"fc\", \"neuron_count\":784, \"activation\":\"tanh\"},\n"  // Output 784 values for 28x28 image
-					"\t{\"type\":\"adam\", \"learning_rate\":0.0002, \"beta1\":0.5, \"batch_size\":128}\n"
+					"\t{\"type\":\"adam\", \"learning_rate\":0.0002, \"beta1\":0.5, \"batch_size\":128, \"l2_decay\":0.0001}\n"
 					"]\n";
 
 	if (!gen.MakeLayers(gen_t))
