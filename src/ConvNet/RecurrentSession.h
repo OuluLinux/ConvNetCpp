@@ -97,6 +97,9 @@ public:
 	void SetOutputSize(int i) {output_size = i;}
 	void SetLearningRate(double d) {learning_rate = d;}
 	
+	// Getter for mode
+	int GetMode() const { return mode; }
+	
 };
 
 }

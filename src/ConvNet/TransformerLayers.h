@@ -108,7 +108,7 @@ public:
         : self_attention(embed_dim, num_heads), 
           feed_forward(ff_dim),  // Assuming this takes neuron_count as parameter
           dropout1(dropout_rate), dropout2(dropout_rate) {}
-    EncoderLayerCRTP(ValueMap values) { LoadImpl(values); }
+    EncoderLayerCRTP(ValueMap values) : self_attention(0, 0), feed_forward(0), dropout1(0.0), dropout2(0.0) { LoadImpl(values); }
 
     // Public interface
     int GetEmbedDim() const { return self_attention.GetEmbedDim(); }
@@ -163,7 +163,7 @@ public:
           cross_attention(embed_dim, num_heads),  // Cross attention with encoder
           feed_forward(ff_dim),  // Assuming this takes neuron_count as parameter
           dropout1(dropout_rate), dropout2(dropout_rate), dropout3(dropout_rate) {}
-    DecoderLayerCRTP(ValueMap values) { LoadImpl(values); }
+    DecoderLayerCRTP(ValueMap values) : self_attention(0, 0), cross_attention(0, 0), feed_forward(0), dropout1(0.0), dropout2(0.0), dropout3(0.0) { LoadImpl(values); }
 
     // Public interface
     int GetEmbedDim() const { return self_attention.GetEmbedDim(); }
@@ -200,7 +200,7 @@ private:
 
 public:
     PositionalEncodingCRTP(int max_len, int embed_dim);
-    PositionalEncodingCRTP(ValueMap values) { LoadImpl(values); }
+    PositionalEncodingCRTP(ValueMap values) : pe(0, 0, 0) { LoadImpl(values); }
 
     // Public interface
     int GetMaxLen() const { return max_len; }

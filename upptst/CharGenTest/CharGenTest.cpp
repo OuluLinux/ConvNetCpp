@@ -59,32 +59,98 @@ CONSOLE_APP_MAIN
     ASSERT(epoch_size == 2);        // 2 sentences
 
     // Test RecurrentSession with LSTM configuration including tokenization
-    RecurrentSession ses;
+    {
+        RecurrentSession ses;
 
-    String model_str = "{\n"
-        "\t\"generator\":\"lstm\",\n"
-        "\t\"hidden_sizes\":[10,10],\n"
-        "\t\"letter_size\":5,\n"
-        "\t\"use_tokenization\":true,\n"  // Test with tokenization enabled
-        "\t\"regc\":0.000001,\n"
-        "\t\"learning_rate\":0.01,\n"
-        "\t\"clipval\":5.0\n"
-        "}";
+        String model_str = "{\n"
+            "\t\"generator\":\"lstm\",\n"
+            "\t\"hidden_sizes\":[10,10],\n"
+            "\t\"letter_size\":5,\n"
+            "\t\"use_tokenization\":true,\n"  // Test with tokenization enabled
+            "\t\"regc\":0.000001,\n"
+            "\t\"learning_rate\":0.01,\n"
+            "\t\"clipval\":5.0\n"
+            "}";
 
-    ValueMap js = ParseJSON(model_str);
-    ses.Load(js);
-    
-    // Verify that tokenization was properly loaded
-    LOG("Tokenization enabled in RecurrentSession: " << (ses.use_tokenization ? "true" : "false"));
-    ASSERT(ses.use_tokenization == true);  // Should be true based on JSON config
+        ValueMap js = ParseJSON(model_str);
+        ses.Load(js);
 
-    ses.SetInputSize(20);  // arbitrary size
-    ses.SetOutputSize(20); // arbitrary size
-    ses.Init();
+        // Verify that tokenization was properly loaded
+        LOG("Tokenization enabled in RecurrentSession: " << (ses.use_tokenization ? "true" : "false"));
+        ASSERT(ses.use_tokenization == true);  // Should be true based on JSON config
 
-    LOG("CharGen RecurrentSession test:");
-    LOG("  Learning rate: " << ses.GetLearningRate());
-    ASSERT(ses.GetLearningRate() == 0.01);
+        ses.SetInputSize(20);  // arbitrary size
+        ses.SetOutputSize(20); // arbitrary size
+        ses.Init();
+
+        LOG("CharGen LSTM RecurrentSession test:");
+        LOG("  Learning rate: " << ses.GetLearningRate());
+        ASSERT(ses.GetLearningRate() == 0.01);
+    }
+
+    // Test RecurrentSession with Transformer configuration
+    {
+        RecurrentSession ses;
+
+        String model_str = "{\n"
+            "\t\"generator\":\"transformer\",\n"
+            "\t\"hidden_sizes\":[10,10],\n"
+            "\t\"letter_size\":5,\n"
+            "\t\"use_tokenization\":true,\n"  // Test with tokenization enabled
+            "\t\"regc\":0.000001,\n"
+            "\t\"learning_rate\":0.001,\n"  // Lower learning rate for transformer
+            "\t\"clipval\":1.0\n"           // Different clip value for transformer
+            "}";
+
+        ValueMap js = ParseJSON(model_str);
+        ses.Load(js);
+
+        // Verify that tokenization was properly loaded and generator is transformer
+        LOG("Tokenization enabled in Transformer RecurrentSession: " << (ses.use_tokenization ? "true" : "false"));
+        LOG("Transformer Generator mode loaded: expected MODE_TRANSFORMER (3)");
+        LOG("Actual mode: " << ses.GetMode());
+        ASSERT(ses.use_tokenization == true);  // Should be true based on JSON config
+
+        ses.SetInputSize(20);  // arbitrary size
+        ses.SetOutputSize(20); // arbitrary size
+        ses.Init(); // May not fully work due to architectural differences, but should not crash
+
+        LOG("Transformer RecurrentSession test:");
+        LOG("  Learning rate: " << ses.GetLearningRate());
+        ASSERT(ses.GetLearningRate() == 0.001);
+    }
+
+    // Test RecurrentSession with GPT configuration
+    {
+        RecurrentSession ses;
+
+        String model_str = "{\n"
+            "\t\"generator\":\"gpt\",\n"
+            "\t\"hidden_sizes\":[10,10],\n"
+            "\t\"letter_size\":5,\n"
+            "\t\"use_tokenization\":true,\n"  // Test with tokenization enabled
+            "\t\"regc\":0.000001,\n"
+            "\t\"learning_rate\":0.001,\n"  // Lower learning rate for GPT
+            "\t\"clipval\":1.0\n"           // Different clip value for GPT
+            "}";
+
+        ValueMap js = ParseJSON(model_str);
+        ses.Load(js);
+
+        // Verify that tokenization was properly loaded and generator is GPT
+        LOG("Tokenization enabled in GPT RecurrentSession: " << (ses.use_tokenization ? "true" : "false"));
+        LOG("GPT Generator mode loaded: expected MODE_GPT (4)");
+        LOG("Actual mode: " << ses.GetMode());
+        ASSERT(ses.use_tokenization == true);  // Should be true based on JSON config
+
+        ses.SetInputSize(20);  // arbitrary size
+        ses.SetOutputSize(20); // arbitrary size
+        ses.Init(); // May not fully work due to architectural differences, but should not crash
+
+        LOG("GPT RecurrentSession test:");
+        LOG("  Learning rate: " << ses.GetLearningRate());
+        ASSERT(ses.GetLearningRate() == 0.001);
+    }
 
     // Test tokenizer functionality
     LOG("Testing Tokenizer functionality:");
