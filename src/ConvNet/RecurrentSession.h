@@ -2,6 +2,8 @@
 #define _ConvNet_RecurrentSession_h_
 
 #include "Recurrent.h"
+#include "TransformerLayers.h"
+#include "GptLayers.h"
 
 namespace ConvNet {
 
@@ -26,6 +28,8 @@ protected:
 	Vector<HighwayModel> hw_model;
 	Vector<LSTMModel> lstm_model;
 	Vector<RNNModel> rnn_model;
+	std::unique_ptr<TransformerCRTP> transformer_model;  // For transformer model
+	std::unique_ptr<GPTModel> gpt_model;                // For GPT model
 	MatId Whd, bd, Wil;
 	MatId noise_i[2];
 	
@@ -53,7 +57,7 @@ protected:
 	int letter_size;
 	int max_graphs;
 	
-	enum {MODE_RNN, MODE_LSTM, MODE_HIGHWAY};
+	enum {MODE_RNN, MODE_LSTM, MODE_HIGHWAY, MODE_TRANSFORMER, MODE_GPT};
 	
 	void InitRNN();
 	void InitRNN(int i, int j, GraphTree& g);
@@ -61,6 +65,8 @@ protected:
 	void InitLSTM(int i, int j, GraphTree& g);
 	void InitHighway();
 	void InitHighway(int i, int j, GraphTree& g);
+	void InitTransformer();
+	void InitGPT();
 	void Backward(int seq_end_cursor);
 	void SolverStep();
 	void ResetPrevs();

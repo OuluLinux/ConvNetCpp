@@ -1,4 +1,6 @@
 #include "ConvNet.h"
+#include "TransformerLayers.h"
+#include "GptLayers.h"
 
 namespace ConvNet {
 
@@ -36,6 +38,12 @@ int RecurrentSession::GetMatCount() {
 		count = lstm_model.GetCount() * LSTMModel::GetCount();
 	else if (mode == MODE_HIGHWAY)
 		count = hw_model.GetCount() * HighwayModel::GetCount() + 2;
+	else if (mode == MODE_TRANSFORMER)
+		// Transformer parameters count would depend on implementation
+		count = 0;  // Placeholder - will implement properly based on how transformer uses parameters
+	else if (mode == MODE_GPT)
+		// GPT parameters count would depend on implementation
+		count = 0;  // Placeholder - will implement properly based on how GPT uses parameters
 	else
 		Panic("Invalid mode");
 	count += 3;
@@ -572,7 +580,11 @@ void RecurrentSession::Load(const ValueMap& js) {
 	
 	String generator;
 	LOAD(generator);
-	mode = generator == "lstm" ? MODE_LSTM : generator == "rnn" ? MODE_RNN : MODE_HIGHWAY;
+	if (generator == "lstm") mode = MODE_LSTM;
+	else if (generator == "rnn") mode = MODE_RNN;
+	else if (generator == "transformer") mode = MODE_TRANSFORMER;
+	else if (generator == "gpt") mode = MODE_GPT;
+	else mode = MODE_HIGHWAY;  // Default to highway for backward compatibility
 	
 	if (js.Find("hidden_sizes") != -1) {
 		hidden_sizes.Clear();
@@ -639,7 +651,12 @@ void RecurrentSession::Load(const ValueMap& js) {
 void RecurrentSession::Store(ValueMap& js) {
 	#define SAVE(x) js.GetAdd(#x) = x;
 	
-	String generator = mode == MODE_LSTM ? "lstm" : mode == MODE_RNN ? "rnn" : "highway";
+	String generator;
+	if (mode == MODE_LSTM) generator = "lstm";
+	else if (mode == MODE_RNN) generator = "rnn";
+	else if (mode == MODE_TRANSFORMER) generator = "transformer";
+	else if (mode == MODE_GPT) generator = "gpt";
+	else generator = "highway";  // Default to highway for backward compatibility
 	SAVE(generator);
 	
 	ValueMap hs;
@@ -734,6 +751,4 @@ void RecurrentSession::Serialize(Stream& s) {
 			}
 		}
 	}
-}
-
 }

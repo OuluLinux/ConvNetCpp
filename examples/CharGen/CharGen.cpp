@@ -32,6 +32,8 @@ CharGen::CharGen() {
 	set_rnn <<= THISBACK1(SetPreset, 0);
 	set_lstm <<= THISBACK1(SetPreset, 1);
 	set_rhn <<= THISBACK1(SetPreset, 2);
+	set_transformer <<= THISBACK1(SetPreset, 3);
+	set_gpt <<= THISBACK1(SetPreset, 4);
 	
 	CtrlLayout(*this);
 	
@@ -108,6 +110,36 @@ void CharGen::SetPreset(int i) {
 			"\t\"regc\":0.000001,\n" // L2 regularization strength
 			"\t\"learning_rate\":0.01,\n" // learning rate
 			"\t\"clipval\":5.0\n" // clip gradients at this value
+			"}";
+	}
+	else if (i == 3) {
+		model_str = "{\n"
+
+			// model parameters
+			"\t\"generator\":\"transformer\",\n" // transformer model
+			"\t\"hidden_sizes\":[20,20],\n" // list of sizes of hidden layers (for compatibility)
+			"\t\"letter_size\":5,\n" // size of letter embeddings
+			"\t\"use_tokenization\":true,\n" // enable tokenization instead of character-level processing
+
+			// optimization
+			"\t\"regc\":0.000001,\n" // L2 regularization strength
+			"\t\"learning_rate\":0.001,\n" // learning rate (typically lower for transformer models)
+			"\t\"clipval\":1.0\n" // clip gradients at this value
+			"}";
+	}
+	else if (i == 4) {
+		model_str = "{\n"
+
+			// model parameters
+			"\t\"generator\":\"gpt\",\n" // GPT model
+			"\t\"hidden_sizes\":[20,20],\n" // list of sizes of hidden layers (for compatibility)
+			"\t\"letter_size\":5,\n" // size of letter embeddings
+			"\t\"use_tokenization\":true,\n" // enable tokenization instead of character-level processing
+
+			// optimization
+			"\t\"regc\":0.000001,\n" // L2 regularization strength
+			"\t\"learning_rate\":0.001,\n" // learning rate (typically lower for transformer models)
+			"\t\"clipval\":1.0\n" // clip gradients at this value
 			"}";
 	}
 	model_edit.SetData(model_str);
