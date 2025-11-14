@@ -46,6 +46,7 @@ CharGen::CharGen() {
 	epoch_size = -1;
 	input_size = -1;
 	output_size = -1;
+	tokenize_text = true;  // Default to using tokenization
 	
 	PostCallback(THISBACK1(SetPreset, 1));
 	PostCallback(THISBACK(Reload));
@@ -72,6 +73,7 @@ void CharGen::SetPreset(int i) {
 			"\t\"generator\":\"rnn\",\n" // can be 'rnn' or 'lstm' or 'highway'
 			"\t\"hidden_sizes\":[20,20],\n" // list of sizes of hidden layers
 			"\t\"letter_size\":5,\n" // size of letter embeddings
+			"\t\"use_tokenization\":true,\n" // enable tokenization instead of character-level processing
 			
 			// optimization
 			"\t\"regc\":0.000001,\n" // L2 regularization strength
@@ -86,6 +88,7 @@ void CharGen::SetPreset(int i) {
 			"\t\"generator\":\"lstm\",\n" // can be 'rnn' or 'lstm' or 'highway'
 			"\t\"hidden_sizes\":[20,20],\n" // list of sizes of hidden layers
 			"\t\"letter_size\":5,\n" // size of letter embeddings
+			"\t\"use_tokenization\":true,\n" // enable tokenization instead of character-level processing
 			
 			// optimization
 			"\t\"regc\":0.000001,\n" // L2 regularization strength
@@ -99,6 +102,7 @@ void CharGen::SetPreset(int i) {
 			// model parameters
 			"\t\"generator\":\"highway\",\n" // can be 'rnn' or 'lstm' or 'highway'
 			"\t\"hidden_sizes\":[20,20],\n" // list of sizes of hidden layers
+			"\t\"use_tokenization\":true,\n" // enable tokenization instead of character-level processing
 			
 			// optimization
 			"\t\"regc\":0.000001,\n" // L2 regularization strength
@@ -151,11 +155,30 @@ void CharGen::Reload() {
 		}
 	}
 	
-	InitVocab(data_sents, 1); // takes count threshold for characters
-	
 	// eval options to set some globals
 	ValueMap js = ParseJSON((String)model_edit.GetData());
 	ses.Load(js);
+	
+	// Check if tokenization should be used
+	tokenize_text = ses.use_tokenization; // use the value loaded from the JSON config
+
+	if (tokenize_text) {
+		// Initialize tokenizer
+		tokenizer.Create();
+		tokenizer->BuildVocabulary(data_sents, 1); // min frequency of 1 for testing
+		
+		// Set input/output size based on tokenizer vocabulary
+		input_size = tokenizer->GetVocabSize();
+		output_size = tokenizer->GetVocabSize();
+		epoch_size = data_sents.GetCount();
+		
+		// Update UI label to show tokenization info
+		input_stats.SetLabel(Format("Tokenization enabled, vocab size: %d", tokenizer->GetVocabSize()));
+	} else {
+		// Use character-level processing (existing behavior)
+		InitVocab(data_sents, 1); // takes count threshold for characters
+	}
+
 	ses.SetInputSize(input_size);
 	ses.SetOutputSize(output_size);
 	ses.Init();
@@ -283,9 +306,15 @@ WString CharGen::PredictSentence(bool samplei, double temperature) {
 	ses.Predict(sequence, samplei, temperature);
 	
 	WString s;
-	for(int i = 0; i < sequence.GetCount(); i++) {
-		int chr = indexToLetter.Get(sequence[i]);
-		s.Cat(chr);
+	if (tokenize_text && tokenizer) {
+		// Use tokenization to convert token IDs back to text
+		s = tokenizer->Detokenize(sequence);
+	} else {
+		// Use character-level processing (existing behavior)
+		for(int i = 0; i < sequence.GetCount(); i++) {
+			int chr = indexToLetter.Get(sequence[i]);
+			s.Cat(chr);
+		}
 	}
 	return s;
 }
@@ -302,14 +331,37 @@ double CharGen::Median(Vector<double>& values) {
 void CharGen::Tick() {
 	TimeStop ts;  // log start timestamp
 	
-	// sample sentence fromd data
+	// sample sentence from data
 	int sentix = Random(data_sents.GetCount());
 	const WString& sent = data_sents[sentix];
 	
-	int size = min(ses.GetGraphCount()-1, sent.GetCount());
-	sequence.SetCount(size);
-	for(int i = 0; i < size; i++) {
-		sequence[i] = letterToIndex.Get(sent[i]);
+	if (tokenize_text && tokenizer) {
+		// Use tokenization to convert sentence to token IDs
+		Vector<int> token_ids = tokenizer->Tokenize(sent);
+		int size = min(ses.GetGraphCount()-1, token_ids.GetCount());
+		sequence.SetCount(size);
+		for(int i = 0; i < size; i++) {
+			sequence[i] = token_ids[i];
+		}
+		Cout() << "DEBUG: Training with tokenized sequence (size=" << size << "): ";
+		for(int i = 0; i < min(size, 10); i++) {  // Print first 10 tokens or all if less
+			Cout() << sequence[i] << " ";
+		}
+		if(size > 10) Cout() << "...";
+		Cout() << " (source: \"" << sent.Mid(0, min(20, sent.GetCount())) << (sent.GetCount() > 20 ? "..." : "") << "\")\n";
+	} else {
+		// Use character-level processing (existing behavior)
+		int size = min(ses.GetGraphCount()-1, sent.GetCount());
+		sequence.SetCount(size);
+		for(int i = 0; i < size; i++) {
+			sequence[i] = letterToIndex.Get(sent[i]);
+		}
+		Cout() << "DEBUG: Training with character sequence (size=" << size << "): ";
+		for(int i = 0; i < min(size, 10); i++) {  // Print first 10 chars or all if less
+			Cout() << sequence[i] << " ";
+		}
+		if(size > 10) Cout() << "...";
+		Cout() << " (source: \"" << sent.Mid(0, min(20, sent.GetCount())) << (sent.GetCount() > 20 ? "..." : "") << "\")\n";
 	}
 	
 	ses.Learn(sequence);
@@ -327,8 +379,42 @@ void CharGen::Tick() {
 		WString samples;
 		for (int q = 0; q < 5; q++) {
 			if (q) samples += "\n\n";
-			samples += PredictSentence(true, sample_softmax_temperature);
+			
+			// Get the raw token sequence that the model predicts
+			Vector<int> raw_sequence;
+			ses.Predict(raw_sequence, true, sample_softmax_temperature);
+			
+			// Convert token IDs back to text for display (existing behavior)
+			WString sample_text;
+			if (tokenize_text && tokenizer) {
+				// Use tokenization to convert token IDs back to text
+				sample_text = tokenizer->Detokenize(raw_sequence);
+			} else {
+				// Use character-level processing (existing behavior)
+				for(int i = 0; i < raw_sequence.GetCount(); i++) {
+					int chr = indexToLetter.Get(raw_sequence[i]);
+					sample_text.Cat(chr);
+				}
+			}
+			samples += sample_text;
+			
+			// For the first sample, output debug for the raw tokens
+			if (q == 0) {  // Only debug the first sample to avoid too much output
+				Cout() << "DEBUG: Sample token IDs generated (tokenize_text=" << tokenize_text << "): ";
+				for(int i = 0; i < min(raw_sequence.GetCount(), 20); i++) {  // Print first 20 tokens or all if less
+					Cout() << raw_sequence[i] << " ";
+				}
+				if(raw_sequence.GetCount() > 20) Cout() << "...";
+				WString source_text = tokenize_text && tokenizer ? tokenizer->Detokenize(raw_sequence) : WString();
+				if (source_text.GetCount() > 0) {
+					Cout() << " (source: \"" << source_text.Mid(0, min(20, source_text.GetCount())) << (source_text.GetCount() > 20 ? "..." : "") << "\")\n";
+				} else {
+					Cout() << "\n";
+				}
+			}
 		}
+		
+		Cout() << "DEBUG: Using tokenizer=" << (tokenizer ? "YES" : "NO") << ", vocab size=" << (tokenizer ? tokenizer->GetVocabSize() : 0) << "\n";
 		
 		PostCallback(THISBACK1(SetSamples, samples));
 	}

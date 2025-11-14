@@ -79,6 +79,7 @@
 #include "MemoryPool.h"
 #include "RuntimeFlexibility.h"
 #include "CrtpLayers.h"
+#include "Tokenization.h"
 // #include "TransformerLayers.h"  // Temporarily removed due to build issues
 // #include "GptLayers.h"          // Temporarily removed due to build issues
 // #include "ParallellaSupport.h"  // Temporarily removed due to build issues

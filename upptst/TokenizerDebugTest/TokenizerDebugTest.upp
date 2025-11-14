@@ -1,0 +1,4 @@
+uppsrc app "TokenizerDebugTest" . : 
+	ConvNet, 
+	Core,
+	plugin/z

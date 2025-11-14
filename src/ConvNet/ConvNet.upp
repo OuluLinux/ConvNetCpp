@@ -69,5 +69,7 @@ file
 	// ParallellaSupport.h,
 	// ParallellaSupport.cpp,
 	PerformanceTesting.h,
+	Tokenization.h,
+	Tokenization.cpp,
 	DQN.h;
 

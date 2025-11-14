@@ -12,6 +12,7 @@ RecurrentSession::RecurrentSession() {
 	letter_size = -1;
 	max_graphs = 100;
 	initial_bias = -4;
+	use_tokenization = false;  // Default to character-level processing
 	
 	// Solver
 	decay_rate = 0.999;
@@ -584,6 +585,7 @@ void RecurrentSession::Load(const ValueMap& js) {
 	LOAD(regc);
 	LOAD(learning_rate);
 	LOAD(clipval);
+	LOAD(use_tokenization);
 	/*
 	if (js.Find("model") != -1) {
 		ValueMap model = js.GetValue(js.Find("model"));
@@ -648,6 +650,7 @@ void RecurrentSession::Store(ValueMap& js) {
 	SAVE(regc);
 	SAVE(learning_rate);
 	SAVE(clipval);
+	SAVE(use_tokenization);
 	/*
 	ValueMap model;
 	

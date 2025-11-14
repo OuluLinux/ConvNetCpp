@@ -67,6 +67,7 @@ protected:
 	
 	
 public:
+	bool use_tokenization;  // Flag to indicate if we're using tokenization instead of character-level
 	typedef RecurrentSession CLASSNAME;
 	RecurrentSession();
 	~RecurrentSession();

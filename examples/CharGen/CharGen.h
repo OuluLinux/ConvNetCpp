@@ -44,6 +44,8 @@ class CharGen : public WithMainLayout<TopWindow> {
 	int epoch_size;
 	int tick_iter;
 	bool running, stopped, paused;
+	bool tokenize_text;  // Add option to tokenize text instead of character-based processing
+	Shared<Tokenizer> tokenizer;  // Tokenizer instance
 	
 public:
 	typedef CharGen CLASSNAME;
