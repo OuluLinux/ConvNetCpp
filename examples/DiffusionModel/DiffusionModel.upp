@@ -1,0 +1,15 @@
+//DIFFUSIONMODEL
+//FILE
+//  DiffusionModel.cpp
+//END
+#include "DiffusionModel.h"
+
+struct WithCtrlPanel : Ctrl {
+	TrainingGraph graph;
+
+	typedef WithCtrlPanel CLASSNAME;
+	WithCtrlPanel()
+	{
+		Add(graph.SizePos());
+	}
+};

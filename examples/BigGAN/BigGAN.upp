@@ -1,0 +1,17 @@
+//BIGGAN
+//FILE
+//  BigGAN.cpp
+//END
+#include "BigGAN.h"
+
+struct WithCtrlPanel : Ctrl {
+	TrainingGraph disc_graph;
+	TrainingGraph gen_graph;
+
+	typedef WithCtrlPanel CLASSNAME;
+	WithCtrlPanel()
+	{
+		Add(disc_graph.SizePos());
+		Add(gen_graph.TopPos(1, 240).HSizePos());
+	}
+};
