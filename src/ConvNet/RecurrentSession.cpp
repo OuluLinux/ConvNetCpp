@@ -115,6 +115,12 @@ void RecurrentSession::Init() {
 	else if (mode == MODE_HIGHWAY) {
 		InitHighway();
 	}
+	else if (mode == MODE_TRANSFORMER) {
+		InitHighway();
+	}
+	else if (mode == MODE_GPT) {
+		InitHighway();
+	}
 	else Panic("Invalid RecurrentSession mode");
 	
 	InitGraphs();
@@ -751,4 +757,5 @@ void RecurrentSession::Serialize(Stream& s) {
 			}
 		}
 	}
+}
 }
