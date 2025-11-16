@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TheSetup>
+	<Package id="VisionTransformer" type="0" main="main.cpp" target_dir="VisionTransformer" />
+	<BuildToolset id="GCC" version="1" cpp11="1" />
+	<IncludeDir dir="." />
+	<FlagFile mask="*.cpp" base="CPP" />
+	<AsmFile mask="*.s" />
+	<AsmFile mask="*.S" />
+	<AsmFile mask="*.asm" />
+	<ResourceFile mask="*.rc" />
+	<GladeFile mask="*.glade" />
+	<CppDir dir="." />
+	<CppFile file="VisionTransformer.cpp" />
+	<CppFile file="main.cpp" />
+	<CppFile file="../ClassifyImages/LoaderCIFAR10.cpp" />
+	<PngFile mask="*.png" />
+	<ImlFile file="VisionTransformer.iml" />
+	<LayoutFile file="VisionTransformer.lay" />
+	<Icon file="icon.ico" />
+</TheSetup>
