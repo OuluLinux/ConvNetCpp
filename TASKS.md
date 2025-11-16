@@ -110,15 +110,15 @@
 - **Description**: Implement Self-Attention GAN (SAGAN) using self-attention mechanisms to capture long-range dependencies in images. Should fork from existing GAN example and create a new SAGAN directory with its own GUI app main function, using a common neural network GUI framework.
 - **Status**: Completed
 
+## IN_PROGRESS
+
+## DONE
+
 ### 19. Fix character-level tokenization in CharGenTest
 - **Task ID**: 19
 - **Priority**: High
 - **Description**: The CharGenTest was failing due to improper character-level tokenization in the SubwordTokenizer. Fix the tokenizer implementation so that detokenize properly reconstructs the original text.
 - **Status**: Completed
-
-## IN_PROGRESS
-
-## DONE
 
 ### 11. Add DCGAN implementation
 - **Task ID**: 11

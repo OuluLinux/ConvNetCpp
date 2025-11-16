@@ -15,7 +15,7 @@ protected:
 
     // Special token IDs
     static const int START_TOKEN_ID = 0;
-    static const int END_TOKEN_ID = 0;  // Using same as START for now, as in char-level approach
+    static const int END_TOKEN_ID = 1;  // Using 1 for END token
     static const int UNKNOWN_TOKEN_ID = -1;
     
 public:
