@@ -116,10 +116,10 @@ void RecurrentSession::Init() {
 		InitHighway();
 	}
 	else if (mode == MODE_TRANSFORMER) {
-		InitHighway();
+		InitTransformer();
 	}
 	else if (mode == MODE_GPT) {
-		InitHighway();
+		InitGPT();
 	}
 	else Panic("Invalid RecurrentSession mode");
 	
@@ -153,18 +153,24 @@ void RecurrentSession::InitGraphs() {
 	
 	for (int i = 0; i < graphs.GetCount(); i++) {
 		Array<GraphTree>& hidden_graphs = graphs[i];
-		hidden_graphs.SetCount(hidden_count);
-		for (int j = 0; j < hidden_count; j++) {
-			hidden_graphs[j].SetPool(*this);
-			
-			if (mode == MODE_RNN)
-				InitRNN(i, j, hidden_graphs[j]);
-			else if (mode == MODE_LSTM)
-				InitLSTM(i, j, hidden_graphs[j]);
-			else if (mode == MODE_HIGHWAY)
-				InitHighway(i, j, hidden_graphs[j]);
-			else
-				InitHighway(i, j, hidden_graphs[j]); // Default to InitHighway for MODE_TRANSFORMER and MODE_GPT
+		// For Transformer and GPT models, we do not initialize GraphTree-based architectures
+		// since they use different architectural approaches
+		if (mode == MODE_TRANSFORMER || mode == MODE_GPT) {
+			// For now, create empty graphs for Transformer/GPT models to avoid crash
+			// They will have their own training logic outside of the GraphTree-based approach
+			hidden_graphs.SetCount(0); // No GraphTrees for Transformer/GPT
+		} else {
+			hidden_graphs.SetCount(hidden_count);
+			for (int j = 0; j < hidden_count; j++) {
+				hidden_graphs[j].SetPool(*this);
+
+				if (mode == MODE_RNN)
+					InitRNN(i, j, hidden_graphs[j]);
+				else if (mode == MODE_LSTM)
+					InitLSTM(i, j, hidden_graphs[j]);
+				else if (mode == MODE_HIGHWAY)
+					InitHighway(i, j, hidden_graphs[j]);
+			}
 		}
 	}
 }
@@ -345,106 +351,147 @@ void RecurrentSession::InitHighway() {
 
 void RecurrentSession::InitHighway(int i, int j, GraphTree& g) {
 	HighwayModel& m = hw_model[j];
-	
+
 	g.Clear();
-	
+
 	Vector<MatId>& hidden_prevs = this->hidden_prevs[i];
 	Vector<MatId>& hidden_nexts = this->hidden_prevs[i+1];
 	Vector<MatId>& cell_prevs = this->cell_prevs[i];
 	Vector<MatId>& cell_nexts = this->cell_prevs[i+1];
-	
+
 	if (j == 0) {
 		input = g.RowPluck(i, Wil);
 	}
-	
+
 	MatId input_vector = j == 0 ? input : hidden_nexts[j-1];
 	MatId hidden_prev = hidden_prevs[j];
-	
+
 	if (j == 0) {
 		MatId dropped_x0			= g.EltMul(input_vector, noise_i[0]);
 		MatId dropped_h_tab0		= g.EltMul(hidden_prev, m.noise_h[0]);
-		
+
 		MatId dropped_x1			= g.EltMul(input_vector, noise_i[1]);
 		MatId dropped_h_tab1		= g.EltMul(hidden_prev, m.noise_h[1]);
-		
+
 		MatId t_gate_tab			= g.Sigmoid(g.AddConstant(initial_bias, g.Add(dropped_x0, dropped_h_tab0)));
 		MatId in_transform_tab		= g.Tanh(g.Add(dropped_x1, dropped_h_tab1));
 		MatId c_gate_tab			= g.AddConstant(1, g.MulConstant(-1, t_gate_tab));
 		MatId hidden_d				= g.Add(
 										g.EltMul(hidden_prev, c_gate_tab),
 										g.EltMul(in_transform_tab, t_gate_tab));
-		
+
 		hidden_nexts[j] = hidden_d;
 	}
 	else
 	{
 		MatId dropped_h_tab0		= g.EltMul(input_vector, m.noise_h[0]);
 		MatId dropped_h_tab1		= g.EltMul(input_vector, m.noise_h[1]);
-		
+
 		MatId t_gate_tab			= g.Sigmoid(g.AddConstant(initial_bias, dropped_h_tab0));
 		MatId in_transform_tab		= g.Tanh(dropped_h_tab1);
 		MatId c_gate_tab			= g.AddConstant(1, g.MulConstant(-1, t_gate_tab));
 		MatId hidden_d				= g.Add(
 										g.EltMul(input_vector, c_gate_tab),
 										g.EltMul(in_transform_tab, t_gate_tab));
-		
+
 		hidden_nexts[j] = hidden_d;
 	}
-	
-	
+
+
 	// one decoder to outputs at end
 	if (j == hidden_prevs.GetCount() - 1) {
 		g.Add(g.Mul(Whd, hidden_nexts.Top()), bd);
 	}
 }
+
+void RecurrentSession::InitTransformer() {
+	// For now, just initialize basic parameters since the full transformer implementation
+	// might need different architecture than the RNN-based approach
+	// The transformer will be handled differently when the graph initialization is properly addressed
+	ASSERT(input_size == output_size);
+	ASSERT_(hidden_sizes.GetCount() > 0, "Hidden sizes must be set");
+
+	// For now, just initialize basic matrices for decoder
+	RandMat(output_size, hidden_sizes.Top(), 0, 0.08, Whd);
+	InitMat(bd, 1, output_size, 0);
+}
+
+void RecurrentSession::InitGPT() {
+	// For now, just initialize basic parameters since the full GPT implementation
+	// might need different architecture than the RNN-based approach
+	// The GPT model will be handled differently when the graph initialization is properly addressed
+	ASSERT(input_size == output_size);
+	ASSERT_(hidden_sizes.GetCount() > 0, "Hidden sizes must be set");
+
+	// For now, just initialize basic matrices for decoder
+	RandMat(output_size, hidden_sizes.Top(), 0, 0.08, Whd);
+	InitMat(bd, 1, output_size, 0);
+}
 	
 void RecurrentSession::Learn(const Vector<int>& input_sequence) {
+	// For Transformer and GPT models, we need to use their specific training approach
+	if (mode == MODE_TRANSFORMER || mode == MODE_GPT) {
+		// For now, just return and print a warning since full implementation is not ready
+		// In a proper implementation, this would call the transformer/gpt specific training logic
+		if (mode == MODE_TRANSFORMER) {
+			LOG("Transformer training not fully implemented in GraphTree architecture");
+		} else if (mode == MODE_GPT) {
+			LOG("GPT training not fully implemented in GraphTree architecture");
+		}
+		return;
+	}
+
 	double log2ppl = 0.0;
 	double cost = 0.0;
-	
+
 	ASSERT(input_sequence.GetCount() < graphs.GetCount());
-	
+
 	// Copy input sequence. Fixed index_sequence addresses are used in RowPluck.
 	int n = input_sequence.GetCount();
-	
+
 	// start and end tokens are zeros
 	index_sequence[0] = 0; // first step: start with START token
 	for(int i = 0; i < n; i++)
 		index_sequence[i+1] = input_sequence[i]; // this value is used in the RowPluck
 	for(int i = n+1; i < index_sequence.GetCount(); i++)
 		index_sequence[i] = -1; // for debugging
-	
+
 	ResetPrevs();
-	
+
 	for(int i = 0; i <= n; i++) {
-		
+
 		int ix_target = i == n ? 0 : index_sequence[i+1]; // last step: end with END token
-		
+
 		Array<GraphTree>& list = graphs[i];
 		for(int j = 0; j < list.GetCount(); j++) {
 			list[j].Forward();
 		}
-		
+
+		// Check if we have any graphs before accessing them
+		if (list.GetCount() == 0) {
+			return; // No graphs to process, likely transformer/GPT mode
+		}
+
 		MatId logprobs = list.Top().Top().output;
 		Mat& logprobs_mat = Get(logprobs);
 		Softmax(logprobs_mat, probs); // compute the softmax probabilities
-		
+
 		double p = probs.Get(ix_target);
 		log2ppl += -log2(p); // accumulate base 2 log prob and do smoothing
 		cost += -log(p);
-		
+
 		// write gradients into log probabilities
 		int count = logprobs_mat.GetLength();
 		for(int j = 0; j < count; j++)
 			logprobs_mat.SetGradient(j, probs.Get(j));
 		logprobs_mat.AddGradient(ix_target, -1.0);
 	}
-	
+
 	ppl = pow(2, log2ppl / (n - 1));
 	cost = cost;
-	
+
 	Backward(n);
-	
+
 	SolverStep();
 }
 
@@ -514,6 +561,18 @@ void RecurrentSession::ResetPrevs() {
 }
 
 void RecurrentSession::Predict(Vector<int>& output_sequence, bool samplei, double temperature, bool continue_sentence, int max_predictions) {
+	// For Transformer and GPT models, we need to use their specific inference approach
+	if (mode == MODE_TRANSFORMER || mode == MODE_GPT) {
+		// For now, just return and print a warning since full implementation is not ready
+		// In a proper implementation, this would call the transformer/gpt specific prediction logic
+		if (mode == MODE_TRANSFORMER) {
+			LOG("Transformer prediction not fully implemented in GraphTree architecture");
+		} else if (mode == MODE_GPT) {
+			LOG("GPT prediction not fully implemented in GraphTree architecture");
+		}
+		return;
+	}
+
 	int begin_write = 0;
 	if (continue_sentence) {
 		begin_write = output_sequence.GetCount();
@@ -521,36 +580,42 @@ void RecurrentSession::Predict(Vector<int>& output_sequence, bool samplei, doubl
 	else {
 		output_sequence.SetCount(0);
 	}
-	
+
 	index_sequence[0] = 0;
 	for(int i = 1; i < index_sequence.GetCount(); i++)
 		index_sequence[i] = -1; // for debugging
-	
+
 	ResetPrevs();
 	int predictions = 0;
-	
+
 	for (int i = 0; ; i++) {
-		
+
 		Array<GraphTree>& list = graphs[i];
+
+		// Check if we have any graphs before processing them
+		if (list.GetCount() == 0) {
+			return; // No graphs to process, likely transformer/GPT mode
+		}
+
 		for(int j = 0; j < list.GetCount(); j++) {
 			GraphTree& g = list[j];
 			g.Forward();
 		}
-		
+
 		// Use given beginning if set
 		if (continue_sentence && i < begin_write) {
-			
+
 			// Set index to variable what was given
 			int ix = output_sequence[i];
 			index_sequence[i+1] = ix;
 		}
-		
+
 		// By default, predict from START token and previous input value
 		else {
 			// sample predicted letter
 			MatId logprobs = list.Top().Top().output;
 			Mat& logprobs_mat = Get(logprobs);
-			
+
 			if (temperature != 1.0 && samplei) {
 				// scale log probabilities by temperature and renormalize
 				// if temperature is high, logprobs will go towards zero
@@ -560,23 +625,23 @@ void RecurrentSession::Predict(Vector<int>& output_sequence, bool samplei, doubl
 					logprobs_mat.Set(q, logprobs_mat.Get(q) / temperature);
 				}
 			}
-			
+
 			Softmax(logprobs_mat, probs);
-			
+
 			int ix = 0;
 			if (samplei) {
 				ix = probs.GetSampledColumn();
 			} else {
 				ix = probs.GetMaxColumn();
 			}
-			
+
 			if (ix == 0) break; // END token predicted, break out
 			if (i+1 >= max_graphs) break; // something is wrong
-			
+
 			output_sequence.Add(ix);
 			predictions++;
 			if (predictions == max_predictions) break;
-			
+
 			// Set index to variable what RowPluck reads
 			index_sequence[i+1] = ix;
 		}
