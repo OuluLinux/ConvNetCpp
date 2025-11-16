@@ -14,14 +14,15 @@ Tokenizer::~Tokenizer() {
 }
 
 void Tokenizer::BuildVocabulary(const Upp::Vector<Upp::WString>& texts, int min_frequency) {
+    // This is the base tokenizer - for word-level tokenization
     // Clear existing vocabulary (keeping special tokens at the beginning)
     Upp::String start_token = GetToken(0);
     Upp::String end_token = GetToken(1);
     Upp::String unk_token = GetToken(2);
-    
+
     token_to_id.Clear();
     id_to_token.Clear();
-    
+
     // Re-add special tokens
     token_to_id.Add(start_token, 0);
     id_to_token.Add(0, start_token);
@@ -29,20 +30,20 @@ void Tokenizer::BuildVocabulary(const Upp::Vector<Upp::WString>& texts, int min_
     id_to_token.Add(1, end_token);
     token_to_id.Add(unk_token, 2);
     id_to_token.Add(2, unk_token);
-    
+
     // Count token frequencies
     Upp::VectorMap<Upp::String, int> token_counts;
-    
+
     for (const auto& text : texts) {
         // For a word-level tokenizer, we split by whitespace and punctuation
         Upp::String str = text.ToString(); // Convert to String
-        
+
         Upp::String current_token;
         for(int i = 0; i < str.GetCount(); i++) {
             char c = str[i];
             // Check if character is a delimiter
-            bool is_delimiter = (c == ' ' || c == '\t' || c == '\n' || c == '\r' || 
-                               c == '.' || c == ',' || c == '!' || c == '?' || 
+            bool is_delimiter = (c == ' ' || c == '\t' || c == '\n' || c == '\r' ||
+                               c == '.' || c == ',' || c == '!' || c == '?' ||
                                c == ';' || c == ':' || c == '"' || c == '\'' ||
                                c == '[' || c == ']' || c == '{' || c == '}' ||
                                c == '(' || c == ')' || c == '<' || c == '>' ||
@@ -50,7 +51,7 @@ void Tokenizer::BuildVocabulary(const Upp::Vector<Upp::WString>& texts, int min_
                                c == '-' || c == '=' || c == '+' || c == '*' ||
                                c == '&' || c == '^' || c == '%' || c == '$' ||
                                c == '#' || c == '@' || c == '~' || c == '`');
-            
+
             if(is_delimiter) {
                 if(!current_token.IsEmpty()) {
                     token_counts.GetAdd(current_token, 0)++;
@@ -69,9 +70,9 @@ void Tokenizer::BuildVocabulary(const Upp::Vector<Upp::WString>& texts, int min_
             token_counts.GetAdd(current_token, 0)++;
         }
     }
-    
+
     // Add tokens that meet the frequency threshold
-    int next_id = GetVocabSize(); // Start after special tokens
+    int next_id = 3; // Start after special tokens (was GetVocabSize() which was wrong after clearing)
     for (int i = 0; i < token_counts.GetCount(); i++) {
         if (token_counts[i] >= min_frequency) {
             Upp::String token = token_counts.GetKey(i);
@@ -142,7 +143,7 @@ Upp::Vector<int> Tokenizer::Tokenize(const Upp::WString& text) const {
 
 Upp::WString Tokenizer::Detokenize(const Upp::Vector<int>& token_ids) const {
     Upp::WString result;
-    
+
     for (int token_id : token_ids) {
         Upp::String token = GetToken(token_id);
         if (!token.IsEmpty()) {
@@ -152,7 +153,7 @@ Upp::WString Tokenizer::Detokenize(const Upp::Vector<int>& token_ids) const {
             result.Cat(token_wstr);
         }
     }
-    
+
     return result;
 }
 
@@ -191,25 +192,136 @@ SubwordTokenizer::SubwordTokenizer() : Tokenizer() {
 }
 
 void SubwordTokenizer::BuildVocabulary(const Upp::Vector<Upp::WString>& texts, int min_frequency, int vocab_size) {
-    // This is a simplified implementation
-    // A full implementation would use algorithms like BPE or WordPiece
-    
-    // For now, just call the base implementation
-    Tokenizer::BuildVocabulary(texts, min_frequency);
-    
-    // If vocabulary exceeds vocab_size, we could implement pruning here
-    if (GetVocabSize() > vocab_size) {
-        // In a real implementation, we'd apply vocabulary reduction techniques
-        // For now, just issue a warning if needed
+    // For the CharGen example and similar use-cases, implement character-level tokenization
+    // This is a simplified approach that treats each character as a token
+
+    // Count character frequencies
+    Upp::VectorMap<Upp::String, int> token_counts;
+
+    for (const auto& text : texts) {
+        for(int i = 0; i < text.GetCount(); i++) {
+            Upp::WString char_wstr;
+            char_wstr.Cat(text[i]);
+            Upp::String char_str = char_wstr.ToString();
+            token_counts.GetAdd(char_str, 0)++;
+        }
+    }
+
+    // Clear and rebuild the tokenizer maps
+    // Store special tokens first
+    Upp::String start_token = "<START>";
+    Upp::String end_token = "<END>";
+    Upp::String unk_token = "<UNK>";
+
+    // Clear everything first
+    token_to_id.Clear();
+    id_to_token.Clear();
+
+    // Add special tokens first
+    token_to_id.Add(start_token, 0);
+    id_to_token.Add(0, start_token);
+    token_to_id.Add(end_token, 1);
+    id_to_token.Add(1, end_token);
+    token_to_id.Add(unk_token, 2);
+    id_to_token.Add(2, unk_token);
+
+    // Add characters that meet the frequency threshold
+    int next_id = 3; // Start after special tokens
+    for (int i = 0; i < token_counts.GetCount(); i++) {
+        if (token_counts[i] >= min_frequency) {
+            Upp::String token = token_counts.GetKey(i);
+            // Only add if not already present as a special token
+            if (token_to_id.Find(token) == -1) {
+                token_to_id.Add(token, next_id);
+                id_to_token.Add(next_id, token);
+                next_id++;
+            }
+        }
     }
 }
 
+Upp::Vector<int> SubwordTokenizer::Tokenize(const Upp::WString& text) const {
+    Upp::Vector<int> token_ids;
+
+    for(int i = 0; i < text.GetCount(); i++) {
+        Upp::WString char_wstr;
+        char_wstr.Cat(text[i]);
+        Upp::String char_str = char_wstr.ToString();
+        int token_id = GetTokenId(char_str);
+        if (token_id != UNKNOWN_TOKEN_ID) {
+            token_ids.Add(token_id);
+        } else {
+            token_ids.Add(GetTokenId("<UNK>"));  // Use unknown token
+        }
+    }
+
+    return token_ids;
+}
+
+Upp::WString SubwordTokenizer::Detokenize(const Upp::Vector<int>& token_ids) const {
+    Upp::WString result;
+
+    for (int token_id : token_ids) {
+        Upp::String token = GetToken(token_id);
+        if (!token.IsEmpty() && token != "<START>" && token != "<END>" && token != "<UNK>") {
+            // For character-level tokenization, append the character
+            Upp::WString token_wstr = token.ToWString();
+            result.Cat(token_wstr);
+        }
+    }
+
+    return result;
+}
+
 CharacterTokenizer::CharacterTokenizer() : Tokenizer() {
-    // Character tokenizer is just a specialized tokenizer
+    // Character tokenizer inherits from Tokenizer which already initializes special tokens
+    // We don't need to do anything additional here
 }
 
 void CharacterTokenizer::BuildVocabulary(const Upp::Vector<Upp::WString>& texts, int min_frequency) {
-    Tokenizer::BuildVocabulary(texts, min_frequency);
+    // Count character frequencies
+    Upp::VectorMap<Upp::String, int> token_counts;
+
+    for (const auto& text : texts) {
+        for(int i = 0; i < text.GetCount(); i++) {
+            Upp::WString char_wstr;
+            char_wstr.Cat(text[i]);
+            Upp::String char_str = char_wstr.ToString();
+            token_counts.GetAdd(char_str, 0)++;
+        }
+    }
+
+    // Clear and rebuild the tokenizer maps
+    // Store special tokens first
+    Upp::String start_token = "<START>";
+    Upp::String end_token = "<END>";
+    Upp::String unk_token = "<UNK>";
+
+    // Clear everything first
+    token_to_id.Clear();
+    id_to_token.Clear();
+
+    // Add special tokens first
+    token_to_id.Add(start_token, 0);
+    id_to_token.Add(0, start_token);
+    token_to_id.Add(end_token, 1);
+    id_to_token.Add(1, end_token);
+    token_to_id.Add(unk_token, 2);
+    id_to_token.Add(2, unk_token);
+
+    // Add characters that meet the frequency threshold
+    int next_id = 3; // Start after special tokens
+    for (int i = 0; i < token_counts.GetCount(); i++) {
+        if (token_counts[i] >= min_frequency) {
+            Upp::String token = token_counts.GetKey(i);
+            // Only add if not already present as a special token
+            if (token_to_id.Find(token) == -1) {
+                token_to_id.Add(token, next_id);
+                id_to_token.Add(next_id, token);
+                next_id++;
+            }
+        }
+    }
 }
 
 } // namespace ConvNet

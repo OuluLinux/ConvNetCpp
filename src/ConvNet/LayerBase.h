@@ -29,7 +29,8 @@ enum {
 	TANH_LAYER,
 	MAXOUT_LAYER,
 	SVM_LAYER,
-	HETEROSCEDASTICREGRESSION_LAYER
+	HETEROSCEDASTICREGRESSION_LAYER,
+	CUSTOM_LAYER
 };
 
 class LayerBase : Moveable<LayerBase> {
@@ -97,8 +98,12 @@ public:
 	
 	// Deconv
 	SimpleVolume ghost_image, ghost_gradients;
-	
-	
+
+	// Custom layer - placeholder for runtime-flexible layer types
+	// Using String to store serialized representation for now
+	String custom_layer;
+
+
 	// Fully connected
 	int GetInputCount() const {return input_count;}
 	Volume& ForwardFullyConn(Volume& input, bool is_training = false);

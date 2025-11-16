@@ -477,6 +477,9 @@ bool Session::MakeLayers(const String& json) {
 			else if (type == "tanh")		AddTanhLayer();
 			else if (type == "maxout")		AddMaxoutLayer(REQ(group_size));
 			else if (type == "svm")			AddSVMLayer(REQ(class_count));
+			// else if (type == "vit_patch_embed")		AddViTPatchEmbeddingLayer(row.GetAdd("patch_size"), row.GetAdd("embed_dim"), row.GetAdd("num_patches"));
+			// else if (type == "vit_encoder")			AddViTEncoderLayer(row.GetAdd("embed_dim"), row.GetAdd("num_heads"), row.GetAdd("ff_dim"), row.GetAdd("num_layers"), DEF(row.GetAdd("dropout_rate"), 0.1));
+			// else if (type == "vit_classifier")		AddViTClassifierLayer(row.GetAdd("num_classes"), row.GetAdd("embed_dim"));
 			else {
 				LOG("ERROR: UNRECOGNIZED LAYER TYPE: " + type);
 				Leave();
@@ -755,9 +758,29 @@ LayerBase& Session::AddSVMLayer(int class_count) {
 	return svm;
 }
 
+// LayerBase& Session::AddViTPatchEmbeddingLayer(int patch_size, int embed_dim, int num_patches) {
+// 	LayerBase& patch_embed = net.AddLayer();
+// 	patch_embed.layer_type = CUSTOM_LAYER;  // Using CUSTOM_LAYER as a placeholder
+// 	patch_embed.custom_layer = std::make_unique<RuntimeLayerWrapper<ViTPatchEmbeddingCRTP>>(patch_size, embed_dim, num_patches);
+// 	net.CheckLayer();
+// 	return patch_embed;
+// }
 
+// LayerBase& Session::AddViTEncoderLayer(int embed_dim, int num_heads, int ff_dim, int num_layers, double dropout_rate) {
+// 	LayerBase& encoder = net.AddLayer();
+// 	encoder.layer_type = CUSTOM_LAYER;  // Using CUSTOM_LAYER as a placeholder
+// 	encoder.custom_layer = std::make_unique<RuntimeLayerWrapper<ViTEncoderCRTP>>(embed_dim, num_heads, ff_dim, num_layers, dropout_rate);
+// 	net.CheckLayer();
+// 	return encoder;
+// }
 
-
+// LayerBase& Session::AddViTClassifierLayer(int num_classes, int embed_dim) {
+// 	LayerBase& classifier = net.AddLayer();
+// 	classifier.layer_type = CUSTOM_LAYER;  // Using CUSTOM_LAYER as a placeholder
+// 	classifier.custom_layer = std::make_unique<RuntimeLayerWrapper<ViTClassifierCRTP>>(num_classes, embed_dim);
+// 	net.CheckLayer();
+// 	return classifier;
+// }
 
 
 }
