@@ -1,0 +1,23 @@
+<Pkg>
+<Id>StyleGAN</Id>
+<Package>StyleGAN</Package>
+<Target>Examples</Target>
+</Pkg>
+
+<SourceList>
+<Source>StyleGAN.cpp</Source>
+<Source>StyleGANLayer.cpp</Source>
+<Source>main.cpp</Source>
+</SourceList>
+
+<IncludeList>
+<Include>StyleGAN.h</Include>
+</IncludeList>
+
+<LibraryList />
+
+<DefList />
+
+<LinkList />
+
+<Precomp>ConvNet</Precomp>

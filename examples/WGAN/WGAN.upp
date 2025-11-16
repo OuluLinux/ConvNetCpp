@@ -1,0 +1,23 @@
+<Pkg>
+<Id>WGAN</Id>
+<Package>WGAN</Package>
+<Target>Examples</Target>
+</Pkg>
+
+<SourceList>
+<Source>WGAN.cpp</Source>
+<Source>WGANLayer.cpp</Source>
+<Source>main.cpp</Source>
+</SourceList>
+
+<IncludeList>
+<Include>WGAN.h</Include>
+</IncludeList>
+
+<LibraryList />
+
+<DefList />
+
+<LinkList />
+
+<Precomp>ConvNet</Precomp>

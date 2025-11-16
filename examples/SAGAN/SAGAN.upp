@@ -1,0 +1,23 @@
+<Pkg>
+<Id>SAGAN</Id>
+<Package>SAGAN</Package>
+<Target>Examples</Target>
+</Pkg>
+
+<SourceList>
+<Source>SAGAN.cpp</Source>
+<Source>SAGANLayer.cpp</Source>
+<Source>main.cpp</Source>
+</SourceList>
+
+<IncludeList>
+<Include>SAGAN.h</Include>
+</IncludeList>
+
+<LibraryList />
+
+<DefList />
+
+<LinkList />
+
+<Precomp>ConvNet</Precomp>

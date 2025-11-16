@@ -1,6 +1,6 @@
 # TASKS.md - ConvNetCpp Project
 
-## DONE
+## TODO
 
 ### 1. Fix GAN example that has never worked
 - **Task ID**: 1
@@ -54,25 +54,25 @@
 - **Task ID**: 9
 - **Priority**: Medium
 - **Description**: Implement Deep Convolutional GAN with transposed convolutions, batch normalization, and specific activation functions. Should fork from existing GAN example and create a new DCGAN directory with its own GUI app main function, using a common neural network GUI framework.
-- **Status**: Not Started
+- **Status**: Completed
 
 ### 10. Add WGAN implementation
 - **Task ID**: 10
 - **Priority**: Medium
 - **Description**: Implement Wasserstein GAN using Earth Mover's distance for more stable training. Should fork from existing GAN example and create a new WGAN directory with its own GUI app main function, using a common neural network GUI framework.
-- **Status**: Not Started
+- **Status**: Completed
 
 ### 11. Add Progressive Growing GAN implementation
 - **Task ID**: 11
 - **Priority**: High
 - **Description**: Implement Progressive Growing GAN that starts at low resolution and gradually increases resolution during training. Should fork from existing GAN example and create a new ProgressiveGAN directory with its own GUI app main function, using a common neural network GUI framework.
-- **Status**: Not Started
+- **Status**: Completed
 
 ### 12. Add StyleGAN implementation
 - **Task ID**: 12
 - **Priority**: High
 - **Description**: Implement StyleGAN with adaptive instance normalization and style control at different scales. Should fork from existing GAN example and create a new StyleGAN directory with its own GUI app main function, using a common neural network GUI framework.
-- **Status**: Not Started
+- **Status**: Completed
 
 ### 13. Add BigGAN implementation
 - **Task ID**: 13
@@ -96,7 +96,7 @@
 - **Task ID**: 16
 - **Priority**: High
 - **Description**: Implement Self-Attention GAN (SAGAN) using self-attention mechanisms to capture long-range dependencies in images. Should fork from existing GAN example and create a new SAGAN directory with its own GUI app main function, using a common neural network GUI framework.
-- **Status**: Not Started
+- **Status**: Completed
 
 ### 17. Fix character-level tokenization in CharGenTest
 - **Task ID**: 17
@@ -107,3 +107,33 @@
 ## IN_PROGRESS
 
 ## DONE
+
+### 9. Add DCGAN implementation
+- **Task ID**: 9
+- **Priority**: Medium
+- **Description**: Implement Deep Convolutional GAN with transposed convolutions, batch normalization, and specific activation functions. Should fork from existing GAN example and create a new DCGAN directory with its own GUI app main function, using a common neural network GUI framework.
+- **Status**: Completed
+
+### 10. Add WGAN implementation
+- **Task ID**: 10
+- **Priority**: Medium
+- **Description**: Implement Wasserstein GAN using Earth Mover's distance for more stable training. Should fork from existing GAN example and create a new WGAN directory with its own GUI app main function, using a common neural network GUI framework.
+- **Status**: Completed
+
+### 11. Add Progressive Growing GAN implementation
+- **Task ID**: 11
+- **Priority**: High
+- **Description**: Implement Progressive Growing GAN that starts at low resolution and gradually increases resolution during training. Should fork from existing GAN example and create a new ProgressiveGAN directory with its own GUI app main function, using a common neural network GUI framework.
+- **Status**: Completed
+
+### 12. Add StyleGAN implementation
+- **Task ID**: 12
+- **Priority**: High
+- **Description**: Implement StyleGAN with adaptive instance normalization and style control at different scales. Should fork from existing GAN example and create a new StyleGAN directory with its own GUI app main function, using a common neural network GUI framework.
+- **Status**: Completed
+
+### 16. Add Self-Attention GAN implementation
+- **Task ID**: 16
+- **Priority**: High
+- **Description**: Implement Self-Attention GAN (SAGAN) using self-attention mechanisms to capture long-range dependencies in images. Should fork from existing GAN example and create a new SAGAN directory with its own GUI app main function, using a common neural network GUI framework.
+- **Status**: Completed

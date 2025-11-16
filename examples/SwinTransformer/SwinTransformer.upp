@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TheSetup>
+   <Package id="APP" label="SwinTransformer" type="main" target="yes" cpp="98" threads="yes">
+      <File name="SwinTransformer.cpp" mod="1715888609" size="1165"/>
+      <File name="SwinTransformer.h" mod="1715888609" size="2652"/>
+      <File name="SwinTransformer.lay.cpp" mod="1715888609" size="450"/>
+      <File name="main.cpp" mod="1715888609" size="323"/>
+      <FileTag id="SOURCES"/>
+   </Package>
+</TheSetup>

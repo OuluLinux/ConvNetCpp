@@ -1,0 +1,23 @@
+<Pkg>
+<Id>DCGAN</Id>
+<Package>DCGAN</Package>
+<Target>Examples</Target>
+</Pkg>
+
+<SourceList>
+<Source>DCGAN.cpp</Source>
+<Source>DCGANLayer.cpp</Source>
+<Source>main.cpp</Source>
+</SourceList>
+
+<IncludeList>
+<Include>DCGAN.h</Include>
+</IncludeList>
+
+<LibraryList />
+
+<DefList />
+
+<LinkList />
+
+<Precomp>ConvNet</Precomp>

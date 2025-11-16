@@ -90,6 +90,13 @@ public:
 	LayerBase&			AddTanhLayer();
 	LayerBase&			AddMaxoutLayer(int group_size);
 	LayerBase&			AddSVMLayer(int class_count);
+	LayerBase&			AddViTPatchEmbeddingLayer(int patch_size, int embed_dim, int num_patches);
+	LayerBase&			AddViTEncoderLayer(int embed_dim, int num_heads, int ff_dim, int num_layers, double dropout_rate=0.1);
+	LayerBase&			AddViTClassifierLayer(int num_classes, int embed_dim);
+	LayerBase&			AddSwinPatchMergingLayer(int dim, int out_dim);
+	LayerBase&			AddWindowAttentionLayer(int window_size, int num_heads, int input_dim);
+	LayerBase&			AddSwinTransformerBlockLayer(int dim, const Vector<int>& input_resolution, int num_heads, int window_size=7, int shift_size=0, int mlp_ratio=4, bool mlp_bias=true, double mlp_dropout=0.0);
+	LayerBase&			AddMaskedMultiHeadAttentionLayer(int embed_dim, int num_heads);
 	LayerBase&			GetLayer(int i) {return net.GetLayers()[i];}
 	int					GetLayerCount() const {return net.GetLayers().GetCount();}
 	void				Tick();

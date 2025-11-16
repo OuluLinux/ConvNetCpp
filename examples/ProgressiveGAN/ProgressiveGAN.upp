@@ -1,0 +1,23 @@
+<Pkg>
+<Id>ProgressiveGAN</Id>
+<Package>ProgressiveGAN</Package>
+<Target>Examples</Target>
+</Pkg>
+
+<SourceList>
+<Source>ProgressiveGAN.cpp</Source>
+<Source>ProgressiveGANLayer.cpp</Source>
+<Source>main.cpp</Source>
+</SourceList>
+
+<IncludeList>
+<Include>ProgressiveGAN.h</Include>
+</IncludeList>
+
+<LibraryList />
+
+<DefList />
+
+<LinkList />
+
+<Precomp>ConvNet</Precomp>
