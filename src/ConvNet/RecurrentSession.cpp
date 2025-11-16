@@ -127,7 +127,7 @@ void RecurrentSession::Init() {
 }
 
 void RecurrentSession::InitGraphs() {
-	ASSERT(mode == MODE_RNN || mode == MODE_LSTM || mode == MODE_HIGHWAY);
+	ASSERT(mode == MODE_RNN || mode == MODE_LSTM || mode == MODE_HIGHWAY || mode == MODE_TRANSFORMER || mode == MODE_GPT);
 	
 	step_cache.Clear();
 	int hidden_count = hidden_sizes.GetCount();
@@ -161,8 +161,10 @@ void RecurrentSession::InitGraphs() {
 				InitRNN(i, j, hidden_graphs[j]);
 			else if (mode == MODE_LSTM)
 				InitLSTM(i, j, hidden_graphs[j]);
-			else
+			else if (mode == MODE_HIGHWAY)
 				InitHighway(i, j, hidden_graphs[j]);
+			else
+				InitHighway(i, j, hidden_graphs[j]); // Default to InitHighway for MODE_TRANSFORMER and MODE_GPT
 		}
 	}
 }
