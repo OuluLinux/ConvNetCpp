@@ -1,0 +1,23 @@
+<<?xml version="1.0" encoding="utf-8"?>
+<Layout>
+<Ctrl name="controls">
+<ParentCtrl name="input_section">
+<ParentCtrl name="imageUrlLabel" type="Label" sz="10000,20" />
+<EditField name="imageUrlEdit" sz="10000,24" />
+<Button name="loadButton" sz="10000,24" />
+<ParentCtrl name="textLabel" type="Label" sz="10000,20" />
+<EditField name="textPromptEdit" sz="10000,48" />
+<Button name="computeButton" sz="10000,24" />
+</ParentCtrl>
+<ParentCtrl name="display_section">
+<ParentCtrl name="imageLabel" type="Label" sz="10000,20" />
+<CLIPImageControl name="imageDisplay" sz="10000,200" />
+<ParentCtrl name="textDisplay" sz="10000,60" />
+</ParentCtrl>
+<ParentCtrl name="results_section">
+<ParentCtrl name="similarityLabel" type="Label" sz="10000,20" />
+<CLIPSimilarityControl name="similarityDisplay" sz="10000,200" />
+</ParentCtrl>
+</Ctrl>
+<LayoutStyle horz="3" vert="3" />
+</Layout>

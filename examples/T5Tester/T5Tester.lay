@@ -1,0 +1,22 @@
+<<?xml version="1.0" encoding="utf-8"?>
+<Layout>
+<Ctrl name="controls">
+<ParentCtrl name="left_side">
+<ParentCtrl name="modelInfo" type="Label" sz="10000,40" />
+<ParentCtrl name="seqInput" type="Label" sz="10000,20" />
+<EditField name="inputEdit" sz="10000,48" />
+<ParentCtrl name="taskLabel" type="Label" sz="10000,20" />
+<DropList name="taskSelect" sz="10000,200" />
+<ParentCtrl name="seqOutput" type="Label" sz="10000,20" />
+<EditField name="outputEdit" sz="10000,48" />
+<Button name="trainBtn" sz="10000,24" />
+<Button name="testBtn" sz="10000,24" />
+<Button name="visualizeBtn" sz="10000,24" />
+</ParentCtrl>
+<ParentCtrl name="right_side">
+<T5AttentionControl name="attentionVis" sz="10000,10000" />
+<T5MetricsControl name="modelMetrics" sz="10000,200" />
+</ParentCtrl>
+</Ctrl>
+<LayoutStyle horz="3" vert="3" />
+</Layout>

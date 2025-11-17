@@ -1,18 +1,19 @@
-#ifndef _BERTTester_BERTTester_h
-#define _BERTTester_BERTTester_h
+#ifndef _EfficientNet_EfficientNet_h
+#define _EfficientNet_EfficientNet_h
 
 #include <CtrlLib/CtrlLib.h>
 #include <Docking/Docking.h>
 #include <ConvNetCtrl/ConvNetCtrl.h>
+
 using namespace Upp;
 using namespace ConvNet;
 
-#define IMAGECLASS BERTTesterImg
-#define IMAGEFILE <BERTTester/BERTTester.iml>
+#define IMAGECLASS EfficientNetImg
+#define IMAGEFILE <EfficientNet/EfficientNet.iml>
 #include <Draw/iml_header.h>
 
-// BERTTester example application with MLM and NSP functionality
-class BERTTester : public DockWindow {
+// EfficientNet implementation using compound scaling
+class EfficientNetApp : public DockWindow {
 	ParentCtrl settings;
 	Label lrate, lmom, lbatch, ldecay;
 	EditDouble rate, mom, decay;
@@ -34,26 +35,15 @@ class BERTTester : public DockWindow {
 	SpinLock ticking_lock;
 	int average_size;
 	int max_diff_imgs;
-	int augmentation;
-	bool is_training;
 
-	// BERT-specific controls
-	ParentCtrl bert_ctrl;
-	EditField input_text1;
-	EditField input_text2;
-	EditField output_text;
-	Button tokenize_btn;
-	Button mask_btn;
-	Button predict_btn;
-	Button task_select; // Toggle between MLM and NSP
-
-	// Task state
-	int current_task; // 0=MLM, 1=NSP
+	// EfficientNet-specific controls
+	ParentCtrl efficientnet_ctrl;
+	DropList model_variant; // For selecting EfficientNet variant (B0, B1, B2, etc.)
 
 public:
-	typedef BERTTester CLASSNAME;
-	BERTTester();
-	~BERTTester();
+	typedef EfficientNetApp CLASSNAME;
+	EfficientNetApp();
+	~EfficientNetApp();
 
 	virtual void DockInit();
 
@@ -71,12 +61,10 @@ public:
 	void ResetAll();
 	void PostReload() {PostCallback(THISBACK(Reload));}
 
-	// BERT-specific functionality
-	void OnTaskToggle();
-	void OnTokenize();
-	void OnMask();
-	void OnPredict();
-	String BuildBERTConfig();
+	// EfficientNet-specific functionality
+	void OnModelVariantChanged();
+	String BuildEfficientNetB0Config(); // Base configuration for EfficientNet-B0
+	String BuildScaledConfig(int model_variant); // Build configuration for different EfficientNet variants (B1, B2, etc.)
 };
 
 #endif
