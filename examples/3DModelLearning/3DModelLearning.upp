@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package name="3DModelLearning" type="0">
+<module name="examples" enabled="true" />
+<file name="3DModelLearning.cpp" />
+<file name="3DModelLearning.h" />
+<file name="main.cpp" />
+</package>

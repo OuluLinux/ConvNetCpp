@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package name="CLIPTester" type="0">
+<module name="examples" enabled="true" />
+<file name="CLIPTester.cpp" />
+<file name="CLIPTester.h" />
+<file name="main.cpp" />
+</package>

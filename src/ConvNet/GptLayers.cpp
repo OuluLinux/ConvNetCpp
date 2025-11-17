@@ -20,7 +20,9 @@ GPTModel::GPTModel(int vocab_size, int embed_dim, int num_heads,
     
     // Initialize output weights (tied with input embeddings in many GPT implementations)
     output_weights.Init(vocab_size, embed_dim, 1);
-    output_weights.FillRandom();
+    for(int i = 0; i < output_weights.GetCount(); i++) {
+        output_weights.Set(i, Randomf() * 0.02 - 0.01);  // Random values between -0.01 and 0.01
+    }
 }
 
 Volume& GPTModel::Forward(Volume& input_tokens, bool is_training) {

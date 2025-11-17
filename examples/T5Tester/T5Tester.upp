@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package name="T5Tester" type="0">
+<module name="examples" enabled="true" />
+<file name="T5Tester.cpp" />
+<file name="T5Tester.h" />
+<file name="main.cpp" />
+</package>

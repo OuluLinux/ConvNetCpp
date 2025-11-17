@@ -25,16 +25,16 @@ MultiHeadAttentionCRTP::MultiHeadAttentionCRTP(int embed_dim, int num_heads)
     bo.Init(embed_dim, 1, 1);
     
     // Initialize with small random values - using existing Volume methods
-    wq.Fill(0.01 * Randomf());  // Simple initialization
-    wk.Fill(0.01 * Randomf());
-    wv.Fill(0.01 * Randomf());
-    wo.Fill(0.01 * Randomf());
-    
+    wq.SetConst(0.01 * Randomf());  // Simple initialization
+    wk.SetConst(0.01 * Randomf());
+    wv.SetConst(0.01 * Randomf());
+    wo.SetConst(0.01 * Randomf());
+
     // Initialize bias to small values
-    bq.Fill(0.0);
-    bk.Fill(0.0);
-    bv.Fill(0.0);
-    bo.Fill(0.0);
+    bq.SetConst(0.0);
+    bk.SetConst(0.0);
+    bv.SetConst(0.0);
+    bo.SetConst(0.0);
 }
 
 Volume& MultiHeadAttentionCRTP::ForwardImpl(Volume& input, bool is_training) {
@@ -316,23 +316,6 @@ void DecoderLayerCRTP::ApplyLayerNorm(Volume& input, const Volume& gamma, const 
     }
 }
 
-// EncoderLayerCRTP implementation
-EncoderLayerCRTP::EncoderLayerCRTP(int embed_dim, int num_heads, int ff_dim, double dropout_rate)
-    : self_attention(embed_dim, num_heads), 
-      feed_forward(ff_dim),  // Note: ff_dim should be different from the one used here
-      dropout1(dropout_rate), dropout2(dropout_rate) {
-    // Initialize layer normalization parameters
-    norm1_weights.Init(embed_dim, 1, 1);
-    norm1_biases.Init(embed_dim, 1, 1);
-    norm2_weights.Init(embed_dim, 1, 1);
-    norm2_biases.Init(embed_dim, 1, 1);
-    
-    // Initialize to appropriate values for layer normalization
-    norm1_weights.Fill(1.0);
-    norm1_biases.Fill(0.0);
-    norm2_weights.Fill(1.0);
-    norm2_biases.Fill(0.0);
-}
 
 Volume& EncoderLayerCRTP::ForwardImpl(Volume& input, bool is_training) {
     // Step 1: Self-attention
@@ -360,8 +343,8 @@ void EncoderLayerCRTP::BackwardImpl() {
 
 void EncoderLayerCRTP::InitImpl(int input_width, int input_height, int input_depth) {
     // Initialize the sub-layers based on input dimensions
-    self_attention.InitImpl(input_width, input_height, input_depth);
-    feed_forward.InitImpl(input_width, input_height, input_depth);
+    self_attention.Init(input_width, input_height, input_depth);
+    feed_forward.Init(input_width, input_height, input_depth);
 }
 
 Vector<ParametersAndGradients>& EncoderLayerCRTP::GetParametersAndGradientsImpl() {
@@ -402,8 +385,14 @@ Vector<ParametersAndGradients>& EncoderLayerCRTP::GetParametersAndGradientsImpl(
 
 void EncoderLayerCRTP::StoreImpl(ValueMap& map) const {
     // Store encoder layer parameters
-    self_attention.Store(map.GetAdd("self_attention"));
-    feed_forward.Store(map.GetAdd("feed_forward"));
+    ValueMap sa_map;
+    self_attention.Store(sa_map);
+    map.GetAdd("self_attention") = sa_map;
+
+    ValueMap ff_map;
+    feed_forward.Store(ff_map);
+    map.GetAdd("feed_forward") = ff_map;
+
     // Store normalization parameters
 }
 
@@ -419,28 +408,6 @@ String EncoderLayerCRTP::ToStringImpl() const {
                   self_attention.GetEmbedDim(), self_attention.GetNumHeads());
 }
 
-// DecoderLayerCRTP implementation
-DecoderLayerCRTP::DecoderLayerCRTP(int embed_dim, int num_heads, int ff_dim, double dropout_rate)
-    : self_attention(embed_dim, num_heads), 
-      cross_attention(embed_dim, num_heads),  // Cross attention with encoder
-      feed_forward(ff_dim),
-      dropout1(dropout_rate), dropout2(dropout_rate), dropout3(dropout_rate) {
-    // Initialize layer normalization parameters
-    norm1_weights.Init(embed_dim, 1, 1);
-    norm1_biases.Init(embed_dim, 1, 1);
-    norm2_weights.Init(embed_dim, 1, 1);
-    norm2_biases.Init(embed_dim, 1, 1);
-    norm3_weights.Init(embed_dim, 1, 1);
-    norm3_biases.Init(embed_dim, 1, 1);
-    
-    // Initialize to appropriate values
-    norm1_weights.Fill(1.0);
-    norm1_biases.Fill(0.0);
-    norm2_weights.Fill(1.0);
-    norm2_biases.Fill(0.0);
-    norm3_weights.Fill(1.0);
-    norm3_biases.Fill(0.0);
-}
 
 Volume& DecoderLayerCRTP::ForwardImpl(Volume& input, bool is_training) {
     // Step 1: Masked self-attention
@@ -470,9 +437,9 @@ void DecoderLayerCRTP::BackwardImpl() {
 
 void DecoderLayerCRTP::InitImpl(int input_width, int input_height, int input_depth) {
     // Initialize the sub-layers based on input dimensions
-    self_attention.InitImpl(input_width, input_height, input_depth);
-    cross_attention.InitImpl(input_width, input_height, input_depth);
-    feed_forward.InitImpl(input_width, input_height, input_depth);
+    self_attention.Init(input_width, input_height, input_depth);
+    cross_attention.Init(input_width, input_height, input_depth);
+    feed_forward.Init(input_width, input_height, input_depth);
 }
 
 Vector<ParametersAndGradients>& DecoderLayerCRTP::GetParametersAndGradientsImpl() {
@@ -633,26 +600,39 @@ TransformerCRTP::TransformerCRTP(int src_vocab_size, int tgt_vocab_size, int emb
     tgt_embedding.Init(embed_dim, tgt_vocab_size, 1);  // [embed_dim, vocab_size]
     output_projection.Init(tgt_vocab_size, embed_dim, 1);  // [vocab_size, embed_dim]
     
-    // Initialize encoder layers
+    // Initialize encoder layers - Clear existing and add new ones
+    encoder_layers.Clear();
     for (int i = 0; i < num_encoder_layers; i++) {
-        encoder_layers.Add(EncoderLayerCRTP(embed_dim, num_heads, ff_dim, dropout_rate));
+        encoder_layers.Add();
+        // Manually initialize the new element in place
+        // We'll call an Init method if available, or use placement new
+        // Since we can't place special init here easily, we'll construct temp and assign
+        encoder_layers.Top() = EncoderLayerCRTP(embed_dim, num_heads, ff_dim, dropout_rate);
     }
-    
+
     // Initialize decoder layers
+    decoder_layers.Clear();
     for (int i = 0; i < num_decoder_layers; i++) {
-        decoder_layers.Add(DecoderLayerCRTP(embed_dim, num_heads, ff_dim, dropout_rate));
+        decoder_layers.Add();
+        decoder_layers.Top() = DecoderLayerCRTP(embed_dim, num_heads, ff_dim, dropout_rate);
     }
     
     // Initialize layer normalization for output
     final_norm_weights.Init(embed_dim, 1, 1);
     final_norm_biases.Init(embed_dim, 1, 1);
-    final_norm_weights.Fill(1.0);
-    final_norm_biases.Fill(0.0);
+    final_norm_weights.SetConst(1.0);
+    final_norm_biases.SetConst(0.0);
     
     // Initialize embeddings with small random values
-    src_embedding.FillRandom();
-    tgt_embedding.FillRandom();
-    output_projection.FillRandom();
+    for(int i = 0; i < src_embedding.GetCount(); i++) {
+        src_embedding.Set(i, Randomf() * 0.02 - 0.01);  // Random values between -0.01 and 0.01
+    }
+    for(int i = 0; i < tgt_embedding.GetCount(); i++) {
+        tgt_embedding.Set(i, Randomf() * 0.02 - 0.01);  // Random values between -0.01 and 0.01
+    }
+    for(int i = 0; i < output_projection.GetCount(); i++) {
+        output_projection.Set(i, Randomf() * 0.02 - 0.01);  // Random values between -0.01 and 0.01
+    }
 }
 
 Volume& TransformerCRTP::Forward(Volume& src, Volume& tgt, bool is_training) {

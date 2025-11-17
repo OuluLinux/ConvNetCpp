@@ -1,0 +1,6 @@
+umk upptst,examples,tutorial,src,/home/sblo/ai-upp/bazaar,/home/sblo/ai-upp/uppsrc ConditionalGAN CLANG.bm -bds +GUI,DEBUG_FULL bin/ConditionalGAN
+Saving 
+----- ConditionalGAN ( GUI DEBUG_FULL MAIN CLANG DEBUG SHARED BLITZ POSIX LINUX )
+/common/active/sblo/Dev/ConvNetCpp/bin/ConditionalGAN ( B) is up to date.
+
+OK. (0:00.00)

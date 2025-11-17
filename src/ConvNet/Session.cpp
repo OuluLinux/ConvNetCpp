@@ -482,7 +482,19 @@ bool Session::MakeLayers(const String& json) {
 			else if (type == "vit_classifier")		AddViTClassifierLayer(row.GetAdd("num_classes"), row.GetAdd("embed_dim"));
 			else if (type == "swin_patch_merge")	AddSwinPatchMergingLayer(row.GetAdd("dim"), row.GetAdd("out_dim"));
 			else if (type == "window_attention")	AddWindowAttentionLayer(row.GetAdd("window_size"), row.GetAdd("num_heads"), row.GetAdd("input_dim"));
-			else if (type == "swin_block")			AddSwinTransformerBlockLayer(row.GetAdd("dim"), row.GetAdd("input_resolution", Vector<int>()), row.GetAdd("num_heads"), DEF(row.GetAdd("window_size"), 7), DEF(row.GetAdd("shift_size"), 0), DEF(row.GetAdd("mlp_ratio"), 4), DEF(row.GetAdd("mlp_bias"), true), DEF(row.GetAdd("mlp_dropout"), 0.0));
+			else if (type == "swin_block") {
+				Vector<int> input_resolution_vec = (Vector<int>)row.GetAdd("input_resolution");
+				int input_resolution[2];
+				if (input_resolution_vec.GetCount() >= 2) {
+					input_resolution[0] = input_resolution_vec[0];
+					input_resolution[1] = input_resolution_vec[1];
+				} else {
+					// Default value if not enough elements
+					input_resolution[0] = input_resolution_vec.GetCount() > 0 ? input_resolution_vec[0] : 0;
+					input_resolution[1] = input_resolution_vec.GetCount() > 1 ? input_resolution_vec[1] : 0;
+				}
+				AddSwinTransformerBlockLayer(row.GetAdd("dim"), input_resolution, row.GetAdd("num_heads"), DEF(row.GetAdd("window_size"), 7), DEF(row.GetAdd("shift_size"), 0), DEF(row.GetAdd("mlp_ratio"), 4), DEF(row.GetAdd("mlp_bias"), true), DEF(row.GetAdd("mlp_dropout"), 0.0));
+			}
 			else if (type == "masked_attention")	AddMaskedMultiHeadAttentionLayer(row.GetAdd("embed_dim"), row.GetAdd("num_heads"));
 			else {
 				LOG("ERROR: UNRECOGNIZED LAYER TYPE: " + type);
@@ -781,7 +793,7 @@ LayerBase& Session::AddSVMLayer(int class_count) {
 LayerBase& Session::AddViTPatchEmbeddingLayer(int patch_size, int embed_dim, int num_patches) {
 	LayerBase& patch_embed = net.AddLayer();
 	patch_embed.layer_type = CUSTOM_LAYER;  // Using CUSTOM_LAYER as a placeholder
-	patch_embed.custom_layer = std::make_unique<RuntimeLayerWrapper<ViTPatchEmbeddingCRTP>>(patch_size, embed_dim, num_patches);
+	patch_embed.custom_runtime_layer = std::make_unique<RuntimeLayerWrapper<ViTPatchEmbeddingCRTP>>(patch_size, embed_dim, num_patches);
 	net.CheckLayer();
 	return patch_embed;
 }
@@ -789,7 +801,7 @@ LayerBase& Session::AddViTPatchEmbeddingLayer(int patch_size, int embed_dim, int
 LayerBase& Session::AddViTEncoderLayer(int embed_dim, int num_heads, int ff_dim, int num_layers, double dropout_rate) {
 	LayerBase& encoder = net.AddLayer();
 	encoder.layer_type = CUSTOM_LAYER;  // Using CUSTOM_LAYER as a placeholder
-	encoder.custom_layer = std::make_unique<RuntimeLayerWrapper<ViTEncoderCRTP>>(embed_dim, num_heads, ff_dim, num_layers, dropout_rate);
+	encoder.custom_runtime_layer = std::make_unique<RuntimeLayerWrapper<ViTEncoderCRTP>>(embed_dim, num_heads, ff_dim, num_layers, dropout_rate);
 	net.CheckLayer();
 	return encoder;
 }
@@ -797,7 +809,7 @@ LayerBase& Session::AddViTEncoderLayer(int embed_dim, int num_heads, int ff_dim,
 LayerBase& Session::AddViTClassifierLayer(int num_classes, int embed_dim) {
 	LayerBase& classifier = net.AddLayer();
 	classifier.layer_type = CUSTOM_LAYER;  // Using CUSTOM_LAYER as a placeholder
-	classifier.custom_layer = std::make_unique<RuntimeLayerWrapper<ViTClassifierCRTP>>(num_classes, embed_dim);
+	classifier.custom_runtime_layer = std::make_unique<RuntimeLayerWrapper<ViTClassifierCRTP>>(num_classes, embed_dim);
 	net.CheckLayer();
 	return classifier;
 }
@@ -805,7 +817,7 @@ LayerBase& Session::AddViTClassifierLayer(int num_classes, int embed_dim) {
 LayerBase& Session::AddSwinPatchMergingLayer(int dim, int out_dim) {
 	LayerBase& patch_merging = net.AddLayer();
 	patch_merging.layer_type = CUSTOM_LAYER;  // Using CUSTOM_LAYER as a placeholder
-	patch_merging.custom_layer = std::make_unique<RuntimeLayerWrapper<SwinPatchMergingCRTP>>(dim, out_dim);
+	patch_merging.custom_runtime_layer = std::make_unique<RuntimeLayerWrapper<SwinPatchMergingCRTP>>(dim, out_dim);
 	net.CheckLayer();
 	return patch_merging;
 }
@@ -813,15 +825,15 @@ LayerBase& Session::AddSwinPatchMergingLayer(int dim, int out_dim) {
 LayerBase& Session::AddWindowAttentionLayer(int window_size, int num_heads, int input_dim) {
 	LayerBase& window_attn = net.AddLayer();
 	window_attn.layer_type = CUSTOM_LAYER;  // Using CUSTOM_LAYER as a placeholder
-	window_attn.custom_layer = std::make_unique<RuntimeLayerWrapper<WindowAttentionCRTP>>(window_size, num_heads, input_dim);
+	window_attn.custom_runtime_layer = std::make_unique<RuntimeLayerWrapper<WindowAttentionCRTP>>(window_size, num_heads, input_dim);
 	net.CheckLayer();
 	return window_attn;
 }
 
-LayerBase& Session::AddSwinTransformerBlockLayer(int dim, const Vector<int>& input_resolution, int num_heads, int window_size, int shift_size, int mlp_ratio, bool mlp_bias, double mlp_dropout) {
+LayerBase& Session::AddSwinTransformerBlockLayer(int dim, int input_resolution[2], int num_heads, int window_size, int shift_size, int mlp_ratio, bool mlp_bias, double mlp_dropout) {
 	LayerBase& swin_block = net.AddLayer();
 	swin_block.layer_type = CUSTOM_LAYER;  // Using CUSTOM_LAYER as a placeholder
-	swin_block.custom_layer = std::make_unique<RuntimeLayerWrapper<SwinTransformerBlockCRTP>>(dim, input_resolution, num_heads, window_size, shift_size, mlp_ratio, mlp_bias, mlp_dropout);
+	swin_block.custom_runtime_layer = std::make_unique<RuntimeLayerWrapper<SwinTransformerBlockCRTP>>(dim, input_resolution, num_heads, window_size, shift_size, mlp_ratio, mlp_bias, mlp_dropout);
 	net.CheckLayer();
 	return swin_block;
 }
@@ -829,7 +841,7 @@ LayerBase& Session::AddSwinTransformerBlockLayer(int dim, const Vector<int>& inp
 LayerBase& Session::AddMaskedMultiHeadAttentionLayer(int embed_dim, int num_heads) {
 	LayerBase& masked_attn = net.AddLayer();
 	masked_attn.layer_type = CUSTOM_LAYER;  // Using CUSTOM_LAYER as a placeholder
-	masked_attn.custom_layer = std::make_unique<RuntimeLayerWrapper<MaskedMultiHeadAttentionCRTP>>(embed_dim, num_heads);
+	masked_attn.custom_runtime_layer = std::make_unique<RuntimeLayerWrapper<MaskedMultiHeadAttentionCRTP>>(embed_dim, num_heads);
 	net.CheckLayer();
 	return masked_attn;
 }

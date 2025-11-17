@@ -1,0 +1,274 @@
+umk upptst,examples,tutorial,src,/home/sblo/ai-upp/bazaar,/home/sblo/ai-upp/uppsrc Classify2D CLANG.bm -bds +GUI,DEBUG_FULL bin/Classify2D
+Saving 
+----- ConvNet ( GUI DEBUG_FULL CLANG DEBUG SHARED BLITZ POSIX LINUX ) (1 / 18)
+BLITZ: MetaSession.cpp SessionData.cpp Net.cpp Volume.cpp Brain.cpp MagicNet.cpp LayerBase.cpp FullyConnLayer.cpp LRNLayer.cpp DropOutLayer.cpp InputLayer.cpp SoftmaxLayer.cpp RegressionLayer.cpp HeteroscedasticRegressionLayer.cpp ConvLayer.cpp DeconvLayer.cpp PoolLayer.cpp UnpoolLayer.cpp ReluLayer.cpp SigmoidLayer.cpp TanhLayer.cpp SVMLayer.cpp MaxoutLayer.cpp TrainerBase.cpp AdadeltaTrainer.cpp AdagradTrainer.cpp AdamTrainer.cpp NetsterovTrainer.cpp SgdTrainer.cpp WindowgradTrainer.cpp RecurrentSession.cpp Agent.cpp Recurrent.cpp Mat.cpp MemoryPool.cpp TransformerLayers.cpp GptLayers.cpp ParallellaSupport.cpp Tokenization.cpp
+Session.cpp
+ViTLayerImpl.cpp
+----- CtrlLib ( GUI DEBUG_FULL CLANG DEBUG SHARED BLITZ POSIX LINUX ) (2 / 18)
+----- ConvNetCtrl ( GUI DEBUG_FULL CLANG DEBUG SHARED BLITZ POSIX LINUX ) (3 / 18)
+----- plugin/z ( GUI DEBUG_FULL CLANG DEBUG SHARED BLITZ POSIX LINUX ) (4 / 18)
+----- Docking ( GUI DEBUG_FULL CLANG DEBUG SHARED BLITZ POSIX LINUX ) (5 / 18)
+----- Core ( GUI DEBUG_FULL CLANG DEBUG SHARED BLITZ POSIX LINUX ) (6 / 18)
+----- CtrlCore ( GUI DEBUG_FULL CLANG DEBUG SHARED BLITZ POSIX LINUX ) (7 / 18)
+----- PdfDraw ( GUI DEBUG_FULL CLANG DEBUG SHARED BLITZ POSIX LINUX ) (8 / 18)
+----- Draw ( GUI DEBUG_FULL CLANG DEBUG SHARED BLITZ POSIX LINUX ) (9 / 18)
+----- plugin/bmp ( GUI DEBUG_FULL CLANG DEBUG SHARED BLITZ POSIX LINUX ) (10 / 18)
+----- RichText ( GUI DEBUG_FULL CLANG DEBUG SHARED BLITZ POSIX LINUX ) (11 / 18)
+----- Painter ( GUI DEBUG_FULL CLANG DEBUG SHARED BLITZ POSIX LINUX ) (12 / 18)
+----- plugin/png ( GUI DEBUG_FULL CLANG DEBUG SHARED BLITZ POSIX LINUX ) (13 / 18)
+----- Core/ColorGeom ( GUI DEBUG_FULL CLANG DEBUG SHARED BLITZ POSIX LINUX ) (14 / 18)
+----- PlotCtrl ( GUI DEBUG_FULL CLANG DEBUG SHARED BLITZ POSIX LINUX ) (15 / 18)
+----- PlotLib ( GUI DEBUG_FULL CLANG DEBUG SHARED BLITZ POSIX LINUX ) (16 / 18)
+----- TabBar ( GUI DEBUG_FULL CLANG DEBUG SHARED BLITZ POSIX LINUX ) (17 / 18)
+----- Classify2D ( GUI DEBUG_FULL MAIN CLANG DEBUG SHARED BLITZ POSIX LINUX ) (18 / 18)
+In file included from /common/active/sblo/Dev/ConvNetCpp/src/ConvNet/ViTLayerImpl.cpp:1:
+In file included from /common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.h:4:
+In file included from /common/active/sblo/Dev/ConvNetCpp/src/ConvNet/ConvNet.h:78:
+In file included from /common/active/sblo/Dev/ConvNetCpp/src/ConvNet/RecurrentSession.h:6:
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/GptLayers.h:22:12: error: use of undeclared identifier 'DecoderLayerCRTP'
+   22 |     Vector<DecoderLayerCRTP> decoder_layers;  // Multiple decoder layers (though simplified for GPT)
+      |            ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/GptLayers.h:23:5: error: unknown type name 'PositionalEncodingCRTP'
+   23 |     PositionalEncodingCRTP positional_encoding;  // For positional information
+      |     ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/GptLayers.h:26:10: error: no template named 'unique_ptr' in namespace 'std'
+   26 |     std::unique_ptr<TransformerCRTP> transformer;  // Core transformer used for computation
+      |     ~~~~~^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/GptLayers.h:26:21: error: use of undeclared identifier 'TransformerCRTP'
+   26 |     std::unique_ptr<TransformerCRTP> transformer;  // Core transformer used for computation
+      |                     ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/GptLayers.h:81:10: error: no template named 'unique_ptr' in namespace 'std'
+   81 |     std::unique_ptr<GPTModel> model;
+      |     ~~~~~^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/GptLayers.h:92:21: error: no template named 'unique_ptr' in namespace 'std'
+   92 |     GPTSession(std::unique_ptr<GPTModel> gpt_model);
+      |                ~~~~~^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/GptLayers.h:113:6: error: no template named 'unique_ptr' in namespace 'std'
+  113 | std::unique_ptr<GPTModel> CreateGPT(int vocab_size, int embed_dim, int num_heads, 
+      | ~~~~~^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/GptLayers.h:118:6: error: no template named 'unique_ptr' in namespace 'std'
+  118 | std::unique_ptr<GPTSession> CreateGPTSession(int vocab_size, int embed_dim, 
+      | ~~~~~^
+In file included from /common/active/sblo/Dev/ConvNetCpp/src/ConvNet/ViTLayerImpl.cpp:1:
+In file included from /common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.h:4:
+In file included from /common/active/sblo/Dev/ConvNetCpp/src/ConvNet/ConvNet.h:78:
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/RecurrentSession.h:31:7: error: no template named 'unique_ptr' in namespace 'std'
+   31 |         std::unique_ptr<TransformerCRTP> transformer_model;  // For transformer model
+      |         ~~~~~^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/RecurrentSession.h:31:18: error: use of undeclared identifier 'TransformerCRTP'
+   31 |         std::unique_ptr<TransformerCRTP> transformer_model;  // For transformer model
+      |                         ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/RecurrentSession.h:32:7: error: no template named 'unique_ptr' in namespace 'std'
+   32 |         std::unique_ptr<GPTModel> gpt_model;                // For GPT model
+      |         ~~~~~^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/ViTLayerImpl.cpp:91:37: error: no member named 'GetSize' in 'ConvNet::Volume'
+   91 |     for (int i = 0; i < proj_weight.GetSize(); i++) {
+      |                         ~~~~~~~~~~~ ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/ViTLayerImpl.cpp:92:32: error: too many arguments to function call, expected single argument 'data', have 2 arguments
+   92 |         proj_weight.SetData(i, Randomf() * scale);
+      |         ~~~~~~~~~~~~~~~~~~~    ^~~~~~~~~~~~~~~~~
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/Utilities.h:82:7: note: 'SetData' declared here
+   82 |         void SetData(Vector<double>& data);
+      |              ^       ~~~~~~~~~~~~~~~~~~~~
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/ViTLayerImpl.cpp:96:35: error: no member named 'GetSize' in 'ConvNet::Volume'
+   96 |     for (int i = 0; i < proj_bias.GetSize(); i++) {
+      |                         ~~~~~~~~~ ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/ViTLayerImpl.cpp:97:30: error: too many arguments to function call, expected single argument 'data', have 2 arguments
+   97 |         proj_bias.SetData(i, 0.0);
+      |         ~~~~~~~~~~~~~~~~~    ^~~
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/Utilities.h:82:7: note: 'SetData' declared here
+   82 |         void SetData(Vector<double>& data);
+      |              ^       ~~~~~~~~~~~~~~~~~~~~
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/ViTLayerImpl.cpp:101:35: error: no member named 'GetSize' in 'ConvNet::Volume'
+  101 |     for (int i = 0; i < pos_embed.GetSize(); i++) {
+      |                         ~~~~~~~~~ ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/ViTLayerImpl.cpp:102:30: error: too many arguments to function call, expected single argument 'data', have 2 arguments
+  102 |         pos_embed.SetData(i, Randomf() * 0.02);  // Small random initialization
+      |         ~~~~~~~~~~~~~~~~~    ^~~~~~~~~~~~~~~~
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/Utilities.h:82:7: note: 'SetData' declared here
+   82 |         void SetData(Vector<double>& data);
+      |              ^       ~~~~~~~~~~~~~~~~~~~~
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/ViTLayerImpl.cpp:107:5: error: use of undeclared identifier 'parameters_and_gradients'; did you mean 'GetParametersAndGradients'?
+  107 |     parameters_and_gradients.Clear();
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~
+      |     GetParametersAndGradients
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/CrtpLayers.h:27:37: note: 'GetParametersAndGradients' declared here
+   27 |     Vector<ParametersAndGradients>& GetParametersAndGradients() {
+      |                                     ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/ViTLayerImpl.cpp:107:5: error: reference to non-static member function must be called; did you mean to call it with no arguments?
+  107 |     parameters_and_gradients.Clear();
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~
+      |                             ()
+fatal error: too many errors emitted, stopping now [-ferror-limit=]
+20 errors generated.
+In file included from /home/sblo/.cache/upp.out/ConvNet/CLANG.Debug.Debug_Full.Gui.Shared/ConvNet$blitz.cpp:302:
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.cpp:28:8: error: no member named 'Fill' in 'ConvNet::Volume'
+   28 |     wq.Fill(0.01 * Randomf());  // Simple initialization
+      |     ~~ ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.cpp:29:8: error: no member named 'Fill' in 'ConvNet::Volume'
+   29 |     wk.Fill(0.01 * Randomf());
+      |     ~~ ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.cpp:30:8: error: no member named 'Fill' in 'ConvNet::Volume'
+   30 |     wv.Fill(0.01 * Randomf());
+      |     ~~ ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.cpp:31:8: error: no member named 'Fill' in 'ConvNet::Volume'
+   31 |     wo.Fill(0.01 * Randomf());
+      |     ~~ ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.cpp:34:8: error: no member named 'Fill' in 'ConvNet::Volume'
+   34 |     bq.Fill(0.0);
+      |     ~~ ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.cpp:35:8: error: no member named 'Fill' in 'ConvNet::Volume'
+   35 |     bk.Fill(0.0);
+      |     ~~ ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.cpp:36:8: error: no member named 'Fill' in 'ConvNet::Volume'
+   36 |     bv.Fill(0.0);
+      |     ~~ ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.cpp:37:8: error: no member named 'Fill' in 'ConvNet::Volume'
+   37 |     bo.Fill(0.0);
+      |     ~~ ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.cpp:320:19: error: redefinition of 'EncoderLayerCRTP'
+  320 | EncoderLayerCRTP::EncoderLayerCRTP(int embed_dim, int num_heads, int ff_dim, double dropout_rate)
+      |                   ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.h:107:5: note: previous definition is here
+  107 |     EncoderLayerCRTP(int embed_dim, int num_heads, int ff_dim, double dropout_rate = 0.1)
+      |     ^
+In file included from /home/sblo/.cache/upp.out/ConvNet/CLANG.Debug.Debug_Full.Gui.Shared/ConvNet$blitz.cpp:302:
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.cpp:331:19: error: no member named 'Fill' in 'ConvNet::Volume'
+  331 |     norm1_weights.Fill(1.0);
+      |     ~~~~~~~~~~~~~ ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.cpp:332:18: error: no member named 'Fill' in 'ConvNet::Volume'
+  332 |     norm1_biases.Fill(0.0);
+      |     ~~~~~~~~~~~~ ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.cpp:333:19: error: no member named 'Fill' in 'ConvNet::Volume'
+  333 |     norm2_weights.Fill(1.0);
+      |     ~~~~~~~~~~~~~ ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.cpp:334:18: error: no member named 'Fill' in 'ConvNet::Volume'
+  334 |     norm2_biases.Fill(0.0);
+      |     ~~~~~~~~~~~~ ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.cpp:363:20: error: 'InitImpl' is a private member of 'ConvNet::MultiHeadAttentionCRTP'
+  363 |     self_attention.InitImpl(input_width, input_height, input_depth);
+      |                    ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.h:49:10: note: declared private here
+   49 |     void InitImpl(int input_width, int input_height, int input_depth);
+      |          ^
+In file included from /home/sblo/.cache/upp.out/ConvNet/CLANG.Debug.Debug_Full.Gui.Shared/ConvNet$blitz.cpp:302:
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.cpp:364:18: error: 'InitImpl' is a private member of 'ConvNet::FullyConnLayerCRTP'
+  364 |     feed_forward.InitImpl(input_width, input_height, input_depth);
+      |                  ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/CrtpLayers.h:119:10: note: declared private here
+  119 |     void InitImpl(int input_width, int input_height, int input_depth);
+      |          ^
+In file included from /home/sblo/.cache/upp.out/ConvNet/CLANG.Debug.Debug_Full.Gui.Shared/ConvNet$blitz.cpp:302:
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.cpp:405:26: error: non-const lvalue reference to type 'ValueMap' cannot bind to a value of unrelated type 'Value'
+  405 |     self_attention.Store(map.GetAdd("self_attention"));
+      |                          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/CrtpLayers.h:35:26: note: passing argument to parameter 'map' here
+   35 |     void Store(ValueMap& map) const {
+      |                          ^
+In file included from /home/sblo/.cache/upp.out/ConvNet/CLANG.Debug.Debug_Full.Gui.Shared/ConvNet$blitz.cpp:302:
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.cpp:406:24: error: non-const lvalue reference to type 'ValueMap' cannot bind to a value of unrelated type 'Value'
+  406 |     feed_forward.Store(map.GetAdd("feed_forward"));
+      |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/CrtpLayers.h:35:26: note: passing argument to parameter 'map' here
+   35 |     void Store(ValueMap& map) const {
+      |                          ^
+In file included from /home/sblo/.cache/upp.out/ConvNet/CLANG.Debug.Debug_Full.Gui.Shared/ConvNet$blitz.cpp:302:
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.cpp:423:19: error: redefinition of 'DecoderLayerCRTP'
+  423 | DecoderLayerCRTP::DecoderLayerCRTP(int embed_dim, int num_heads, int ff_dim, double dropout_rate)
+      |                   ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.h:161:5: note: previous definition is here
+  161 |     DecoderLayerCRTP(int embed_dim, int num_heads, int ff_dim, double dropout_rate = 0.1)
+      |     ^
+In file included from /home/sblo/.cache/upp.out/ConvNet/CLANG.Debug.Debug_Full.Gui.Shared/ConvNet$blitz.cpp:302:
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.cpp:437:19: error: no member named 'Fill' in 'ConvNet::Volume'
+  437 |     norm1_weights.Fill(1.0);
+      |     ~~~~~~~~~~~~~ ^
+fatal error: too many errors emitted, stopping now [-ferror-limit=]
+20 errors generated.
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/Session.cpp:780:27: error: no viable overloaded '='
+  780 |         patch_embed.custom_layer = std::make_unique<RuntimeLayerWrapper<ViTPatchEmbeddingCRTP>>(patch_size, embed_dim, num_patches);
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~ ^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/sblo/ai-upp/uppsrc/Core/AString.hpp:331:17: note: candidate function not viable: no known conversion from '__detail::__unique_ptr_t<RuntimeLayerWrapper<ViTPatchEmbeddingCRTP>>' (aka 'unique_ptr<ConvNet::RuntimeLayerWrapper<ConvNet::ViTPatchEmbeddingCRTP>>') to 'const char *' for 1st argument
+  331 | String& String::operator=(const char *s)
+      |                 ^         ~~~~~~~~~~~~~
+/home/sblo/ai-upp/uppsrc/Core/String.h:378:10: note: candidate function not viable: no known conversion from '__detail::__unique_ptr_t<RuntimeLayerWrapper<ViTPatchEmbeddingCRTP>>' (aka 'unique_ptr<ConvNet::RuntimeLayerWrapper<ConvNet::ViTPatchEmbeddingCRTP>>') to 'const Nuller' for 1st argument
+  378 |         String& operator=(const Nuller&)                       { Clear(); return *this; }
+      |                 ^         ~~~~~~~~~~~~~
+/home/sblo/ai-upp/uppsrc/Core/String.h:379:10: note: candidate function not viable: no known conversion from '__detail::__unique_ptr_t<RuntimeLayerWrapper<ViTPatchEmbeddingCRTP>>' (aka 'unique_ptr<ConvNet::RuntimeLayerWrapper<ConvNet::ViTPatchEmbeddingCRTP>>') to 'const String' for 1st argument
+  379 |         String& operator=(const String& s)                     { String0::Assign(s); return *this; }
+      |                 ^         ~~~~~~~~~~~~~~~
+/home/sblo/ai-upp/uppsrc/Core/String.h:380:10: note: candidate function not viable: no known conversion from '__detail::__unique_ptr_t<RuntimeLayerWrapper<ViTPatchEmbeddingCRTP>>' (aka 'unique_ptr<ConvNet::RuntimeLayerWrapper<ConvNet::ViTPatchEmbeddingCRTP>>') to 'String' for 1st argument
+  380 |         String& operator=(String&& s)                          { if(this != &s) { Free(); Pick0(pick(s)); } return *this; }
+      |                 ^         ~~~~~~~~~~
+/home/sblo/ai-upp/uppsrc/Core/String.h:381:10: note: candidate function not viable: no known conversion from '__detail::__unique_ptr_t<RuntimeLayerWrapper<ViTPatchEmbeddingCRTP>>' (aka 'unique_ptr<ConvNet::RuntimeLayerWrapper<ConvNet::ViTPatchEmbeddingCRTP>>') to 'StringBuffer &' for 1st argument
+  381 |         String& operator=(StringBuffer& b)                     { *this = String(b); return *this; }
+      |                 ^         ~~~~~~~~~~~~~~~
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/Session.cpp:788:23: error: no viable overloaded '='
+  788 |         encoder.custom_layer = std::make_unique<RuntimeLayerWrapper<ViTEncoderCRTP>>(embed_dim, num_heads, ff_dim, num_layers, dropout_rate);
+      |         ~~~~~~~~~~~~~~~~~~~~ ^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/sblo/ai-upp/uppsrc/Core/AString.hpp:331:17: note: candidate function not viable: no known conversion from '__detail::__unique_ptr_t<RuntimeLayerWrapper<ViTEncoderCRTP>>' (aka 'unique_ptr<ConvNet::RuntimeLayerWrapper<ConvNet::ViTEncoderCRTP>>') to 'const char *' for 1st argument
+  331 | String& String::operator=(const char *s)
+      |                 ^         ~~~~~~~~~~~~~
+/home/sblo/ai-upp/uppsrc/Core/String.h:378:10: note: candidate function not viable: no known conversion from '__detail::__unique_ptr_t<RuntimeLayerWrapper<ViTEncoderCRTP>>' (aka 'unique_ptr<ConvNet::RuntimeLayerWrapper<ConvNet::ViTEncoderCRTP>>') to 'const Nuller' for 1st argument
+  378 |         String& operator=(const Nuller&)                       { Clear(); return *this; }
+      |                 ^         ~~~~~~~~~~~~~
+/home/sblo/ai-upp/uppsrc/Core/String.h:379:10: note: candidate function not viable: no known conversion from '__detail::__unique_ptr_t<RuntimeLayerWrapper<ViTEncoderCRTP>>' (aka 'unique_ptr<ConvNet::RuntimeLayerWrapper<ConvNet::ViTEncoderCRTP>>') to 'const String' for 1st argument
+  379 |         String& operator=(const String& s)                     { String0::Assign(s); return *this; }
+      |                 ^         ~~~~~~~~~~~~~~~
+/home/sblo/ai-upp/uppsrc/Core/String.h:380:10: note: candidate function not viable: no known conversion from '__detail::__unique_ptr_t<RuntimeLayerWrapper<ViTEncoderCRTP>>' (aka 'unique_ptr<ConvNet::RuntimeLayerWrapper<ConvNet::ViTEncoderCRTP>>') to 'String' for 1st argument
+  380 |         String& operator=(String&& s)                          { if(this != &s) { Free(); Pick0(pick(s)); } return *this; }
+      |                 ^         ~~~~~~~~~~
+/home/sblo/ai-upp/uppsrc/Core/String.h:381:10: note: candidate function not viable: no known conversion from '__detail::__unique_ptr_t<RuntimeLayerWrapper<ViTEncoderCRTP>>' (aka 'unique_ptr<ConvNet::RuntimeLayerWrapper<ConvNet::ViTEncoderCRTP>>') to 'StringBuffer &' for 1st argument
+  381 |         String& operator=(StringBuffer& b)                     { *this = String(b); return *this; }
+      |                 ^         ~~~~~~~~~~~~~~~
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/Session.cpp:796:26: error: no viable overloaded '='
+  796 |         classifier.custom_layer = std::make_unique<RuntimeLayerWrapper<ViTClassifierCRTP>>(num_classes, embed_dim);
+      |         ~~~~~~~~~~~~~~~~~~~~~~~ ^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/sblo/ai-upp/uppsrc/Core/AString.hpp:331:17: note: candidate function not viable: no known conversion from '__detail::__unique_ptr_t<RuntimeLayerWrapper<ViTClassifierCRTP>>' (aka 'unique_ptr<ConvNet::RuntimeLayerWrapper<ConvNet::ViTClassifierCRTP>>') to 'const char *' for 1st argument
+  331 | String& String::operator=(const char *s)
+      |                 ^         ~~~~~~~~~~~~~
+/home/sblo/ai-upp/uppsrc/Core/String.h:378:10: note: candidate function not viable: no known conversion from '__detail::__unique_ptr_t<RuntimeLayerWrapper<ViTClassifierCRTP>>' (aka 'unique_ptr<ConvNet::RuntimeLayerWrapper<ConvNet::ViTClassifierCRTP>>') to 'const Nuller' for 1st argument
+  378 |         String& operator=(const Nuller&)                       { Clear(); return *this; }
+      |                 ^         ~~~~~~~~~~~~~
+/home/sblo/ai-upp/uppsrc/Core/String.h:379:10: note: candidate function not viable: no known conversion from '__detail::__unique_ptr_t<RuntimeLayerWrapper<ViTClassifierCRTP>>' (aka 'unique_ptr<ConvNet::RuntimeLayerWrapper<ConvNet::ViTClassifierCRTP>>') to 'const String' for 1st argument
+  379 |         String& operator=(const String& s)                     { String0::Assign(s); return *this; }
+      |                 ^         ~~~~~~~~~~~~~~~
+/home/sblo/ai-upp/uppsrc/Core/String.h:380:10: note: candidate function not viable: no known conversion from '__detail::__unique_ptr_t<RuntimeLayerWrapper<ViTClassifierCRTP>>' (aka 'unique_ptr<ConvNet::RuntimeLayerWrapper<ConvNet::ViTClassifierCRTP>>') to 'String' for 1st argument
+  380 |         String& operator=(String&& s)                          { if(this != &s) { Free(); Pick0(pick(s)); } return *this; }
+      |                 ^         ~~~~~~~~~~
+/home/sblo/ai-upp/uppsrc/Core/String.h:381:10: note: candidate function not viable: no known conversion from '__detail::__unique_ptr_t<RuntimeLayerWrapper<ViTClassifierCRTP>>' (aka 'unique_ptr<ConvNet::RuntimeLayerWrapper<ConvNet::ViTClassifierCRTP>>') to 'StringBuffer &' for 1st argument
+  381 |         String& operator=(StringBuffer& b)                     { *this = String(b); return *this; }
+      |                 ^         ~~~~~~~~~~~~~~~
+In file included from /common/active/sblo/Dev/ConvNetCpp/src/ConvNet/Session.cpp:1:
+In file included from /common/active/sblo/Dev/ConvNetCpp/src/ConvNet/ConvNet.h:78:
+In file included from /common/active/sblo/Dev/ConvNetCpp/src/ConvNet/RecurrentSession.h:5:
+In file included from /common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.h:5:
+In file included from /common/active/sblo/Dev/ConvNetCpp/src/ConvNet/CrtpLayers.h:6:
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/RuntimeFlexibility.h:40:43: error: call to implicitly-deleted copy constructor of 'ConvNet::ViTEncoderCRTP'
+   40 |     RuntimeLayerWrapper(Args&&... args) : layer(std::forward<Args>(args)...) {}
+      |                                           ^     ~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/unique_ptr.h:1085:34: note: in instantiation of function template specialization 'ConvNet::RuntimeLayerWrapper<ConvNet::ViTEncoderCRTP>::RuntimeLayerWrapper<const ConvNet::ViTEncoderCRTP &>' requested here
+ 1085 |     { return unique_ptr<_Tp>(new _Tp(std::forward<_Args>(__args)...)); }
+      |                                  ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/RuntimeFlexibility.h:80:21: note: in instantiation of function template specialization 'std::make_unique<ConvNet::RuntimeLayerWrapper<ConvNet::ViTEncoderCRTP>, const ConvNet::ViTEncoderCRTP &>' requested here
+   80 |         return std::make_unique<RuntimeLayerWrapper<ConcreteLayer>>(layer);
+      |                     ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/RuntimeFlexibility.h:40:5: note: in instantiation of member function 'ConvNet::RuntimeLayerWrapper<ConvNet::ViTEncoderCRTP>::Clone' requested here
+   40 |     RuntimeLayerWrapper(Args&&... args) : layer(std::forward<Args>(args)...) {}
+      |     ^
+/usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/unique_ptr.h:1085:34: note: in instantiation of function template specialization 'ConvNet::RuntimeLayerWrapper<ConvNet::ViTEncoderCRTP>::RuntimeLayerWrapper<int &, int &, int &, int &, double &>' requested here
+ 1085 |     { return unique_ptr<_Tp>(new _Tp(std::forward<_Args>(__args)...)); }
+      |                                  ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/Session.cpp:788:30: note: in instantiation of function template specialization 'std::make_unique<ConvNet::RuntimeLayerWrapper<ConvNet::ViTEncoderCRTP>, int &, int &, int &, int &, double &>' requested here
+  788 |         encoder.custom_layer = std::make_unique<RuntimeLayerWrapper<ViTEncoderCRTP>>(embed_dim, num_heads, ff_dim, num_layers, dropout_rate);
+      |                                     ^
+/common/active/sblo/Dev/ConvNetCpp/src/ConvNet/TransformerLayers.h:332:30: note: copy constructor of 'ViTEncoderCRTP' is implicitly deleted because field 'encoder_layers' has a deleted copy constructor
+  332 |     Vector<EncoderLayerCRTP> encoder_layers;
+      |                              ^
+/home/sblo/ai-upp/uppsrc/Core/Vcont.h:262:2: note: copy constructor is implicitly deleted because 'Vector<ConvNet::EncoderLayerCRTP>' has a user-declared move constructor
+  262 |         Vector(Vector&& v)               { Pick(pick(v)); }
+      |         ^
+4 errors generated.
+ConvNet: 41 file(s) built in (0:01.90), 46 msecs / file
+
+There were errors. (0:02.23)

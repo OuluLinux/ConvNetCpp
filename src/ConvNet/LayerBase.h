@@ -2,6 +2,12 @@
 #define _ConvNet_LayerBase_h_
 
 #include "Utilities.h"
+#include <memory>
+
+// Forward declaration for custom layers
+namespace ConvNet {
+    class RuntimeLayer; // Forward declaration so std::unique_ptr knows about RuntimeLayer
+}
 
 
 namespace ConvNet {
@@ -101,7 +107,10 @@ public:
 
 	// Custom layer - placeholder for runtime-flexible layer types
 	// Using String to store serialized representation for now
-	String custom_layer;
+	String custom_layer_serialized;
+
+	// Pointer to RuntimeLayer for advanced layer types (ViT, Swin Transformer, etc.)
+	std::unique_ptr<RuntimeLayer> custom_runtime_layer;
 
 
 	// Fully connected

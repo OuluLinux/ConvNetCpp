@@ -305,10 +305,10 @@ public:
 class InputLayerCRTP : public LayerBaseCRTP<InputLayerCRTP> {
 private:
     friend class LayerBaseCRTP<InputLayerCRTP>;
-    
+
     // Core data
     Volume output_activation;
-    
+
     // Internal implementation methods
     Volume& ForwardImpl(Volume& input, bool is_training);
     void BackwardImpl();
@@ -319,13 +319,53 @@ private:
     void LoadImpl(const ValueMap& map);
     String ToStringImpl() const;
     Volume& GetOutputImpl() { return output_activation; }
-    
+
 public:
     InputLayerCRTP(int input_width, int input_height, int input_depth);
     InputLayerCRTP(ValueMap values) { LoadImpl(values); }
-    
+
     // Public interface
     Volume& ForwardImpl(bool is_training);
+};
+
+// CRTP Layer Normalization implementation
+class LayerNormCRTP : public LayerBaseCRTP<LayerNormCRTP> {
+private:
+    friend class LayerBaseCRTP<LayerNormCRTP>;
+
+    // Core data
+    int normalized_shape;  // Size of the last dimension we're normalizing over
+    double eps;            // Small epsilon for numerical stability
+    Volume gamma;          // Learnable scale parameter
+    Volume beta;           // Learnable bias parameter
+    Volume output_activation;
+    Volume input_activation;
+
+    // Cached values for backward pass
+    Volume mean_cache;
+    Volume var_cache;
+
+    // Internal implementation methods
+    Volume& ForwardImpl(Volume& input, bool is_training);
+    void BackwardImpl();
+    void InitImpl(int input_width, int input_height, int input_depth);
+    Vector<ParametersAndGradients>& GetParametersAndGradientsImpl();
+    String GetKeyImpl() const { return "layer_norm"; }
+    void StoreImpl(ValueMap& map) const;
+    void LoadImpl(const ValueMap& map);
+    String ToStringImpl() const;
+    Volume& GetOutputImpl() { return output_activation; }
+
+public:
+    LayerNormCRTP(int normalized_shape, double eps = 1e-5);
+    LayerNormCRTP() : normalized_shape(0), eps(1e-5) {}  // Default constructor
+    LayerNormCRTP(ValueMap values) { LoadImpl(values); }
+
+    // Public interface
+    int GetNormalizedShape() const { return normalized_shape; }
+    double GetEps() const { return eps; }
+    const Volume& GetGamma() const { return gamma; }
+    const Volume& GetBeta() const { return beta; }
 };
 
 // CRTP-based Network class for maximum performance

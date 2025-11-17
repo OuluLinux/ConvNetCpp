@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package name="AnimationLearning" type="0">
+<module name="examples" enabled="true" />
+<file name="AnimationLearning.cpp" />
+<file name="AnimationLearning.h" />
+<file name="main.cpp" />
+</package>

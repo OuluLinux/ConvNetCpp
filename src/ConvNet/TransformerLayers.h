@@ -104,11 +104,32 @@ private:
     Volume& GetOutputImpl() { return output_activation; }
 
 public:
+    // Default constructor - initializes with default values
+    EncoderLayerCRTP() : self_attention(0, 0), feed_forward(0), dropout1(0.0), dropout2(0.0) { }
+
     EncoderLayerCRTP(int embed_dim, int num_heads, int ff_dim, double dropout_rate = 0.1)
-        : self_attention(embed_dim, num_heads), 
+        : self_attention(embed_dim, num_heads),
           feed_forward(ff_dim),  // Assuming this takes neuron_count as parameter
-          dropout1(dropout_rate), dropout2(dropout_rate) {}
+          dropout1(dropout_rate), dropout2(dropout_rate) {
+        // Initialize layer normalization parameters
+        norm1_weights.Init(embed_dim, 1, 1);
+        norm1_biases.Init(embed_dim, 1, 1);
+        norm2_weights.Init(embed_dim, 1, 1);
+        norm2_biases.Init(embed_dim, 1, 1);
+
+        // Initialize to appropriate values for layer normalization
+        norm1_weights.SetConst(1.0);
+        norm1_biases.SetConst(0.0);
+        norm2_weights.SetConst(1.0);
+        norm2_biases.SetConst(0.0);
+    }
     EncoderLayerCRTP(ValueMap values) : self_attention(0, 0), feed_forward(0), dropout1(0.0), dropout2(0.0) { LoadImpl(values); }
+
+    // Serialization support for U++ containers
+    void Serialize(Stream& s) {
+        s % self_attention % feed_forward % dropout1 % dropout2
+          % norm1_weights % norm1_biases % norm2_weights % norm2_biases;
+    }
 
     // Public interface
     int GetEmbedDim() const { return self_attention.GetEmbedDim(); }
@@ -158,12 +179,38 @@ private:
     Volume& GetOutputImpl() { return output_activation; }
 
 public:
+    // Default constructor - initializes with default values
+    DecoderLayerCRTP() : self_attention(0, 0), cross_attention(0, 0), feed_forward(0), dropout1(0.0), dropout2(0.0), dropout3(0.0) { }
+
     DecoderLayerCRTP(int embed_dim, int num_heads, int ff_dim, double dropout_rate = 0.1)
-        : self_attention(embed_dim, num_heads), 
+        : self_attention(embed_dim, num_heads),
           cross_attention(embed_dim, num_heads),  // Cross attention with encoder
           feed_forward(ff_dim),  // Assuming this takes neuron_count as parameter
-          dropout1(dropout_rate), dropout2(dropout_rate), dropout3(dropout_rate) {}
+          dropout1(dropout_rate), dropout2(dropout_rate), dropout3(dropout_rate) {
+        // Initialize layer normalization parameters
+        norm1_weights.Init(embed_dim, 1, 1);
+        norm1_biases.Init(embed_dim, 1, 1);
+        norm2_weights.Init(embed_dim, 1, 1);
+        norm2_biases.Init(embed_dim, 1, 1);
+        norm3_weights.Init(embed_dim, 1, 1);
+        norm3_biases.Init(embed_dim, 1, 1);
+
+        // Initialize to appropriate values
+        norm1_weights.SetConst(1.0);
+        norm1_biases.SetConst(0.0);
+        norm2_weights.SetConst(1.0);
+        norm2_biases.SetConst(0.0);
+        norm3_weights.SetConst(1.0);
+        norm3_biases.SetConst(0.0);
+    }
     DecoderLayerCRTP(ValueMap values) : self_attention(0, 0), cross_attention(0, 0), feed_forward(0), dropout1(0.0), dropout2(0.0), dropout3(0.0) { LoadImpl(values); }
+
+    // Serialization support for U++ containers
+    void Serialize(Stream& s) {
+        s % self_attention % cross_attention % feed_forward % dropout1 % dropout2 % dropout3
+          % norm1_weights % norm1_biases % norm2_weights % norm2_biases
+          % norm3_weights % norm3_biases;
+    }
 
     // Public interface
     int GetEmbedDim() const { return self_attention.GetEmbedDim(); }
@@ -205,9 +252,14 @@ public:
     // Public interface
     int GetMaxLen() const { return max_len; }
     int GetEmbedDim() const { return embed_dim; }
-    
+
     // Generate positional encodings using sine/cosine functions
     void GeneratePositionalEncodings();
+
+    // Serialization support for U++ containers
+    void Serialize(Stream& s) {
+        s % max_len % embed_dim % pe;
+    }
 };
 
 // Complete Transformer Model
@@ -229,6 +281,9 @@ private:
     // Output layer normalization
     Volume final_norm_weights;
     Volume final_norm_biases;
+
+    // Output activation for forward pass
+    Volume output_activation;
 
 public:
     TransformerCRTP(int src_vocab_size, int tgt_vocab_size, int embed_dim, 
