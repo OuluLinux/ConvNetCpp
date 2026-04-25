@@ -2,6 +2,12 @@
 
 GUI_APP_MAIN
 {
-    TransformerApp app;
-    app.Run();
+	try {
+		TransformerApp app;
+		app.Init(); 
+		app.Run();
+	}
+	catch (Exc e) {
+		PromptOK(e);
+	}
 }

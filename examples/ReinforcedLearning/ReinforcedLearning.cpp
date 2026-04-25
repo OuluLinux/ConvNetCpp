@@ -57,7 +57,7 @@ ReinforcedLearning::ReinforcedLearning() {
 	
 	// "Very fast" is meaningful only if the program doesn't have threads, and calculating
 	// must be done in the GUI loop, like in the JS version.
-	#ifdef flagMT
+	#ifndef flagST
 	speed.MinMax(0,2);
 	speed.SetData(0);
 	#else

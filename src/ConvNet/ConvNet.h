@@ -70,18 +70,19 @@
 #include "Net.h"
 #include "LayerBase.h"
 #include "Training.h"
+#include "SessionModules.h"
 #include "Session.h"
 #include "MetaSession.h"
 #include "Brain.h"
 #include "Agent.h"
 #include "Recurrent.h"
-#include "RecurrentSession.h"
 #include "MemoryPool.h"
 #include "RuntimeFlexibility.h"
-#include "CrtpLayers.h"
 #include "Tokenization.h"
-// #include "TransformerLayers.h"  // Temporarily removed due to build issues
-// #include "GptLayers.h"          // Temporarily removed due to build issues
+#include "CrtpLayers.h"
+#include "TransformerLayers.h"
+#include "GptLayers.h"
+#include "RecurrentSession.h"
 // #include "ParallellaSupport.h"  // Temporarily removed due to build issues
 #include "MagicNet.h"
 

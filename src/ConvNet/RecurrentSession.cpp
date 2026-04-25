@@ -661,7 +661,7 @@ void RecurrentSession::Load(const ValueMap& js) {
 	
 	if (js.Find("hidden_sizes") != -1) {
 		hidden_sizes.Clear();
-		ValueMap hs = js.GetValue(js.Find("hidden_sizes"));
+		ValueMap hs = (ValueMap)js.GetValue(js.Find("hidden_sizes"));
 		for(int i = 0; i < hs.GetCount(); i++)
 			hidden_sizes.Add(hs[i]);
 	}
@@ -671,11 +671,10 @@ void RecurrentSession::Load(const ValueMap& js) {
 	LOAD(learning_rate);
 	LOAD(clipval);
 	LOAD(use_tokenization);
-	/*
 	if (js.Find("model") != -1) {
-		ValueMap model = js.GetValue(js.Find("model"));
-		
-		#define LOADVOL(x) {ValueMap map = model.GetValue(model.Find(#x)); this->x.Load(map);}
+		ValueMap model = (ValueMap)js.GetValue(js.Find("model"));
+
+		#define LOADVOL(x) {int idx = model.Find(#x); if (idx >= 0) {ValueMap map = (ValueMap)model.GetValue(idx); Get(x).Load(map);}}
 		LOADVOL(Wil);
 		LOADVOL(Whd);
 		LOADVOL(bd);
@@ -688,7 +687,7 @@ void RecurrentSession::Load(const ValueMap& js) {
 		
 		for(int i = 0; i < hidden_sizes.GetCount(); i++) {
 			if (mode == MODE_LSTM) {
-				#define LOADMODVOL(x) {ValueMap map = model.GetValue(model.Find(#x + IntStr(i))); lstm_model[i].x.Load(map);}
+				#define LOADMODVOL(x) {ValueMap map = model.GetValue(model.Find(#x + IntStr(i))); Get(lstm_model[i].x).Load(map);}
 				LOADMODVOL(Wix);
 				LOADMODVOL(Wih);
 				LOADMODVOL(bi);
@@ -704,21 +703,21 @@ void RecurrentSession::Load(const ValueMap& js) {
 				#undef LOADMODVOL
 			}
 			else if (mode == MODE_RNN) {
-				#define LOADMODVOL(x) {ValueMap map = model.GetValue(model.Find(#x + IntStr(i))); rnn_model[i].x.Load(map);}
+				#define LOADMODVOL(x) {ValueMap map = model.GetValue(model.Find(#x + IntStr(i))); Get(rnn_model[i].x).Load(map);}
 				LOADMODVOL(Wxh);
 				LOADMODVOL(Whh);
 				LOADMODVOL(bhh);
 				#undef LOADMODVOL
 			}
 			else if (mode == MODE_HIGHWAY) {
-				#define LOADMODVOL(x) {ValueMap map = model.GetValue(model.Find(#x + IntStr(i))); hw_model[i].x.Load(map);}
+				#define LOADMODVOL(x) {ValueMap map = model.GetValue(model.Find(#x + IntStr(i))); Get(hw_model[i].x).Load(map);}
 				LOADMODVOL(noise_h[0]);
 				LOADMODVOL(noise_h[1]);
 				#undef LOADMODVOL
 			}
 		}
 	}
-	#undef LOAD*/
+	#undef LOAD
 }
 
 void RecurrentSession::Store(ValueMap& js) {

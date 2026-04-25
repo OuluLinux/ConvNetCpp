@@ -1,0 +1,16 @@
+description "VideoServer - Remote Video Capture Server";
+
+uses
+	Core,
+	Draw,
+	plugin/jpg;
+
+library(LINUX) "v4l2 pthread X11";
+
+library(WIN32 MSC) "mf.lib mfplat.lib mfreadwrite.lib mfuuid.lib ole32.lib user32.lib rpcrt4.lib";
+
+file
+	main.cpp;
+
+mainconfig
+	"" = "";

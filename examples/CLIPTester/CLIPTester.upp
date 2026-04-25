@@ -1,7 +1,23 @@
-<?xml version="1.0" encoding="utf-8"?>
-<package name="CLIPTester" type="0">
-<module name="examples" enabled="true" />
-<file name="CLIPTester.cpp" />
-<file name="CLIPTester.h" />
-<file name="main.cpp" />
-</package>
+description "CLIPTester example\377";
+
+uses
+	CtrlLib,
+	ConvNet,
+	ConvNetCtrl,
+	Docking,
+	PlotCtrl,
+	plugin/z;
+
+options
+	"-I.";
+
+file
+	CLIPTester.cpp,
+	CLIPTester.h,
+	CLIPTester.iml,
+	CLIPTester.lay,
+	main.cpp;
+
+mainconfig
+	"" = "GUI",
+	"" = "GUI DEBUG";

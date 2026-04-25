@@ -18,7 +18,7 @@ CONSOLE_APP_MAIN
         "\t{\"type\":\"input\", \"input_width\":1, \"input_height\":1, \"input_depth\":3},\n"
         "\t{\"type\":\"fc\", \"neuron_count\":15, \"activation\":\"tanh\"},\n"
         "\t{\"type\":\"regression\", \"neuron_count\":1},\n"
-        "\t{\"trainer_placeholder\"}\n"
+        "\t\"trainer_placeholder\"\n"
         "]\n";
     
     // SGD trainer

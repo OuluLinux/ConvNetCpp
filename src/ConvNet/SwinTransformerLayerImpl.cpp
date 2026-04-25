@@ -98,32 +98,34 @@ void SwinPatchMergingCRTP::InitImpl(int input_width, int input_height, int input
     // Initialize weights using Xavier/Glorot initialization
     double scale = sqrt(2.0 / (input_features + out_dim));
     for (int i = 0; i < reduction_weight.GetSize(); i++) {
-        reduction_weight.SetData(i, Randomf() * scale);
+        reduction_weight.Set(i, Randomf() * scale);
     }
     
     // Initialize bias to zeros
     reduction_bias.Init(out_dim, 1, 1);
     for (int i = 0; i < reduction_bias.GetSize(); i++) {
-        reduction_bias.SetData(i, 0.0);
+        reduction_bias.Set(i, 0.0);
     }
 }
 
 Vector<ParametersAndGradients>& SwinPatchMergingCRTP::GetParametersAndGradientsImpl() {
-    parameters_and_gradients.Clear();
-    
+    static Vector<ParametersAndGradients> params;
+    params.Clear();
+
     if (reduction_weight.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_and_gradients.Add();
+        ParametersAndGradients pg;
         pg.volume = &reduction_weight;
-        pg.grad_volume = &reduction_weight;  // Using same volume for gradient temporarily
+        // No explicit grad member in ParametersAndGradients; gradient is typically stored elsewhere
+        params.Add() = pg;
     }
-    
+
     if (reduction_bias.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_and_gradients.Add();
+        ParametersAndGradients pg;
         pg.volume = &reduction_bias;
-        pg.grad_volume = &reduction_bias;
+        params.Add() = pg;
     }
-    
-    return parameters_and_gradients;
+
+    return params;
 }
 
 void SwinPatchMergingCRTP::StoreImpl(ValueMap& map) const {
@@ -133,38 +135,43 @@ void SwinPatchMergingCRTP::StoreImpl(ValueMap& map) const {
     // Store weight and bias data
     Vector<double> weight_data;
     for (int i = 0; i < reduction_weight.GetSize(); i++) {
-        weight_data.Add(reduction_weight.GetData(i));
+        weight_data.Add(reduction_weight.Get(i));
     }
-    map.Set("reduction_weight", weight_data);
+    map.GetAdd("reduction_weight") = (Value)weight_data;
     
     Vector<double> bias_data;
     for (int i = 0; i < reduction_bias.GetSize(); i++) {
-        bias_data.Add(reduction_bias.GetData(i));
+        bias_data.Add(reduction_bias.Get(i));
     }
-    map.Set("reduction_bias", bias_data);
+    map.GetAdd("reduction_bias") = (Value)bias_data;
 }
 
 void SwinPatchMergingCRTP::LoadImpl(const ValueMap& map) {
-    dim = map.Get("dim", 96);
-    out_dim = map.Get("out_dim", dim * 2);  // Default to doubling the dim
-    
+    int dim_idx = map.Find("dim");
+    dim = (dim_idx >= 0) ? (int)map.GetValue(dim_idx) : 96;
+
+    int out_dim_idx = map.Find("out_dim");
+    out_dim = (out_dim_idx >= 0) ? (int)map.GetValue(out_dim_idx) : dim * 2;  // Default to doubling the dim
+
     // Load weight and bias data
-    if (map.Find("reduction_weight")) {
-        Vector<double> weight_data = map.Get("reduction_weight");
+    int weight_idx = map.Find("reduction_weight");
+    if (weight_idx >= 0) {
+        Vector<double> weight_data = (Vector<double>)map.GetValue(weight_idx);
         int input_features = 4 * dim;  // 4 patches concatenated
         reduction_weight.Init(out_dim, input_features, 1);
-        
-        for (int i = 0; i < Min(reduction_weight.GetSize(), weight_data.GetCount()); i++) {
-            reduction_weight.SetData(i, weight_data[i]);
+
+        for (int i = 0; i < min(reduction_weight.GetSize(), weight_data.GetCount()); i++) {
+            reduction_weight.Set(i, weight_data[i]);
         }
     }
-    
-    if (map.Find("reduction_bias")) {
-        Vector<double> bias_data = map.Get("reduction_bias");
+
+    int bias_idx = map.Find("reduction_bias");
+    if (bias_idx >= 0) {
+        Vector<double> bias_data = (Vector<double>)map.GetValue(bias_idx);
         reduction_bias.Init(out_dim, 1, 1);
-        
-        for (int i = 0; i < Min(reduction_bias.GetSize(), bias_data.GetCount()); i++) {
-            reduction_bias.SetData(i, bias_data[i]);
+
+        for (int i = 0; i < min(reduction_bias.GetSize(), bias_data.GetCount()); i++) {
+            reduction_bias.Set(i, bias_data[i]);
         }
     }
 }
@@ -315,86 +322,87 @@ void WindowAttentionCRTP::InitImpl(int input_width, int input_height, int input_
     // Initialize with Xavier/Glorot initialization
     double scale = sqrt(2.0 / (input_dim + input_dim));
     for (int i = 0; i < wq.GetSize(); i++) {
-        wq.SetData(i, Randomf() * scale);
-        wk.SetData(i, Randomf() * scale);
-        wv.SetData(i, Randomf() * scale);
-        wo.SetData(i, Randomf() * scale);
+        wq.Set(i, Randomf() * scale);
+        wk.Set(i, Randomf() * scale);
+        wv.Set(i, Randomf() * scale);
+        wo.Set(i, Randomf() * scale);
     }
     
     // Initialize bias to zeros
     for (int i = 0; i < bq.GetSize(); i++) {
-        bq.SetData(i, 0.0);
-        bk.SetData(i, 0.0);
-        bv.SetData(i, 0.0);
-        bo.SetData(i, 0.0);
+        bq.Set(i, 0.0);
+        bk.Set(i, 0.0);
+        bv.Set(i, 0.0);
+        bo.Set(i, 0.0);
     }
     
     // Initialize relative position bias table
     int table_size = (2 * window_size - 1) * (2 * window_size - 1);
     relative_position_bias_table.Init(table_size, 1, num_heads);
     for (int i = 0; i < relative_position_bias_table.GetSize(); i++) {
-        relative_position_bias_table.SetData(i, Randomf() * 0.02);  // Small random initialization
+        relative_position_bias_table.Set(i, Randomf() * 0.02);  // Small random initialization
     }
 }
 
 Vector<ParametersAndGradients>& WindowAttentionCRTP::GetParametersAndGradientsImpl() {
-    parameters_and_gradients.Clear();
-    
+    static Vector<ParametersAndGradients> params;
+    params.Clear();
+
     if (wq.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_and_gradients.Add();
+        ParametersAndGradients pg;
         pg.volume = &wq;
-        pg.grad_volume = &wq;
+        params.Add() = pg;
     }
-    
+
     if (wk.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_and_gradients.Add();
+        ParametersAndGradients pg;
         pg.volume = &wk;
-        pg.grad_volume = &wk;
+        params.Add() = pg;
     }
-    
+
     if (wv.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_and_gradients.Add();
+        ParametersAndGradients pg;
         pg.volume = &wv;
-        pg.grad_volume = &wv;
+        params.Add() = pg;
     }
-    
+
     if (wo.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_and_gradients.Add();
+        ParametersAndGradients pg;
         pg.volume = &wo;
-        pg.grad_volume = &wo;
+        params.Add() = pg;
     }
-    
+
     if (bq.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_and_gradients.Add();
+        ParametersAndGradients pg;
         pg.volume = &bq;
-        pg.grad_volume = &bq;
+        params.Add() = pg;
     }
-    
+
     if (bk.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_and_gradients.Add();
+        ParametersAndGradients pg;
         pg.volume = &bk;
-        pg.grad_volume = &bk;
+        params.Add() = pg;
     }
-    
+
     if (bv.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_and_gradients.Add();
+        ParametersAndGradients pg;
         pg.volume = &bv;
-        pg.grad_volume = &bv;
+        params.Add() = pg;
     }
-    
+
     if (bo.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_and_gradients.Add();
+        ParametersAndGradients pg;
         pg.volume = &bo;
-        pg.grad_volume = &bo;
+        params.Add() = pg;
     }
-    
+
     if (relative_position_bias_table.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_and_gradients.Add();
+        ParametersAndGradients pg;
         pg.volume = &relative_position_bias_table;
-        pg.grad_volume = &relative_position_bias_table;
+        params.Add() = pg;
     }
-    
-    return parameters_and_gradients;
+
+    return params;
 }
 
 void WindowAttentionCRTP::StoreImpl(ValueMap& map) const {
@@ -407,9 +415,9 @@ void WindowAttentionCRTP::StoreImpl(ValueMap& map) const {
         do { \
             Vector<double> name##_data; \
             for (int i = 0; i < name.GetSize(); i++) { \
-                name##_data.Add(name.GetData(i)); \
+                name##_data.Add(name.Get(i)); \
             } \
-            map.Set(#name, name##_data); \
+            map.GetAdd(#name) = (Value)name##_data; \
         } while(0)
     
     STORE_PARAM(wq);
@@ -426,22 +434,29 @@ void WindowAttentionCRTP::StoreImpl(ValueMap& map) const {
 }
 
 void WindowAttentionCRTP::LoadImpl(const ValueMap& map) {
-    window_size = map.Get("window_size", 7);
-    num_heads = map.Get("num_heads", 12);
-    input_dim = map.Get("input_dim", 768);
+    int window_size_idx = map.Find("window_size");
+    window_size = (window_size_idx >= 0) ? (int)map.GetValue(window_size_idx) : 7;
+
+    int num_heads_idx = map.Find("num_heads");
+    num_heads = (num_heads_idx >= 0) ? (int)map.GetValue(num_heads_idx) : 12;
+
+    int input_dim_idx = map.Find("input_dim");
+    input_dim = (input_dim_idx >= 0) ? (int)map.GetValue(input_dim_idx) : 768;
+
     head_dim = input_dim / num_heads;
-    
+
     #define LOAD_PARAM(name, exp_width, exp_height, exp_depth) \
         do { \
-            if (map.Find(#name)) { \
-                Vector<double> name##_data = map.Get(#name); \
+            int name##_idx = map.Find(#name); \
+            if (name##_idx >= 0) { \
+                Vector<double> name##_data = (Vector<double>)map.GetValue(name##_idx); \
                 name.Init(exp_width, exp_height, exp_depth); \
-                for (int i = 0; i < Min(name.GetSize(), name##_data.GetCount()); i++) { \
-                    name.SetData(i, name##_data[i]); \
+                for (int i = 0; i < min(name.GetSize(), name##_data.GetCount()); i++) { \
+                    name.Set(i, name##_data[i]); \
                 } \
             } \
         } while(0)
-    
+
     LOAD_PARAM(wq, input_dim, input_dim, 1);
     LOAD_PARAM(wk, input_dim, input_dim, 1);
     LOAD_PARAM(wv, input_dim, input_dim, 1);
@@ -450,10 +465,10 @@ void WindowAttentionCRTP::LoadImpl(const ValueMap& map) {
     LOAD_PARAM(bk, input_dim, 1, 1);
     LOAD_PARAM(bv, input_dim, 1, 1);
     LOAD_PARAM(bo, input_dim, 1, 1);
-    
+
     int table_size = (2 * window_size - 1) * (2 * window_size - 1);
     LOAD_PARAM(relative_position_bias_table, table_size, 1, num_heads);
-    
+
     #undef LOAD_PARAM
 }
 
@@ -467,15 +482,15 @@ String WindowAttentionCRTP::ToStringImpl() const {
 }
 
 // SwinTransformerBlockCRTP Implementation
-SwinTransformerBlockCRTP::SwinTransformerBlockCRTP(int dim, int input_resolution[2], int num_heads, int window_size,
+SwinTransformerBlockCRTP::SwinTransformerBlockCRTP(int dim, int input_resolution_param[2], int num_heads, int window_size,
                                                    int shift_size, int mlp_ratio, bool mlp_bias, double mlp_dropout)
     : dim(dim), num_heads(num_heads), window_size(window_size), shift_size(shift_size),
       mlp_ratio(mlp_ratio), mlp_bias(mlp_bias), mlp_dropout(mlp_dropout),
-      window_attn(window_size, num_heads, dim), 
+      window_attn(window_size, num_heads, dim),
       feed_forward(dim * mlp_ratio),  // MLP hidden dim
       dropout1(mlp_dropout), dropout2(mlp_dropout) {
-    input_resolution[0] = input_resolution[0];
-    input_resolution[1] = input_resolution[1];
+    this->input_resolution[0] = input_resolution_param[0];
+    this->input_resolution[1] = input_resolution_param[1];
 }
 
 Volume& SwinTransformerBlockCRTP::ForwardImpl(Volume& input, bool is_training) {
@@ -498,7 +513,7 @@ Volume& SwinTransformerBlockCRTP::ForwardImpl(Volume& input, bool is_training) {
     
     for (int i = 0; i < input.GetSize(); i++) {
         // Add original input to attention output (residual connection)
-        output_activation.SetData(i, input.GetData(i) + attention_output.GetData(i));
+        output_activation.Set(i, input.Get(i) + attention_output.Get(i));
     }
     
     return output_activation;
@@ -525,57 +540,90 @@ void SwinTransformerBlockCRTP::InitImpl(int input_width, int input_height, int i
 }
 
 Vector<ParametersAndGradients>& SwinTransformerBlockCRTP::GetParametersAndGradientsImpl() {
-    parameters_and_gradients.Clear();
-    
+    static Vector<ParametersAndGradients> params;
+    params.Clear();
+
     // Add parameters from window attention
     Vector<ParametersAndGradients>& attn_params = window_attn.GetParametersAndGradients();
     for (int i = 0; i < attn_params.GetCount(); i++) {
-        parameters_and_gradients.Add() = attn_params[i];
+        params.Add() = attn_params[i];
     }
-    
+
     // Add parameters from feed-forward network
     Vector<ParametersAndGradients>& ff_params = feed_forward.GetParametersAndGradients();
     for (int i = 0; i < ff_params.GetCount(); i++) {
-        parameters_and_gradients.Add() = ff_params[i];
+        params.Add() = ff_params[i];
     }
-    
-    return parameters_and_gradients;
+
+    return params;
 }
 
 void SwinTransformerBlockCRTP::StoreImpl(ValueMap& map) const {
-    map.Set("dim", dim);
-    map.Set("input_resolution", Vector<int>{input_resolution[0], input_resolution[1]});
-    map.Set("num_heads", num_heads);
-    map.Set("window_size", window_size);
-    map.Set("shift_size", shift_size);
-    map.Set("mlp_ratio", mlp_ratio);
-    map.Set("mlp_bias", mlp_bias);
-    map.Set("mlp_dropout", mlp_dropout);
-    
+    map.GetAdd("dim") = dim;
+    // Store input_resolution as an array in ValueMap
+    Value input_resolution_val;
+    input_resolution_val.Add(input_resolution[0]);
+    input_resolution_val.Add(input_resolution[1]);
+    map.GetAdd("input_resolution") = input_resolution_val;
+    map.GetAdd("num_heads") = num_heads;
+    map.GetAdd("window_size") = window_size;
+    map.GetAdd("shift_size") = shift_size;
+    map.GetAdd("mlp_ratio") = mlp_ratio;
+    map.GetAdd("mlp_bias") = mlp_bias;
+    map.GetAdd("mlp_dropout") = mlp_dropout;
+
     // Store sub-components
     ValueMap attn_map;
     window_attn.Store(attn_map);
-    map.Set("window_attn", attn_map);
-    
+    map.GetAdd("window_attn") = attn_map;
+
     // For feed_forward, we'll need to store it separately as well
     // This is a simplified approach
 }
 
 void SwinTransformerBlockCRTP::LoadImpl(const ValueMap& map) {
-    dim = map.Get("dim", 96);
-    Vector<int> res = map.Get("input_resolution", Vector<int>{56, 56});  // Default resolution
-    input_resolution[0] = res[0];
-    input_resolution[1] = res[1];
-    num_heads = map.Get("num_heads", 3);
-    window_size = map.Get("window_size", 7);
-    shift_size = map.Get("shift_size", 0);
-    mlp_ratio = map.Get("mlp_ratio", 4);
-    mlp_bias = map.Get("mlp_bias", true);
-    mlp_dropout = map.Get("mlp_dropout", 0.0);
-    
+    int dim_idx = map.Find("dim");
+    dim = (dim_idx >= 0) ? (int)map.GetValue(dim_idx) : 96;
+
+    int res_idx = map.Find("input_resolution");
+    if (res_idx >= 0) {
+        Value res = map.GetValue(res_idx);
+        if (res.GetCount() >= 2) {
+            input_resolution[0] = (int)res[0];
+            input_resolution[1] = (int)res[1];
+        } else {
+            // Default resolution
+            input_resolution[0] = 56;
+            input_resolution[1] = 56;
+        }
+    } else {
+        // Default resolution
+        input_resolution[0] = 56;
+        input_resolution[1] = 56;
+    }
+
+    int num_heads_idx = map.Find("num_heads");
+    num_heads = (num_heads_idx >= 0) ? (int)map.GetValue(num_heads_idx) : 3;
+
+    int window_size_idx = map.Find("window_size");
+    window_size = (window_size_idx >= 0) ? (int)map.GetValue(window_size_idx) : 7;
+
+    int shift_size_idx = map.Find("shift_size");
+    shift_size = (shift_size_idx >= 0) ? (int)map.GetValue(shift_size_idx) : 0;
+
+    int mlp_ratio_idx = map.Find("mlp_ratio");
+    mlp_ratio = (mlp_ratio_idx >= 0) ? (int)map.GetValue(mlp_ratio_idx) : 4;
+
+    int mlp_bias_idx = map.Find("mlp_bias");
+    mlp_bias = (mlp_bias_idx >= 0) ? (bool)map.GetValue(mlp_bias_idx) : true;
+
+    int mlp_dropout_idx = map.Find("mlp_dropout");
+    mlp_dropout = (mlp_dropout_idx >= 0) ? (double)map.GetValue(mlp_dropout_idx) : 0.0;
+
     // Load sub-components
-    if (map.Find("window_attn")) {
-        ValueMap attn_map = map.Get("window_attn");
+    int attn_idx = map.Find("window_attn");
+    if (attn_idx >= 0) {
+        ValueMap attn_map = map.GetValue(attn_idx);
         window_attn = WindowAttentionCRTP(window_size, num_heads, dim);
         window_attn.Load(attn_map);
     }
@@ -738,6 +786,9 @@ void MaskedMultiHeadAttentionCRTP::BackwardImpl() {
 }
 
 void MaskedMultiHeadAttentionCRTP::InitImpl(int input_width, int input_height, int input_depth) {
+    // Store the input_depth for later use in serialization
+    this->input_depth = input_depth;
+
     // Initialize parameters for query, key, value, and output projections
     wq.Init(embed_dim, input_depth, 1);
     wk.Init(embed_dim, input_depth, 1);
@@ -752,93 +803,95 @@ void MaskedMultiHeadAttentionCRTP::InitImpl(int input_width, int input_height, i
     // Initialize with Xavier/Glorot initialization
     double scale = sqrt(2.0 / (input_depth + embed_dim));
     for (int i = 0; i < wq.GetSize(); i++) {
-        wq.SetData(i, Randomf() * scale);
-        wk.SetData(i, Randomf() * scale);
-        wv.SetData(i, Randomf() * scale);
+        wq.Set(i, Randomf() * scale);
+        wk.Set(i, Randomf() * scale);
+        wv.Set(i, Randomf() * scale);
     }
 
     for (int i = 0; i < wo.GetSize(); i++) {
-        wo.SetData(i, Randomf() * scale);
+        wo.Set(i, Randomf() * scale);
     }
 
     // Initialize bias to zeros
     for (int i = 0; i < bq.GetSize(); i++) {
-        bq.SetData(i, 0.0);
-        bk.SetData(i, 0.0);
-        bv.SetData(i, 0.0);
+        bq.Set(i, 0.0);
+        bk.Set(i, 0.0);
+        bv.Set(i, 0.0);
     }
 
     for (int i = 0; i < bo.GetSize(); i++) {
-        bo.SetData(i, 0.0);
+        bo.Set(i, 0.0);
     }
 }
 
 Vector<ParametersAndGradients>& MaskedMultiHeadAttentionCRTP::GetParametersAndGradientsImpl() {
-    parameters_and_gradients.Clear();
+    static Vector<ParametersAndGradients> params;
+    params.Clear();
 
     if (wq.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_and_gradients.Add();
+        ParametersAndGradients pg;
         pg.volume = &wq;
-        pg.grad_volume = &wq;
+        params.Add() = pg;
     }
 
     if (wk.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_and_gradients.Add();
+        ParametersAndGradients pg;
         pg.volume = &wk;
-        pg.grad_volume = &wk;
+        params.Add() = pg;
     }
 
     if (wv.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_andGradients.Add();
+        ParametersAndGradients pg;
         pg.volume = &wv;
-        pg.grad_volume = &wv;
+        params.Add() = pg;
     }
 
     if (wo.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_and_gradients.Add();
+        ParametersAndGradients pg;
         pg.volume = &wo;
-        pg.grad_volume = &wo;
+        params.Add() = pg;
     }
 
     if (bq.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_and_gradients.Add();
+        ParametersAndGradients pg;
         pg.volume = &bq;
-        pg.grad_volume = &bq;
+        params.Add() = pg;
     }
 
     if (bk.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_and_gradients.Add();
+        ParametersAndGradients pg;
         pg.volume = &bk;
-        pg.grad_volume = &bk;
+        params.Add() = pg;
     }
 
     if (bv.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_and_gradients.Add();
+        ParametersAndGradients pg;
         pg.volume = &bv;
-        pg.grad_volume = &bv;
+        params.Add() = pg;
     }
 
     if (bo.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_and_gradients.Add();
+        ParametersAndGradients pg;
         pg.volume = &bo;
-        pg.grad_volume = &bo;
+        params.Add() = pg;
     }
 
-    return parameters_and_gradients;
+    return params;
 }
 
 void MaskedMultiHeadAttentionCRTP::StoreImpl(ValueMap& map) const {
     map.Set("embed_dim", embed_dim);
     map.Set("num_heads", num_heads);
+    map.Set("input_depth", input_depth);
 
     // Store all weight and bias parameters
     #define STORE_PARAM(name) \
         do { \
             Vector<double> name##_data; \
             for (int i = 0; i < name.GetSize(); i++) { \
-                name##_data.Add(name.GetData(i)); \
+                name##_data.Add(name.Get(i)); \
             } \
-            map.Set(#name, name##_data); \
+            map.GetAdd(#name) = (Value)name##_data; \
         } while(0)
 
     STORE_PARAM(wq);
@@ -854,17 +907,26 @@ void MaskedMultiHeadAttentionCRTP::StoreImpl(ValueMap& map) const {
 }
 
 void MaskedMultiHeadAttentionCRTP::LoadImpl(const ValueMap& map) {
-    embed_dim = map.Get("embed_dim", 768);
-    num_heads = map.Get("num_heads", 12);
+    int embed_dim_idx = map.Find("embed_dim");
+    embed_dim = (embed_dim_idx >= 0) ? (int)map.GetValue(embed_dim_idx) : 768;
+
+    int num_heads_idx = map.Find("num_heads");
+    num_heads = (num_heads_idx >= 0) ? (int)map.GetValue(num_heads_idx) : 12;
+
+    // Load input_depth which was stored in the InitImpl
+    int input_depth_idx = map.Find("input_depth");
+    int input_depth = (input_depth_idx >= 0) ? (int)map.GetValue(input_depth_idx) : embed_dim;
+
     head_dim = embed_dim / num_heads;
 
     #define LOAD_PARAM(name, exp_width, exp_height, exp_depth) \
         do { \
-            if (map.Find(#name)) { \
-                Vector<double> name##_data = map.Get(#name); \
+            int name##_idx = map.Find(#name); \
+            if (name##_idx >= 0) { \
+                Vector<double> name##_data = (Vector<double>)map.GetValue(name##_idx); \
                 name.Init(exp_width, exp_height, exp_depth); \
-                for (int i = 0; i < Min(name.GetSize(), name##_data.GetCount()); i++) { \
-                    name.SetData(i, name##_data[i]); \
+                for (int i = 0; i < min(name.GetSize(), name##_data.GetCount()); i++) { \
+                    name.Set(i, name##_data[i]); \
                 } \
             } \
         } while(0)

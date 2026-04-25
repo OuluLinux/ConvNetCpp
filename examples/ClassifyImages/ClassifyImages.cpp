@@ -150,7 +150,16 @@ ClassifyImages::ClassifyImages(int loader, int type)
 	
 	UpdateNetParamDisplay();
 	
-	Add(v_split.SizePos());
+	dispatcher.RegisterStandardCommands();
+	viewport.SetGraph(graph_node);
+	viewport.SetEditor(editor);
+	viewport.SetHistory(history);
+	viewport.SetDispatcher(dispatcher);
+
+	Add(tabs.SizePos());
+	tabs.Add(v_split.SizePos(), "Network");
+	tabs.Add(viewport.SizePos(), "Graph Editor");
+
 	v_split.Vert();
 	
 	if (type == TYPE_LEARNER) {
@@ -213,9 +222,10 @@ ClassifyImages::ClassifyImages(int loader, int type)
 	
 	layer_view.SetSession(ses);
 	
-	graph.SetSession(ses);
-	graph.SetModeLoss();
+	loss_graph.SetSession(ses);
+	loss_graph.SetModeLoss();
 	
+	SyncGraph();
 	PostCallback(THISBACK(Refresher));
 }
 
@@ -227,7 +237,7 @@ ClassifyImages::~ClassifyImages() {
 
 void ClassifyImages::DockInit() {
 	DockLeft(Dockable(settings, "Settings").SizeHint(Size(320, 11*20)));
-	DockLeft(Dockable(graph, "Loss").SizeHint(Size(320, 240)));
+	DockLeft(Dockable(loss_graph, "Loss").SizeHint(Size(320, 240)));
 	DockLeft(Dockable(status, "Status").SizeHint(Size(120, 120)));
 	AutoHide(DOCK_LEFT, Dockable(net_ctrl, "Edit Network").SizeHint(Size(640, 320)));
 }
@@ -273,6 +283,7 @@ void ClassifyImages::OpenFile() {
 	
 	ResetAll();
 	ses.StartTraining();
+	SyncGraph();
 }
 
 void ClassifyImages::SaveFile() {
@@ -308,6 +319,7 @@ void ClassifyImages::Reload() {
 	
 	if (success) {
 		ses.StartTraining();
+		SyncGraph();
 	}
 }
 
@@ -339,7 +351,7 @@ void ClassifyImages::Refresher() {
 	if (type == TYPE_AUTOENCODER)
 		aenc_view.Refresh();
 		
-	graph.RefreshData();
+	loss_graph.RefreshData();
 	RefreshStatus();
 	
 	PostCallback(THISBACK(Refresher));
@@ -347,8 +359,99 @@ void ClassifyImages::Refresher() {
 
 void ClassifyImages::ResetAll() {
 	UpdateNetParamDisplay();
-	graph.Clear();
+	loss_graph.Clear();
 }
 
 
 
+
+void ClassifyImages::SyncGraph() {
+	ses.Enter();
+	graph_node.Clear();
+	
+	Net& net = ses.GetNetwork();
+	const Array<LayerBase>& layers = net.GetLayers();
+	
+	Vector<String> node_ids;
+	
+	for(int i = 0; i < layers.GetCount(); i++) {
+		const LayerBase& l = layers[i];
+		String id = "layer_" + IntStr(i);
+		
+		Upp::Node::NodeDoc& n = graph_node.AddNode(id);
+		node_ids.Add(id);
+		
+		n.label = l.GetKey();
+		if (n.label.IsEmpty()) {
+			n.label = "Layer " + IntStr(i);
+		}
+		
+		// Add input slot (except for first layer)
+		if (i > 0) {
+			n.slots.Add().id = "in";
+		}
+		
+		// Add output pin (except for last layer)
+		if (i < layers.GetCount() - 1) {
+			n.pins.Add().id = "out";
+		}
+		
+		// Add some metadata/labels based on layer type
+		if (l.IsInputLayer()) {
+			if (l.input_width > 0 && l.input_height > 0 && l.input_depth > 0)
+				n.label << "\n(" << l.input_width << "x" << l.input_height << "x" << l.input_depth << ")";
+		}
+		else if (l.layer_type == CONV_LAYER || l.layer_type == DECONV_LAYER) {
+			if (l.width > 0 && l.height > 0 && l.filter_count > 0)
+				n.label << "\n(" << l.filter_count << " filters, " << l.width << "x" << l.height << ")";
+		}
+		else if (l.layer_type == FULLYCONN_LAYER) {
+			if (l.neuron_count > 0)
+				n.label << "\n(" << l.neuron_count << " neurons)";
+		}
+	}
+	
+	// Connect layers
+	for(int i = 0; i < (int)layers.GetCount() - 1; i++) {
+		graph_node.AddEdge("edge_" + IntStr(i), node_ids[i], "out", node_ids[i+1], "in");
+	}
+	
+	// Apply layout
+	Vector<Upp::Node::NodeState> states;
+	Upp::Node::SpringLayout spring;
+	spring.Iterations(100).Seed(42);
+	spring.Run(graph_node, states);
+	graph_node.ApplyLayout(states);
+	
+	viewport.SetGraph(graph_node);
+	viewport.ZoomToFit();
+	viewport.Update();
+	ses.Leave();
+}
+
+bool ClassifyImages::IsViewportWhite() {
+	Size sz = viewport.GetSize();
+	if(sz.cx <= 0 || sz.cy <= 0) sz = Size(1024, 768);
+	viewport.SetRect(sz);
+	ImageDraw id(sz);
+	viewport.Paint(id);
+	Image img = id;
+	
+	for(int y = 0; y < img.GetHeight(); y++) {
+		const RGBA* p = img[y];
+		for(int x = 0; x < img.GetWidth(); x++) {
+			if(p[x].r != 255 || p[x].g != 255 || p[x].b != 255)
+				return false;
+		}
+	}
+	return true;
+}
+
+void ClassifyImages::SaveViewportImage(const String& path) {
+	Size sz = viewport.GetSize();
+	if(sz.cx <= 0 || sz.cy <= 0) sz = Size(1024, 768);
+	viewport.SetRect(sz);
+	ImageDraw id(sz);
+	viewport.Paint(id);
+	PNGEncoder().SaveFile(path, id);
+}

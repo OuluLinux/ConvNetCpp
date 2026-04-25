@@ -113,9 +113,11 @@ public:
     bool IsUsingParallella() const { return use_parallella && device && device->IsInitialized(); }
     
     // Virtual methods to be implemented by derived layers
+    virtual Volume& Forward(Volume& input, bool is_training = false) = 0;  // Pure virtual
+    virtual void Backward() = 0;  // Pure virtual
     virtual bool OffloadToParallella() { return false; }
     virtual bool ProcessOnParallella(Volume& input, Volume& output) { return false; }
-    
+
     typedef ParallellaLayerBase CLASSNAME;
 };
 
@@ -131,8 +133,8 @@ private:
 public:
     ParallellaConvLayer(int w, int h, int f_count, int s = 1, int p = 0);
     
-    Volume& Forward(Volume& input, bool is_training = false);
-    void Backward();
+    Volume& Forward(Volume& input, bool is_training = false) override;
+    void Backward() override;
     
     bool OffloadToParallella() override { return true; }
     bool ProcessOnParallella(Volume& input, Volume& output) override;
@@ -151,8 +153,8 @@ private:
 public:
     ParallellaFullyConnLayer(int input_cnt, int neuron_cnt);
     
-    Volume& Forward(Volume& input, bool is_training = false);
-    void Backward();
+    Volume& Forward(Volume& input, bool is_training = false) override;
+    void Backward() override;
     
     bool OffloadToParallella() override { return true; }
     bool ProcessOnParallella(Volume& input, Volume& output) override;

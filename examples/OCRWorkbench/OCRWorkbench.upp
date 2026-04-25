@@ -1,0 +1,16 @@
+description "OCR Workbench - Unified OCR development and training suite\377";
+
+uses
+	CtrlLib,
+	Docking,
+	plugin/jpg,
+	OCR,
+	OCRDatasetEditor,
+	OCRTraining;
+
+file
+	OCRWorkbench.h,
+	OCRWorkbench.cpp;
+
+mainconfig
+	"" = "GUI";

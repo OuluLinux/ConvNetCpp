@@ -1,4 +1,5 @@
 #include "ConvNet.h"
+#include "SessionModules.h"
 
 namespace ConvNet {
 
@@ -69,7 +70,7 @@ void Session::StartTraining() {
 	if (!is_training_stopped) return;
 	is_training = true;
 	is_training_stopped = false;
-	#ifdef flagMT
+	#ifndef flagST
 	Thread::Start(THISBACK(Train));
 	#else
 	TrainBegin();
@@ -78,7 +79,7 @@ void Session::StartTraining() {
 
 void Session::StopTraining() {
 	is_training = false;
-	#ifdef flagMT
+	#ifndef flagST
 	while (!is_training_stopped)
 		Sleep(100);
 	#else
@@ -129,7 +130,7 @@ void Session::TrainBegin() {
 void Session::TrainIteration() {
 	SessionData& d = Data();
 	
-	const Vector<LayerBase>& layers = net.GetLayers();
+	const Array<LayerBase>& layers = net.GetLayers();
 	bool train_regression = d.is_data_result ? false : (layers.Top().IsRegressionLayer() || layers.Top().IsDeconvLayer());
 	
 	try {
@@ -145,7 +146,7 @@ void Session::TrainIteration() {
 			lock.Enter();
 			
 			// use x to build our estimate of validation error
-			if (test_predict && (step_num % predict_interval) == 0) {
+			if (test_predict && (predict_interval <= 0 || (step_num % predict_interval) == 0)) {
 				TimeStop ts;
 				Volume& v = net.Forward(x);
 				forward_time = ts.Elapsed();
@@ -212,7 +213,7 @@ void Session::TrainIteration() {
 			l2_loss_window.Add(loss_l2d);
 			
 			
-			if ((step_num % step_cb_interal) == 0)
+			if (step_cb_interal <= 0 || (step_num % step_cb_interal) == 0)
 				WhenStepInterval(step_num);
 			
 		}
@@ -220,7 +221,7 @@ void Session::TrainIteration() {
 		iter++;
 		
 	
-		if ((iter % iter_cb_interal) == 0)
+		if (iter_cb_interal <= 0 || (iter % iter_cb_interal) == 0)
 			WhenIterationInterval(iter);
 		
 	}
@@ -304,29 +305,34 @@ void Session::Tick() {
 
 Vector<double> Session::Predict(const Vector<double>& input) {
 	Vector<double> result;
-	
-	// Create a temporary volume with the input data
+
+	// Create a temporary volume matching the network's input layer dimensions
 	Volume temp_vol;
-	if (input.GetCount() == 1) {
-		// Assume it's a single value that needs to be set as 1x1x1 volume
+	LayerBase* in_layer = GetInput();
+	if(in_layer && in_layer->input_width > 0 && in_layer->input_height > 0 && in_layer->input_depth > 0) {
+		int w = in_layer->input_width;
+		int h = in_layer->input_height;
+		int d = in_layer->input_depth;
+		temp_vol.Init(w, h, d, 0.0);
+		int n = min(input.GetCount(), w * h * d);
+		for(int i = 0; i < n; i++)
+			temp_vol.Set(i, input[i]);
+	} else if(input.GetCount() == 1) {
 		temp_vol.Init(1, 1, 1, 0.0);
 		temp_vol.Set(0, input[0]);
 	} else {
-		// Convert 1D input vector to a volume (assuming width=input.size(), height=1, depth=1)
 		temp_vol.Init(input.GetCount(), 1, 1);
-		for (int i = 0; i < input.GetCount(); i++) {
+		for(int i = 0; i < input.GetCount(); i++)
 			temp_vol.Set(i, input[i]);
-		}
 	}
-	
+
 	// Forward pass through network
 	Volume& output = net.Forward(temp_vol, false); // false = not training
-	
+
 	// Convert output Volume to Vector<double>
-	for (int i = 0; i < output.GetLength(); i++) {
+	for(int i = 0; i < output.GetLength(); i++)
 		result.Add(output.Get(i));
-	}
-	
+
 	return result;
 }
 
@@ -355,6 +361,7 @@ bool Session::MakeLayers(const String& json) {
 	}
 	
 	Enter();
+	RegisterBuiltinSessionModules();
 	
 	try {
 		
@@ -370,23 +377,16 @@ bool Session::MakeLayers(const String& json) {
 			}
 			
 			
-			// Read trainer
-			bool trainer_loaded = false;
-			#define LOAD_LAYER(key, layer) \
-				if (type == key) {\
-					trainer.SetType(layer); \
-					trainer_loaded = true; \
-				}
+			// Read trainer through modular registry
+			String module_error;
+			int trainer_apply = SessionModuleRegistry::Get().ApplyTrainer(type, trainer, row, module_error);
+			if (trainer_apply < 0) {
+				LOG("ERROR: " + module_error);
+				Leave();
+				return false;
+			}
 			
-			LOAD_LAYER("adadelta", TRAINER_ADADELTA);
-			LOAD_LAYER("adagrad", TRAINER_ADAGRAD);
-			LOAD_LAYER("adam", TRAINER_ADAM);
-			LOAD_LAYER("netsterov", TRAINER_NETSTEROV);
-			LOAD_LAYER("sgd", TRAINER_SGD);
-			LOAD_LAYER("windowgrad", TRAINER_WINDOWGRAD);
-			
-			
-			if (trainer_loaded) {
+			if (trainer_apply > 0) {
 				#define OPT(x) {Value x = row.GetAdd(#x); if (!x.IsNull()) {trainer.x = x;}}
 				OPT(Beta1);
 				OPT(Beta2);
@@ -410,7 +410,7 @@ bool Session::MakeLayers(const String& json) {
 			}
 			
 			// Reference all possible arguments while there is only a few of them.
-			#define ARG(x) Value x = row.GetAdd(#x);
+			#define ARG(x) Value x = GetLegacyArg(row, #x);
 			#define REQ(x) ChkNotNull(#x, x)
 			#define DEF(x, y) x.IsNull() ? y : (double)x
 			
@@ -461,42 +461,13 @@ bool Session::MakeLayers(const String& json) {
 				}
 			}
 			
-			if      (type == "fc")			AddFullyConnLayer(REQ(neuron_count), DEF(l1_decay_mul, 0.0), DEF(l2_decay_mul, 1.0), DEF(bias_pref, 0.0));
-			else if (type == "lrn")			AddLrnLayer(REQ(k), REQ(n), REQ(alpha), REQ(beta));
-			else if (type == "dropout")		AddDropoutLayer(REQ(drop_prob));
-			else if (type == "input")		AddInputLayer(REQ(input_width), REQ(input_height), REQ(input_depth));
-			else if (type == "softmax")		AddSoftmaxLayer(REQ(class_count));
-			else if (type == "regression")	AddRegressionLayer();
-			else if (type == "heteroscedastic_regression")	AddHeteroscedasticRegressionLayer();
-			else if (type == "conv")		AddConvLayer(REQ(width), REQ(height), REQ(filter_count), DEF(l1_decay_mul, 0.0), DEF(l2_decay_mul, 1.0), DEF(stride, 1), DEF(pad, 0), DEF(bias_pref, 0.0));
-			else if (type == "deconv")		AddDeconvLayer(REQ(width), REQ(height), REQ(filter_count), DEF(l1_decay_mul, 0.0), DEF(l2_decay_mul, 1.0), DEF(stride, 1), DEF(pad, 0), DEF(bias_pref, 0.0));
-			else if (type == "pool")		AddPoolLayer(REQ(width), REQ(height), DEF(stride, 2), DEF(pad, 0));
-			else if (type == "unpool")		AddUnpoolLayer(REQ(width), REQ(height), DEF(stride, 2), DEF(pad, 0));
-			else if (type == "relu")		AddReluLayer();
-			else if (type == "sigmoid")		AddSigmoidLayer();
-			else if (type == "tanh")		AddTanhLayer();
-			else if (type == "maxout")		AddMaxoutLayer(REQ(group_size));
-			else if (type == "svm")			AddSVMLayer(REQ(class_count));
-			else if (type == "vit_patch_embed")		AddViTPatchEmbeddingLayer(row.GetAdd("patch_size"), row.GetAdd("embed_dim"), row.GetAdd("num_patches"));
-			else if (type == "vit_encoder")			AddViTEncoderLayer(row.GetAdd("embed_dim"), row.GetAdd("num_heads"), row.GetAdd("ff_dim"), row.GetAdd("num_layers"), DEF(row.GetAdd("dropout_rate"), 0.1));
-			else if (type == "vit_classifier")		AddViTClassifierLayer(row.GetAdd("num_classes"), row.GetAdd("embed_dim"));
-			else if (type == "swin_patch_merge")	AddSwinPatchMergingLayer(row.GetAdd("dim"), row.GetAdd("out_dim"));
-			else if (type == "window_attention")	AddWindowAttentionLayer(row.GetAdd("window_size"), row.GetAdd("num_heads"), row.GetAdd("input_dim"));
-			else if (type == "swin_block") {
-				Vector<int> input_resolution_vec = (Vector<int>)row.GetAdd("input_resolution");
-				int input_resolution[2];
-				if (input_resolution_vec.GetCount() >= 2) {
-					input_resolution[0] = input_resolution_vec[0];
-					input_resolution[1] = input_resolution_vec[1];
-				} else {
-					// Default value if not enough elements
-					input_resolution[0] = input_resolution_vec.GetCount() > 0 ? input_resolution_vec[0] : 0;
-					input_resolution[1] = input_resolution_vec.GetCount() > 1 ? input_resolution_vec[1] : 0;
-				}
-				AddSwinTransformerBlockLayer(row.GetAdd("dim"), input_resolution, row.GetAdd("num_heads"), DEF(row.GetAdd("window_size"), 7), DEF(row.GetAdd("shift_size"), 0), DEF(row.GetAdd("mlp_ratio"), 4), DEF(row.GetAdd("mlp_bias"), true), DEF(row.GetAdd("mlp_dropout"), 0.0));
+			int layer_apply = SessionModuleRegistry::Get().ApplyLayer(type, *this, row, module_error);
+			if (layer_apply < 0) {
+				LOG("ERROR: " + module_error);
+				Leave();
+				return false;
 			}
-			else if (type == "masked_attention")	AddMaskedMultiHeadAttentionLayer(row.GetAdd("embed_dim"), row.GetAdd("num_heads"));
-			else {
+			else if (layer_apply == 0) {
 				LOG("ERROR: UNRECOGNIZED LAYER TYPE: " + type);
 				Leave();
 				return false;
@@ -556,7 +527,9 @@ bool Session::MakeLayers(const String& json) {
 }
 
 void Session::Serialize(Stream& s) {
-	s % loss_window %reward_window % l1_loss_window % l2_loss_window % train_window % accuracy_window % test_window
+	int file_version = 1;
+	s % file_version
+	  % loss_window %reward_window % l1_loss_window % l2_loss_window % train_window % accuracy_window % test_window
 	  % accuracy_result_window
 	  % owned_data
 	  % trainer
@@ -573,6 +546,40 @@ void Session::Serialize(Stream& s) {
 	  % is_training % is_training_stopped
 	  % test_predict
 	  % augmentation_do_flip;
+	if (s.IsLoading()) {
+		is_training = false;
+		is_training_stopped = true;
+	} // DONT LOAD THESE TEMPORARY VARIABLES!
+}
+
+void Session::SerializeWeights(Stream& s) {
+	int file_version = 1;
+	owned_data.SerializeClasses(s);
+	s % file_version
+	  % loss_window % reward_window % l1_loss_window % l2_loss_window % train_window % accuracy_window % test_window
+	  % accuracy_result_window
+	  % trainer
+	  % net
+	  % x
+	  % session_last_input_array
+	  % predict_interval % step_num
+	  % train_iter_limit
+	  % iter
+	  % forward_time % backward_time
+	  % step_cb_interal
+	  % iter_cb_interal
+	  % augmentation
+	  % is_training % is_training_stopped
+	  % test_predict
+	  % augmentation_do_flip;
+	if (s.IsLoading()) {
+		is_training = false;
+		is_training_stopped = true;
+	} // DONT LOAD THESE TEMPORARY VARIABLES!
+}
+
+void Session::SerializeTrainData(Stream& s) {
+	s % owned_data;
 }
 
 void Session::Xmlize(XmlIO& xml) {
@@ -847,5 +854,16 @@ LayerBase& Session::AddMaskedMultiHeadAttentionLayer(int embed_dim, int num_head
 }
 
 
-}
 
+Value Session::GetLegacyArg(Value& row, const char* s) {
+	Value v = row.GetAdd(s);
+	if (v.IsNull()) {
+		if (!strcmp(s, "input_width")) v = row.GetAdd("out_sx");
+		else if (!strcmp(s, "input_height")) v = row.GetAdd("out_sy");
+		else if (!strcmp(s, "input_depth")) v = row.GetAdd("out_depth");
+		else if (!strcmp(s, "neuron_count")) v = row.GetAdd("num_neurons");
+		else if (!strcmp(s, "class_count")) v = row.GetAdd("num_classes");
+	}
+	return v;
+}
+}

@@ -398,8 +398,11 @@ void EncoderLayerCRTP::StoreImpl(ValueMap& map) const {
 
 void EncoderLayerCRTP::LoadImpl(const ValueMap& map) {
     // Load encoder layer parameters
-    self_attention.Load(map.GetValue(map.Find("self_attention")));
-    feed_forward.Load(map.GetValue(map.Find("feed_forward")));
+    int idx;
+    if ((idx = map.Find("self_attention")) >= 0)
+        self_attention.Load((ValueMap)map.GetValue(idx));
+    if ((idx = map.Find("feed_forward")) >= 0)
+        feed_forward.Load((ValueMap)map.GetValue(idx));
     // Load normalization parameters
 }
 
@@ -496,6 +499,14 @@ void DecoderLayerCRTP::StoreImpl(ValueMap& map) const {
 
 void DecoderLayerCRTP::LoadImpl(const ValueMap& map) {
     // Load decoder layer parameters
+    int idx;
+    if ((idx = map.Find("self_attention")) >= 0)
+        self_attention.Load((ValueMap)map.GetValue(idx));
+    if ((idx = map.Find("cross_attention")) >= 0)
+        cross_attention.Load((ValueMap)map.GetValue(idx));
+    if ((idx = map.Find("feed_forward")) >= 0)
+        feed_forward.Load((ValueMap)map.GetValue(idx));
+    // Load normalization parameters
 }
 
 String DecoderLayerCRTP::ToStringImpl() const {

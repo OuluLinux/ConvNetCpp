@@ -1,15 +1,24 @@
-//DIFFUSIONMODEL
-//FILE
-//  DiffusionModel.cpp
-//END
-#include "DiffusionModel.h"
+description "DiffusionModel example\377";
 
-struct WithCtrlPanel : Ctrl {
-	TrainingGraph graph;
+uses
+	CtrlLib,
+	ConvNet,
+	ConvNetCtrl,
+	Docking,
+	PlotCtrl,
+	plugin/z;
 
-	typedef WithCtrlPanel CLASSNAME;
-	WithCtrlPanel()
-	{
-		Add(graph.SizePos());
-	}
-};
+options
+	"-I.";
+
+file
+	DiffusionModel.cpp,
+	DiffusionModel.h,
+	DiffusionModel.iml,
+	DiffusionModel.lay,
+	DiffusionModelLayer.cpp,
+	main.cpp;
+
+mainconfig
+	"" = "GUI",
+	"" = "GUI DEBUG";

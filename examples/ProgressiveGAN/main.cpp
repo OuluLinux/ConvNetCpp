@@ -2,5 +2,12 @@
 
 GUI_APP_MAIN
 {
-	ProgressiveGAN().Run();
+	try {
+		ProgressiveGAN app;
+		app.Init(); 
+		app.Run();
+	}
+	catch (Exc e) {
+		PromptOK(e);
+	}
 }

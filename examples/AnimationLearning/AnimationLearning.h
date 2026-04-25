@@ -8,19 +8,11 @@
 using namespace Upp;
 using namespace ConvNet;
 
-#define LAYOUTFILE <AnimationLearning/AnimationLearning.lay>
-#include <CtrlCore/lay.h>
-
-#define IMAGECLASS AnimImg
-#define IMAGEFILE <AnimationLearning/AnimationLearning.iml>
-#include <Draw/iml_header.h>
-
 // Custom control for animation visualization
 class AnimationControl : public ParentCtrl {
 private:
-    // Skeleton/joint data representation
-    Vector<Pointf> joints;  // Joint positions (x, y)
-    Vector<Vector<int>> connections;  // Joint connections (bone structure)
+    Vector<Pointf> joints;
+    Vector<Vector<int>> connections;
     int currentFrame;
     int totalFrames;
 
@@ -37,6 +29,7 @@ public:
 };
 
 class AnimationApp : public DockWindow {
+public:
 	ParentCtrl settings;
 	Label lrate, lmom, lbatch, ldecay;
 	EditDouble rate, mom, decay;
@@ -77,6 +70,7 @@ public:
 	AnimationApp();
 	~AnimationApp();
 
+	void Init() {}
 	virtual void DockInit();
 
 	Session& GetSession() {return ses;}
@@ -104,9 +98,9 @@ public:
 	void OnPause();
 	void OnStop();
 
-	String BuildLSTMSkeletonConfig();  // LSTM-based skeleton animation
-	String BuildTransformerSkeletonConfig(); // Transformer-based animation
-	String BuildVAESkeletonConfig(); // VAE-based animation
+	String BuildLSTMSkeletonConfig();
+	String BuildTransformerSkeletonConfig();
+	String BuildVAESkeletonConfig();
 };
 
 #endif

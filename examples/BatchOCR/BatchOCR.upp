@@ -1,0 +1,12 @@
+description "Batch OCR processing example\377";
+
+uses
+	Core,
+	OCR;
+
+file
+	main.cpp;
+
+mainconfig
+	"" = "";
+

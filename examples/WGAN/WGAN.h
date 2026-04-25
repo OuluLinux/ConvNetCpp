@@ -9,14 +9,19 @@ using namespace ConvNet;
 
 #include <plugin/png/png.h>
 
-#define LAYOUTFILE <WGAN/WGAN.lay>
-#include <CtrlCore/lay.h>
-#define IMAGECLASS WGANImg
-#define IMAGEFILE <WGAN/WGAN.iml>
-#include <Draw/iml_header.h>
-
 // Forward declaration
 class WGAN;
+
+template <class T>
+struct WithCtrlPanel : public T {
+    TrainingGraph disc_graph;
+    TrainingGraph gen_graph;
+
+    void CtrlLayout(T& parent) {
+        parent.Add(disc_graph.HSizePos().TopPos(0, 200));
+        parent.Add(gen_graph.HSizePos().TopPos(200, 200));
+    }
+};
 
 // WGAN specific parameters
 struct WGANParams {
@@ -68,8 +73,9 @@ public:
 };
 
 class WGAN : public TopWindow {
-    Splitter vsplit;
-    WithCtrlPanel<ParentCtrl> panel;
+    WithCtrlPanel<ParentCtrl> ctrl_panel;
+    ParentCtrl options_panel;
+    Splitter main_vsplit;
 
     ConvNet::SessionConvLayers disc_layer_view, gen_layer_view;
     Mutex lock;

@@ -89,99 +89,105 @@ void ViTPatchEmbeddingCRTP::InitImpl(int input_width, int input_height, int inpu
     // Initialize weights using Xavier/Glorot initialization
     double scale = sqrt(2.0 / (patch_input_dim + embed_dim));
     for (int i = 0; i < proj_weight.GetSize(); i++) {
-        proj_weight.SetData(i, Randomf() * scale);
+        proj_weight.Set(i, Randomf() * scale);
     }
-    
+
     // Initialize bias to zeros
     for (int i = 0; i < proj_bias.GetSize(); i++) {
-        proj_bias.SetData(i, 0.0);
+        proj_bias.Set(i, 0.0);
     }
-    
+
     // Initialize positional embeddings with learned values
     for (int i = 0; i < pos_embed.GetSize(); i++) {
-        pos_embed.SetData(i, Randomf() * 0.02);  // Small random initialization
+        pos_embed.Set(i, Randomf() * 0.02);  // Small random initialization
     }
 }
 
 Vector<ParametersAndGradients>& ViTPatchEmbeddingCRTP::GetParametersAndGradientsImpl() {
-    parameters_and_gradients.Clear();
-    
+    static Vector<ParametersAndGradients> params_and_grads;
+    params_and_grads.Clear();
+
     if (proj_weight.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_and_gradients.Add();
+        ParametersAndGradients& pg = params_and_grads.Add();
         pg.volume = &proj_weight;
-        pg.grad_volume = &proj_weight;  // Using same volume for gradient temporarily
     }
-    
+
     if (proj_bias.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_and_gradients.Add();
+        ParametersAndGradients& pg = params_and_grads.Add();
         pg.volume = &proj_bias;
-        pg.grad_volume = &proj_bias;
     }
-    
+
     if (pos_embed.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_and_gradients.Add();
+        ParametersAndGradients& pg = params_and_grads.Add();
         pg.volume = &pos_embed;
-        pg.grad_volume = &pos_embed;
     }
-    
-    return parameters_and_gradients;
+
+    return params_and_grads;
 }
 
 void ViTPatchEmbeddingCRTP::StoreImpl(ValueMap& map) const {
-    map.Set("patch_size", patch_size);
-    map.Set("embed_dim", embed_dim);
-    map.Set("num_patches", num_patches);
+    map.GetAdd("patch_size") = patch_size;
+    map.GetAdd("embed_dim") = embed_dim;
+    map.GetAdd("num_patches") = num_patches;
     
     // Store weights and embeddings
     Vector<double> weight_data;
     for (int i = 0; i < proj_weight.GetSize(); i++) {
-        weight_data.Add(proj_weight.GetData(i));
+        weight_data.Add(proj_weight.Get(i));
     }
-    map.Set("proj_weight", weight_data);
-    
+    map.GetAdd("proj_weight") = (Value)weight_data;
+
     Vector<double> bias_data;
     for (int i = 0; i < proj_bias.GetSize(); i++) {
-        bias_data.Add(proj_bias.GetData(i));
+        bias_data.Add(proj_bias.Get(i));
     }
-    map.Set("proj_bias", bias_data);
-    
+    map.GetAdd("proj_bias") = (Value)bias_data;
+
     Vector<double> pos_embed_data;
     for (int i = 0; i < pos_embed.GetSize(); i++) {
-        pos_embed_data.Add(pos_embed.GetData(i));
+        pos_embed_data.Add(pos_embed.Get(i));
     }
-    map.Set("pos_embed", pos_embed_data);
+    map.GetAdd("pos_embed") = (Value)pos_embed_data;
 }
 
 void ViTPatchEmbeddingCRTP::LoadImpl(const ValueMap& map) {
-    patch_size = map.Get("patch_size", 16);
-    embed_dim = map.Get("embed_dim", 768);
-    num_patches = map.Get("num_patches", 196);  // Default for 224x224 image with 16x16 patches
-    
+    int patch_size_idx = map.Find("patch_size");
+    patch_size = (patch_size_idx >= 0) ? (int)map.GetValue(patch_size_idx) : 16;
+
+    int embed_dim_idx = map.Find("embed_dim");
+    embed_dim = (embed_dim_idx >= 0) ? (int)map.GetValue(embed_dim_idx) : 768;
+
+    int num_patches_idx = map.Find("num_patches");
+    num_patches = (num_patches_idx >= 0) ? (int)map.GetValue(num_patches_idx) : 196;  // Default for 224x224 image with 16x16 patches
+
     // Load weights and embeddings
-    if (map.Find("proj_weight")) {
-        Vector<double> weight_data = map.Get("proj_weight");
+    int weight_idx = map.Find("proj_weight");
+    if (weight_idx >= 0) {
+        Vector<double> weight_data = (Vector<double>)map.GetValue(weight_idx);
         proj_weight.Init(embed_dim, patch_size * patch_size * 3, 1);  // Assuming 3 for RGB
-        
-        for (int i = 0; i < Min(proj_weight.GetSize(), weight_data.GetCount()); i++) {
-            proj_weight.SetData(i, weight_data[i]);
+
+        for (int i = 0; i < min(proj_weight.GetSize(), weight_data.GetCount()); i++) {
+            proj_weight.Set(i, weight_data[i]);
         }
     }
-    
-    if (map.Find("proj_bias")) {
-        Vector<double> bias_data = map.Get("proj_bias");
+
+    int bias_idx = map.Find("proj_bias");
+    if (bias_idx >= 0) {
+        Vector<double> bias_data = (Vector<double>)map.GetValue(bias_idx);
         proj_bias.Init(embed_dim, 1, 1);
-        
-        for (int i = 0; i < Min(proj_bias.GetSize(), bias_data.GetCount()); i++) {
-            proj_bias.SetData(i, bias_data[i]);
+
+        for (int i = 0; i < min(proj_bias.GetSize(), bias_data.GetCount()); i++) {
+            proj_bias.Set(i, bias_data[i]);
         }
     }
-    
-    if (map.Find("pos_embed")) {
-        Vector<double> pos_embed_data = map.Get("pos_embed");
+
+    int pos_embed_idx = map.Find("pos_embed");
+    if (pos_embed_idx >= 0) {
+        Vector<double> pos_embed_data = (Vector<double>)map.GetValue(pos_embed_idx);
         pos_embed.Init(num_patches + 1, embed_dim, 1);  // +1 for class token
-        
-        for (int i = 0; i < Min(pos_embed.GetSize(), pos_embed_data.GetCount()); i++) {
-            pos_embed.SetData(i, pos_embed_data[i]);
+
+        for (int i = 0; i < min(pos_embed.GetSize(), pos_embed_data.GetCount()); i++) {
+            pos_embed.Set(i, pos_embed_data[i]);
         }
     }
 }
@@ -214,7 +220,7 @@ Volume& ViTEncoderCRTP::ForwardImpl(Volume& input, bool is_training) {
         class_token.Init(1, embed_dim, 1);
         // Initialize with small random values
         for (int i = 0; i < class_token.GetSize(); i++) {
-            class_token.SetData(i, Randomf() * 0.02);
+            class_token.Set(i, Randomf() * 0.02);
         }
     }
     
@@ -264,77 +270,88 @@ void ViTEncoderCRTP::InitImpl(int input_width, int input_height, int input_depth
     // Initialize class token
     class_token.Init(1, embed_dim, 1);
     for (int i = 0; i < class_token.GetSize(); i++) {
-        class_token.SetData(i, Randomf() * 0.02);
+        class_token.Set(i, Randomf() * 0.02);
     }
 }
 
 Vector<ParametersAndGradients>& ViTEncoderCRTP::GetParametersAndGradientsImpl() {
-    parameters_and_gradients.Clear();
-    
+    static Vector<ParametersAndGradients> params_and_grads;
+    params_and_grads.Clear();
+
     // Add class token parameters
     if (class_token.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_and_gradients.Add();
+        ParametersAndGradients& pg = params_and_grads.Add();
         pg.volume = &class_token;
-        pg.grad_volume = &class_token;
     }
-    
+
     // Add parameters from all encoder layers
     for (int i = 0; i < num_layers; i++) {
         Vector<ParametersAndGradients>& layer_params = encoder_layers[i].GetParametersAndGradients();
         for (int j = 0; j < layer_params.GetCount(); j++) {
-            parameters_and_gradients.Add() = layer_params[j];
+            params_and_grads.Add() = layer_params[j];
         }
     }
-    
-    return parameters_and_gradients;
+
+    return params_and_grads;
 }
 
 void ViTEncoderCRTP::StoreImpl(ValueMap& map) const {
-    map.Set("embed_dim", embed_dim);
-    map.Set("num_heads", num_heads);
-    map.Set("ff_dim", ff_dim);
-    map.Set("num_layers", num_layers);
-    map.Set("dropout_rate", dropout_rate);
+    map.GetAdd("embed_dim") = embed_dim;
+    map.GetAdd("num_heads") = num_heads;
+    map.GetAdd("ff_dim") = ff_dim;
+    map.GetAdd("num_layers") = num_layers;
+    map.GetAdd("dropout_rate") = dropout_rate;
     
     // Store class token
     Vector<double> class_token_data;
     for (int i = 0; i < class_token.GetSize(); i++) {
-        class_token_data.Add(class_token.GetData(i));
+        class_token_data.Add(class_token.Get(i));
     }
-    map.Set("class_token", class_token_data);
-    
+    map.GetAdd("class_token") = (Value)class_token_data;
+
     // Store encoder layers
     for (int i = 0; i < num_layers; i++) {
         ValueMap layer_map;
         encoder_layers[i].Store(layer_map);
         String key = "encoder_layer_" + IntStr(i);
-        map.Set(key, layer_map);
+        map.GetAdd(key) = layer_map;
     }
 }
 
 void ViTEncoderCRTP::LoadImpl(const ValueMap& map) {
-    embed_dim = map.Get("embed_dim", 768);
-    num_heads = map.Get("num_heads", 12);
-    ff_dim = map.Get("ff_dim", 3072);
-    num_layers = map.Get("num_layers", 12);
-    dropout_rate = map.Get("dropout_rate", 0.1);
-    
+    int embed_dim_idx = map.Find("embed_dim");
+    embed_dim = (embed_dim_idx >= 0) ? (int)map.GetValue(embed_dim_idx) : 768;
+
+    int num_heads_idx = map.Find("num_heads");
+    num_heads = (num_heads_idx >= 0) ? (int)map.GetValue(num_heads_idx) : 12;
+
+    int ff_dim_idx = map.Find("ff_dim");
+    ff_dim = (ff_dim_idx >= 0) ? (int)map.GetValue(ff_dim_idx) : 3072;
+
+    int num_layers_idx = map.Find("num_layers");
+    num_layers = (num_layers_idx >= 0) ? (int)map.GetValue(num_layers_idx) : 12;
+
+    int dropout_rate_idx = map.Find("dropout_rate");
+    dropout_rate = (dropout_rate_idx >= 0) ? (double)map.GetValue(dropout_rate_idx) : 0.1;
+
     // Load class token
-    if (map.Find("class_token")) {
-        Vector<double> class_token_data = map.Get("class_token");
+    int class_token_idx = map.Find("class_token");
+    if (class_token_idx >= 0) {
+        Vector<double> class_token_data = (Vector<double>)map.GetValue(class_token_idx);
         class_token.Init(1, embed_dim, 1);
-        
-        for (int i = 0; i < Min(class_token.GetSize(), class_token_data.GetCount()); i++) {
-            class_token.SetData(i, class_token_data[i]);
+
+        for (int i = 0; i < min(class_token.GetSize(), class_token_data.GetCount()); i++) {
+            class_token.Set(i, class_token_data[i]);
         }
     }
-    
+
     // Load encoder layers
     encoder_layers.SetCount(num_layers);
     for (int i = 0; i < num_layers; i++) {
         String key = "encoder_layer_" + IntStr(i);
-        if (map.Find(key)) {
-            ValueMap layer_map = map.Get(key);
+        int layer_idx = map.Find(key);
+        if (layer_idx >= 0) {
+            ValueMap layer_map = (ValueMap)map.GetValue(layer_idx);
             encoder_layers[i] = EncoderLayerCRTP(embed_dim, num_heads, ff_dim, dropout_rate);
             encoder_layers[i].Load(layer_map);
         }
@@ -393,74 +410,78 @@ void ViTClassifierCRTP::InitImpl(int input_width, int input_height, int input_de
     // Initialize weights using Xavier/Glorot initialization
     double scale = sqrt(2.0 / (embed_dim + num_classes));
     for (int i = 0; i < classifier_weight.GetSize(); i++) {
-        classifier_weight.SetData(i, Randomf() * scale);
+        classifier_weight.Set(i, Randomf() * scale);
     }
-    
+
     // Initialize bias to zeros
     classifier_bias.Init(num_classes, 1, 1);
     for (int i = 0; i < classifier_bias.GetSize(); i++) {
-        classifier_bias.SetData(i, 0.0);
+        classifier_bias.Set(i, 0.0);
     }
 }
 
 Vector<ParametersAndGradients>& ViTClassifierCRTP::GetParametersAndGradientsImpl() {
-    parameters_and_gradients.Clear();
-    
+    static Vector<ParametersAndGradients> params_and_grads;
+    params_and_grads.Clear();
+
     if (classifier_weight.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_and_gradients.Add();
+        ParametersAndGradients& pg = params_and_grads.Add();
         pg.volume = &classifier_weight;
-        pg.grad_volume = &classifier_weight;  // Using same volume for gradient temporarily
     }
-    
+
     if (classifier_bias.GetSize() > 0) {
-        ParametersAndGradients& pg = parameters_and_gradients.Add();
+        ParametersAndGradients& pg = params_and_grads.Add();
         pg.volume = &classifier_bias;
-        pg.grad_volume = &classifier_bias;
     }
-    
-    return parameters_and_gradients;
+
+    return params_and_grads;
 }
 
 void ViTClassifierCRTP::StoreImpl(ValueMap& map) const {
-    map.Set("num_classes", num_classes);
-    map.Set("embed_dim", embed_dim);
-    
+    map.GetAdd("num_classes") = num_classes;
+    map.GetAdd("embed_dim") = embed_dim;
+
     // Store weights
     Vector<double> weight_data;
     for (int i = 0; i < classifier_weight.GetSize(); i++) {
-        weight_data.Add(classifier_weight.GetData(i));
+        weight_data.Add(classifier_weight.Get(i));
     }
-    map.Set("classifier_weight", weight_data);
-    
+    map.GetAdd("classifier_weight") = (Value)weight_data;
+
     // Store bias
     Vector<double> bias_data;
     for (int i = 0; i < classifier_bias.GetSize(); i++) {
-        bias_data.Add(classifier_bias.GetData(i));
+        bias_data.Add(classifier_bias.Get(i));
     }
-    map.Set("classifier_bias", bias_data);
+    map.GetAdd("classifier_bias") = (Value)bias_data;
 }
 
 void ViTClassifierCRTP::LoadImpl(const ValueMap& map) {
-    num_classes = map.Get("num_classes", 1000);
-    embed_dim = map.Get("embed_dim", 768);
-    
+    int num_classes_idx = map.Find("num_classes");
+    num_classes = (num_classes_idx >= 0) ? (int)map.GetValue(num_classes_idx) : 1000;
+
+    int embed_dim_idx = map.Find("embed_dim");
+    embed_dim = (embed_dim_idx >= 0) ? (int)map.GetValue(embed_dim_idx) : 768;
+
     // Load weights
-    if (map.Find("classifier_weight")) {
-        Vector<double> weight_data = map.Get("classifier_weight");
+    int weight_idx = map.Find("classifier_weight");
+    if (weight_idx >= 0) {
+        Vector<double> weight_data = (Vector<double>)map.GetValue(weight_idx);
         classifier_weight.Init(num_classes, embed_dim, 1);
-        
-        for (int i = 0; i < Min(classifier_weight.GetSize(), weight_data.GetCount()); i++) {
-            classifier_weight.SetData(i, weight_data[i]);
+
+        for (int i = 0; i < min(classifier_weight.GetSize(), weight_data.GetCount()); i++) {
+            classifier_weight.Set(i, weight_data[i]);
         }
     }
-    
+
     // Load bias
-    if (map.Find("classifier_bias")) {
-        Vector<double> bias_data = map.Get("classifier_bias");
+    int bias_idx = map.Find("classifier_bias");
+    if (bias_idx >= 0) {
+        Vector<double> bias_data = (Vector<double>)map.GetValue(bias_idx);
         classifier_bias.Init(num_classes, 1, 1);
-        
-        for (int i = 0; i < Min(classifier_bias.GetSize(), bias_data.GetCount()); i++) {
-            classifier_bias.SetData(i, bias_data[i]);
+
+        for (int i = 0; i < min(classifier_bias.GetSize(), bias_data.GetCount()); i++) {
+            classifier_bias.Set(i, bias_data[i]);
         }
     }
 }

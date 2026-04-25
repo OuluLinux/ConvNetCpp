@@ -2,5 +2,12 @@
 
 GUI_APP_MAIN
 {
-	SAGAN().Run();
+	try {
+		SAGAN app;
+		app.Init(); 
+		app.Run();
+	}
+	catch (Exc e) {
+		PromptOK(e);
+	}
 }

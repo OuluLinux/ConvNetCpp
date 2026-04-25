@@ -1,0 +1,13 @@
+description "OCR GUI Controls and Visualizations\377";
+
+uses
+	CtrlLib,
+	OCR,
+	plugin/png,
+	plugin/jpg;
+
+file
+	OCRCtrl.h,
+	OCRCtrl.cpp,
+	OCRVis.h,
+	OCRVis.cpp;

@@ -9,7 +9,7 @@ namespace ConvNet
 class Net {
 	
 private:
-	Vector<LayerBase> layers;
+	Array<LayerBase> layers;
 	
 	Vector<ParametersAndGradients> response;
 	SpinLock lock;
@@ -25,8 +25,8 @@ public:
 		s % layers;
 	}
 	
-	const Vector<LayerBase>& GetLayers() const {return layers;}
-	Vector<LayerBase>& GetLayers() {return layers;}
+	const Array<LayerBase>& GetLayers() const {return layers;}
+	Array<LayerBase>& GetLayers() {return layers;}
 	Volume& GetOutput() {return layers.Top().output_activation;}
 	
 	LayerBase& AddLayer() {return layers.Add();}

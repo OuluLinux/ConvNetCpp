@@ -215,7 +215,7 @@ void LayerView::PaintInputXY(Draw& id) {
 	double diff = offset * 2;
 	double step = diff / (count - 1);
 	
-	const Vector<LayerBase>& layers = net.GetLayers();
+	const Array<LayerBase>& layers = net.GetLayers();
 	if (lix < 0 || lix >= layers.GetCount()) {return;}
 	const LayerBase& lb = layers[lix];
 	const Volume& output = lb.output_activation;
@@ -375,7 +375,7 @@ void LayerView::PaintInputImage(Draw& id) {
 		}
 	}
 	
-	const Vector<LayerBase>& layers = net.GetLayers();
+	const Array<LayerBase>& layers = net.GetLayers();
 	if (lix < 0 || lix >= layers.GetCount()) return;
 	const LayerBase& lb = layers[lix];
 	const Volume& output = lb.output_activation;
@@ -476,7 +476,7 @@ void LayerCtrl::RefreshData() {
 	ses->Enter();
 	Net& net = ses->GetNetwork();
 	
-	const Vector<LayerBase>& layers = net.GetLayers();
+	const Array<LayerBase>& layers = net.GetLayers();
 	if (lix < 0 || lix >= layers.GetCount()) lix = 0;
 	d0 = 0;
 	d1 = 1;
@@ -522,7 +522,7 @@ void LayerCtrl::ViewLayer(int i) {
 
 void LayerCtrl::Cycle() {
 	Net& net = ses->GetNetwork();
-	const Vector<LayerBase>& layers = net.GetLayers();
+	const Array<LayerBase>& layers = net.GetLayers();
 	const LayerBase& lb = layers[lix];
 	
 	d0 += 1;

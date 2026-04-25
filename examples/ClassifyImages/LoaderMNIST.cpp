@@ -71,14 +71,19 @@ void LoaderMNIST::Load() {
 			case 2: file = "train-images.idx3-ubyte.bin"; break;
 			case 3: file = "train-labels.idx1-ubyte.bin"; break;
 		}
-		if (!FileExists(GetExeDirFile(file))) {
-			PromptOK("Error: MNIST dataset file " + file + " is not included with this executable.");
-			ret_value = 1;
-			PostCallback(THISBACK(Close0));
-			return;
+		String path;
+		path  = AppendFileName(GetCurrentDirectory(), file);
+		if (!FileExists(path)) {
+			path = GetExeDirFile(file);
+			if (!FileExists(path)) {
+				PromptOK("Error: MNIST dataset file " + file + " is not included with this executable.");
+				ret_value = 1;
+				PostCallback(THISBACK(Close0));
+				return;
+			}
 		}
 		
-		FileIn in(GetExeDirFile(file));
+		FileIn in(path);
 		
 		int length = in.GetSize();
 		LOG("Load " <<  file << " size: " << length);

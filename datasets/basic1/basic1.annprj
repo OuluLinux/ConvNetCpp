@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "name": "basic1_scidoc",
+  "datasets": [
+    {
+      "name": "train",
+      "images": [
+        {
+          "file_name": "sample_page_001.png",
+          "width": 1600,
+          "height": 2200,
+          "image_meta_keys": [
+            "metadata_verified",
+            "figure_tokens",
+            "header_tokens"
+          ],
+          "image_meta_values": [
+            "false",
+            "XaXbXcXdXa",
+            "XbXc"
+          ],
+          "annotations": [
+            {
+              "metadata": {
+                "mlui_slot_id": "figure_token_1"
+              },
+              "polygons": [
+                [
+                  { "x": 300, "y": 900 },
+                  { "x": 360, "y": 900 },
+                  { "x": 360, "y": 1030 },
+                  { "x": 300, "y": 1030 }
+                ]
+              ]
+            },
+            {
+              "metadata": {
+                "mlui_slot_id": "figure_block"
+              },
+              "polygons": [
+                [
+                  { "x": 210, "y": 980 },
+                  { "x": 520, "y": 980 },
+                  { "x": 520, "y": 1400 },
+                  { "x": 210, "y": 1400 }
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "categories": [
+    { "id": "doc_title", "name": "Document Title" },
+    { "id": "figure_token_1", "name": "Figure Token 1" },
+    { "id": "figure_block", "name": "Figure Block" }
+  ]
+}

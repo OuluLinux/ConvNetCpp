@@ -1,4 +1,5 @@
-[0]
-type=icon
-name=icon
-file=icon.ico
+[IMAGES]
+
+[icon]
+0 0 16 16 1 1
+DkGreen

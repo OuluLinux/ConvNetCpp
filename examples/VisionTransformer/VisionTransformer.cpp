@@ -1,31 +1,14 @@
 #include "VisionTransformer.h"
 
-#define IMAGECLASS VisionTransformerImg
-#define IMAGEFILE <VisionTransformer/VisionTransformer.iml>
-#include <Draw/iml_source.h>
-
-// Vision Transformer implementation
+// ViT implementation
 VisionTransformer::VisionTransformer()
+    : loader(ses)
 {
-	Icon(VisionTransformerImg::icon());
 	Sizeable().MaximizeBox().MinimizeBox().Zoomable();
 	Title("Vision Transformer on CIFAR-10");
 
-	// Define a Vision Transformer architecture using the existing transformer layers
-	// This is a simplified version that demonstrates the concept
-	t =		"[\n"
-			"\t{\"type\":\"input\", \"input_width\":32, \"input_height\":32, \"input_depth\":3},\n"
-			"\t{\"type\":\"vit_patch_embed\", \"patch_size\":4, \"embed_dim\":256, \"num_patches\":64},\n"  // Patch embedding: 32x32 image -> patches of 4x4 -> 64 patches of 48 dim (3x4x4)
-			"\t{\"type\":\"vit_encoder\", \"embed_dim\":256, \"num_heads\":8, \"ff_dim\":512, \"num_layers\":6},\n"
-			"\t{\"type\":\"vit_classifier\", \"num_classes\":10, \"embed_dim\":256},\n"
-			"\t{\"type\":\"adam\", \"learning_rate\":0.0001, \"beta1\":0.9, \"beta2\":0.999, \"batch_size\":32, \"l2_decay\":0.0001}\n"
-			"]\n";
-
-	// Image settings for CIFAR-10
-	img_sz = Size(32,32);
-	augmentation = 32;
-	do_flip = true;
-	has_colors = true;
+	// Define a Vision Transformer architecture
+	t = BuildViTConfig();
 
 	net_edit.SetData(t);
 
@@ -37,50 +20,10 @@ VisionTransformer::VisionTransformer()
 	Add(v_split.SizePos());
 	v_split.Vert();
 
-	v_split << layer_view << pred_view;
+	v_split << layer_view;
 	v_split.SetPos(6400);
 
 	ses.SetTestPredict(true);
-	ses.SetAugmentation(augmentation, do_flip);
-
-	pred_view.SetSession(ses);
-	pred_view.SetAugmentation(augmentation, do_flip);
-
-	net_ctrl.Add(net_edit.HSizePos().VSizePos(0,30));
-	net_ctrl.Add(reload_btn.HSizePos().BottomPos(0,30));
-	reload_btn.SetLabel("Reload Network");
-	reload_btn <<= THISBACK(Reload);
-
-	// Settings panel
-	lrate.SetLabel("Learning rate:");
-	lmom.SetLabel("Momentum:");
-	lbatch.SetLabel("Batch size:");
-	ldecay.SetLabel("Weight decay:");
-	apply.SetLabel("Apply");
-	save_net.SetLabel("Save network");
-	load_net.SetLabel("Load network");
-	pause.SetLabel("Pause");
-	apply <<= THISBACK(ApplySettings);
-	save_net <<= THISBACK(SaveFile);
-	load_net <<= THISBACK(OpenFile);
-	pause <<= THISBACK(Pause);
-	int row = 20;
-	settings.Add(lrate.HSizePos(4,4).TopPos(0,row));
-	settings.Add(rate.HSizePos(4,4).TopPos(1*row,row));
-	settings.Add(lmom.HSizePos(4,4).TopPos(2*row,row));
-	settings.Add(mom.HSizePos(4,4).TopPos(3*row,row));
-	settings.Add(lbatch.HSizePos(4,4).TopPos(4*row,row));
-	settings.Add(batch.HSizePos(4,4).TopPos(5*row,row));
-	settings.Add(ldecay.HSizePos(4,4).TopPos(6*row,row));
-	settings.Add(decay.HSizePos(4,4).TopPos(7*row,row));
-	settings.Add(apply.HSizePos(4,4).TopPos(8*row,row));
-	settings.Add(save_net.HSizePos(4,4).TopPos(9*row,row));
-	settings.Add(load_net.HSizePos(4,4).TopPos(10*row,row));
-	settings.Add(pause.HSizePos(4,4).TopPos(11*row,row));
-	rate.SetData(0.0001);
-	mom.SetData(0.9);
-	batch.SetData(32);
-	decay.SetData(0.0001);
 
 	layer_view.SetSession(ses);
 	layer_view.SetColor();
@@ -165,7 +108,7 @@ void VisionTransformer::SaveFile() {
 void VisionTransformer::Reload() {
 	ses.StopTraining();
 
-	String net_str = net_edit.GetData();
+	String net_str = net_edit.GetData().ToString();
 
 	ticking_lock.Enter();
 
@@ -204,4 +147,19 @@ void VisionTransformer::Refresher() {
 void VisionTransformer::ResetAll() {
 	UpdateNetParamDisplay();
 	graph.Clear();
+}
+
+String VisionTransformer::BuildViTConfig() {
+	// Vision Transformer architecture for CIFAR-10
+	return
+		"[\n"
+		"  { \"type\" : \"input\", \"input_width\":32, \"input_height\":32, \"input_depth\":3},\n"
+		"  { \"type\" : \"patch_embed\", \"patch_size\":4, \"embed_dim\":128},\n"
+		"  { \"type\" : \"vit_block\", \"embed_dim\":128, \"num_heads\":8, \"mlp_ratio\":4.0, \"dropout\":0.1},\n"
+		"  { \"type\" : \"vit_block\", \"embed_dim\":128, \"num_heads\":8, \"mlp_ratio\":4.0, \"dropout\":0.1},\n"
+		"  { \"type\" : \"vit_block\", \"embed_dim\":128, \"num_heads\":8, \"mlp_ratio\":4.0, \"dropout\":0.1},\n"
+		"  { \"type\" : \"layer_norm\"},\n"
+		"  { \"type\" : \"fc\", \"neuron_count\":10, \"activation\":\"softmax\"},\n"
+		"  { \"type\" : \"adam\", \"learning_rate\":0.001, \"beta1\":0.9, \"beta2\":0.999, \"batch_size\":64, \"l2_decay\":0.0001}\n"
+		"]\n";
 }

@@ -1,0 +1,23 @@
+description "OCR Training Tool - Train and visualize OCR neural networks\377";
+
+uses
+	CtrlLib,
+	ConvNet,
+	OCR,
+	OCRCtrl,
+	Docking,
+	plugin/png,
+	plugin/jpg;
+
+file
+	OCRTraining.h,
+	OCRTraining.cpp,
+	OCRTrainingApp.cpp,
+	icon.ico,
+	icon64x64.png;
+
+mainconfig
+	"Standalone (Posix)" = "GUI",
+	"Standalone (Windows)" = "GUI",
+	"Library (Posix)" = "GUI",
+	"Library (Windows)" = "GUI";

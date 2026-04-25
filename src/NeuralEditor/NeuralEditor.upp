@@ -1,0 +1,25 @@
+description "Neural graph editor test package (.nnsln/.nnprj/.nngrf)\377";
+
+uses
+	Core,
+	CtrlLib,
+	Docking,
+	NodeWorkbench,
+	ConvNet,
+	ConvNetCtrl,
+	ByteVM;
+
+file
+	NeuralProject.h,
+	NeuralProject.cpp,
+	NeuralCompiler.h,
+	NeuralCompiler.cpp,
+	NeuralScriptRuntime.h,
+	NeuralScriptRuntime.cpp,
+	NeuralEditor.h,
+	NeuralEditor.cpp,
+	main.cpp;
+
+mainconfig
+	"" = "GUI",
+	"X11" = "GUI X11";

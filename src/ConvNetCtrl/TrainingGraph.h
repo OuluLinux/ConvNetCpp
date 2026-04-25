@@ -21,6 +21,8 @@ protected:
 	int average_size;
 	int last_steps;
 	int interval;
+	int update_period_ms;
+	int64 last_add_ms;
 	int limit;
 	int mode;
 	
@@ -35,6 +37,8 @@ public:
 	void SetModeReward() {mode = MODE_REWARD; plotter.data[0].SetTitle("Reward");}
 	void SetAverage(int size) {average_size = size;}
 	void SetInterval(int period) {interval = period;}
+	void SetUpdatePeriodMs(int ms) {update_period_ms = max(1, ms);}
+	void SetUpdateHz(double hz) {SetUpdatePeriodMs((int)max(1.0, 1000.0 / max(0.1, hz)));}
 	void SetLimit(int size) {limit = size;}
 	
 	void StepInterval(int num_steps);

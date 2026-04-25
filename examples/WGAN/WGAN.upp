@@ -1,23 +1,24 @@
-<Pkg>
-<Id>WGAN</Id>
-<Package>WGAN</Package>
-<Target>Examples</Target>
-</Pkg>
+description "WGAN example\377";
 
-<SourceList>
-<Source>WGAN.cpp</Source>
-<Source>WGANLayer.cpp</Source>
-<Source>main.cpp</Source>
-</SourceList>
+uses
+	CtrlLib,
+	ConvNet,
+	ConvNetCtrl,
+	Docking,
+	PlotCtrl,
+	plugin/z;
 
-<IncludeList>
-<Include>WGAN.h</Include>
-</IncludeList>
+options
+	"-I.";
 
-<LibraryList />
+file
+	WGAN.cpp,
+	WGAN.h,
+	WGAN.iml,
+	WGAN.lay,
+	WGANLayer.cpp,
+	main.cpp;
 
-<DefList />
-
-<LinkList />
-
-<Precomp>ConvNet</Precomp>
+mainconfig
+	"" = "GUI",
+	"" = "GUI DEBUG";

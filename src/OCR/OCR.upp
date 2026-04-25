@@ -1,0 +1,39 @@
+description "OCR Core Library - Optical Character Recognition\377";
+
+uses
+	Core,
+	Draw,
+	Painter,
+	plugin/png,
+	ConvNet;
+
+file
+	OCR.h,
+	OCR.cpp,
+	OCRTypes.h,
+	OCRTypes.cpp,
+	OCRDatasetProject.h,
+	OCRDatasetProject.cpp,
+	ImageUtils.h,
+	ImageUtils.cpp,
+	Segmentation.h,
+	Segmentation.cpp,
+	Preprocessing.h,
+	Preprocessing.cpp,
+	Normalization.h,
+	Normalization.cpp,
+	NetworkBuilder.h,
+	NetworkBuilder.cpp,
+	OCRModel.h,
+	OCRModel.cpp,
+	TextSplitter.h,
+	TextSplitter.cpp,
+	OCRPipeline.h,
+	OCRPipeline.cpp,
+	ocr_c.h,
+	ocr_c.cpp,
+	Tesseract.h,
+	Tesseract.cpp,
+	OCRTesting.h,
+	OCRTesting.cpp;
+

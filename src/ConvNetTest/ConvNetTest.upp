@@ -1,0 +1,11 @@
+description "ConvNet unit tests\377";
+
+uses
+    Core,
+    ConvNet;
+
+file
+    main.cpp;
+
+mainconfig
+    "" = "";

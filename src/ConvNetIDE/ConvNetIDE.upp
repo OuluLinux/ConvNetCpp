@@ -1,0 +1,16 @@
+description "Python IDE with ConvNet and OCR support\377";
+
+uses
+    ScriptIDE,
+    OCRPlugin,
+    OCRForm,
+    ConvNetPlugin;
+
+file
+    main.cpp;
+
+mainconfig
+    ""              = "GUI",
+    "X11"           = "GUI X11",
+    "USEMALLOC"     = "GUI USEMALLOC",
+    "X11 USEMALLOC" = "GUI X11 USEMALLOC";

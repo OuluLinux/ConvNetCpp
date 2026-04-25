@@ -7,6 +7,8 @@ uses
 file
 	Copying,
 	ConvNet.h,
+	SessionModules.h,
+	SessionModules.cpp,
 	Session.h,
 	Session.cpp,
 	MetaSession.h,
@@ -62,6 +64,8 @@ file
 	MemoryPool.cpp,
 	RuntimeFlexibility.h,
 	CrtpLayers.h,
+	CrtpLayers.cpp,
+	LayerNormCRTP.cpp,
 	TransformerLayers.h,
 	TransformerLayers.cpp,
 	GptLayers.h,

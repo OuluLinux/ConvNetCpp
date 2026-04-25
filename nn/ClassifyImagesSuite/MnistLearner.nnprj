@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "name": "MnistLearner",
+  "graphs": [
+    "mnist_learner.nngrf"
+  ],
+  "startup_graph": "mnist_learner.nngrf",
+  "metadata": {
+    "source_example": "examples/ClassifyImages",
+    "variant": "mnist_learner",
+    "generator": "convert_examples_to_nn.py"
+  }
+}

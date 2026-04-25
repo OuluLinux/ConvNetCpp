@@ -1,0 +1,16 @@
+description "ScriptIDE plugin exposing ConvNet training and inference to Python\377";
+
+uses
+    Core,
+    ByteVM,
+    ConvNet,
+    ScriptCommon;
+
+file
+    ConvNetPlugin.h,
+    ConvNetPlugin.cpp,
+    ConvNetPluginRegistration.icpp;
+
+mainconfig
+    ""    = "",
+    "GUI" = "GUI";

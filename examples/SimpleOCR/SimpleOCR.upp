@@ -1,0 +1,12 @@
+description "Simple OCR CLI example\377";
+
+uses
+	Core,
+	OCR;
+
+file
+	main.cpp;
+
+mainconfig
+	"" = "";
+

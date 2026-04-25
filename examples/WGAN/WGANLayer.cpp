@@ -17,7 +17,7 @@ void WGANLayer::Init(int stride, const WGANParams& params) {
 
     // WGAN Discriminator (Critic): Uses linear activation (no sigmoid) to output unbounded values
     String disc_t =	"[\n"
-                    "\t{\"type\":\"input\", \"input_width\":" + IntStr(input_width) + ", \"input_height\":" + IntStr(input_height) + ", \"input_depth\":" + IntStr(input_depth) + "},\n"
+                    "\t{\"type\":\"input\", \"input_width\":" + FormatInt(input_width) + ", \"input_height\":" + FormatInt(input_height) + ", \"input_depth\":" + FormatInt(input_depth) + "},\n"
                     "\t{\"type\":\"conv\", \"sx\":4, \"sy\":4, \"stride\":2, \"pad\":1, \"filters\":64, \"activation\":\"relu\"},\n"
                     "\t{\"type\":\"lrn\", \"k\":2, \"n\":5, \"alpha\":0.0001, \"beta\":0.75},\n"
                     "\t{\"type\":\"conv\", \"sx\":4, \"sy\":4, \"stride\":2, \"pad\":1, \"filters\":128, \"activation\":\"relu\"},\n"
@@ -35,7 +35,7 @@ void WGANLayer::Init(int stride, const WGANParams& params) {
 
     // WGAN Generator: Similar to DCGAN but with different learning parameters
     String gen_t =	"[\n"
-                    "\t{\"type\":\"input\", \"input_width\":" + IntStr(noise_size) + ", \"input_height\":1, \"input_depth\":1},\n"
+                    "\t{\"type\":\"input\", \"input_width\":" + FormatInt(noise_size) + ", \"input_height\":1, \"input_depth\":1},\n"
                     "\t{\"type\":\"fc\", \"neuron_count\":7*7*256, \"activation\":\"relu\"},\n"
                     "\t{\"type\":\"lrn\", \"k\":2, \"n\":5, \"alpha\":0.0001, \"beta\":0.75},\n"
                     "\t{\"type\":\"unflatten\", \"width\":7, \"height\":7, \"depth\":256},\n"
@@ -56,7 +56,7 @@ void WGANLayer::Train() {
     Net& disc_net = disc.GetNetwork();
 
     // Clip discriminator weights to enforce Lipschitz constraint
-    for (auto& param : disc.GetParameters()) {
+    for (auto& param : disc.GetNetwork().GetParametersAndGradients()) {
         Volume& vol = *param.volume;
         for (int i = 0; i < vol.GetLength(); i++) {
             double val = vol.Get(i);

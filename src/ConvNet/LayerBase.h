@@ -39,11 +39,11 @@ enum {
 	CUSTOM_LAYER
 };
 
-class LayerBase : Moveable<LayerBase> {
+class LayerBase {
 	
 
 protected:
-	LayerBase(const LayerBase& o) {}
+	LayerBase(const LayerBase& o);
 	
 	// Temporary
 	Vector<ParametersAndGradients> response;
@@ -88,11 +88,11 @@ public:
 	Vector<double> es;
 	
 	// Convolutive layer
-	int width;
-	int height;
-	int filter_count;
-	int stride;
-	int pad;
+	int width = 0;
+	int height = 0;
+	int filter_count = 0;
+	int stride = 0;
+	int pad = 0;
 	
 	// Maxout layer
 	Vector<int> switches;

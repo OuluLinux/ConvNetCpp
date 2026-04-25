@@ -1,6 +1,23 @@
-<target name="GptTester" type="exe" use="ConvNet CtrlLib">
-	<file name="GptTester.cpp"/>
-	<file name="main.cpp"/>
-	<file name="GptTester.iml"/>
-	<file name="GptTester.lay"/>
-</target>
+description "GptTester example\377";
+
+uses
+	CtrlLib,
+	ConvNet,
+	ConvNetCtrl,
+	Docking,
+	PlotCtrl,
+	plugin/z;
+
+options
+	"-I.";
+
+file
+	GptTester.cpp,
+	GptTester.h,
+	GptTester.iml,
+	GptTester.lay,
+	main.cpp;
+
+mainconfig
+	"" = "GUI",
+	"" = "GUI DEBUG";

@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "name": "ClassifyImagesSuite_CIFAR",
+  "projects": [
+    "CifarLearner.nnprj"
+  ],
+  "active_project": "CifarLearner.nnprj",
+  "metadata": {
+    "source_example": "examples/ClassifyImages",
+    "generator": "convert_examples_to_nn.py"
+  }
+}

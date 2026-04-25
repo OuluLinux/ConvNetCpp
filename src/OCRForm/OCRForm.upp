@@ -1,0 +1,58 @@
+description "ScriptIDE OCRForm annotation editor and runtime host\377";
+
+uses
+	Core,
+	Draw,
+	CtrlLib,
+	Painter,
+	plugin/png,
+	plugin/jpg,
+	ByteVM,
+	Form,
+	FormEditor,
+	OCR,
+	OCRCtrl,
+	ScriptIDE;
+
+file
+	OCRForm.h,
+	OCRForm.cpp,
+	OCRFormDocumentHost.h,
+	OCRFormDocumentHost.cpp,
+	OCRFormFileTypeHandler.h,
+	OCRFormFileTypeHandler.cpp,
+	OCRFormPlugin.h,
+	OCRFormPlugin.cpp,
+	OCRFormRegistration.icpp,
+	OcrWidgetTypes.h,
+	OcrAnnotation.h,
+	OcrAnnotation.cpp,
+	AnnotationProposal.h,
+	FrameDiff.h,
+	FrameDiff.cpp,
+	OcrAnalysisWorker.h,
+	OcrAnalysisWorker.cpp,
+	OcrFormLayout.h,
+	OcrFormLayout.cpp,
+	OcrFormDocument.h,
+	OcrFormDocument.cpp,
+	OcrFormExporter.h,
+	OcrFormExporter.cpp,
+	IOcrAnalyser.h,
+	IVideoSource.h,
+	VideoSourceRegistry.h,
+	VideoSourceRegistry.cpp,
+	StaticImageSource.h,
+	StaticImageSource.cpp,
+	ScreenCaptureSource.h,
+	ScreenCaptureSource.cpp,
+	NetworkVideoSource.h,
+	NetworkVideoSource.cpp,
+	YuvConvert.h,
+	OcrAnalyserRegistry.h,
+	OcrAnalyserRegistry.cpp,
+	OcrManualAnalyser.h,
+	OcrManualAnalyser.cpp;
+
+mainconfig
+	"GUI" = "GUI";

@@ -1,0 +1,19 @@
+description "AnnLayTrain - CLI to train AnnLay slot classifiers\377";
+
+uses
+	Core,
+	Draw,
+	plugin/jpg,
+	plugin/png,
+	ConvNet;
+
+file
+	../AnnotationEditor/AnnLay.cpp,
+	../AnnotationEditor/AnnLay.h,
+	../AnnotationEditor/AnchoredSlotClassifier.cpp,
+	../AnnotationEditor/AnchoredSlotClassifier.h,
+	main.cpp;
+
+mainconfig
+	"" = "CONSOLE GUI",
+	"USEMALLOC" = "CONSOLE GUI USEMALLOC";

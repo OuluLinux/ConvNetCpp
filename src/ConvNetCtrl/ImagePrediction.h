@@ -29,7 +29,7 @@ struct ImagePrediction : public Ctrl {
 	bool do_flip;
 	
 protected:
-	void Add(Image& img, String l0, double p0, String l1, double p1, String l2, double p2);
+	void Add(Image& img, const Vector<PredValue>& values);
 	void Refresh0() {Refresh();}
 	
 public:

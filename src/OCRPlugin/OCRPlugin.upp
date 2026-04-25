@@ -1,0 +1,17 @@
+description "ScriptIDE OCR verification plugin for autonomous game development\377";
+
+uses
+	Core,
+	Draw,
+	ByteVM,
+	OCR,
+	ScriptIDE;
+
+file
+	README.md,
+	OCRPlugin.h,
+	OCRPlugin.cpp,
+	OCRPluginRegistration.icpp;
+
+mainconfig
+	"GUI" = "GUI";

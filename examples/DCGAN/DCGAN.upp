@@ -1,23 +1,24 @@
-<Pkg>
-<Id>DCGAN</Id>
-<Package>DCGAN</Package>
-<Target>Examples</Target>
-</Pkg>
+description "DCGAN example\377";
 
-<SourceList>
-<Source>DCGAN.cpp</Source>
-<Source>DCGANLayer.cpp</Source>
-<Source>main.cpp</Source>
-</SourceList>
+uses
+	CtrlLib,
+	ConvNet,
+	ConvNetCtrl,
+	Docking,
+	PlotCtrl,
+	plugin/z;
 
-<IncludeList>
-<Include>DCGAN.h</Include>
-</IncludeList>
+options
+	"-I.";
 
-<LibraryList />
+file
+	DCGAN.cpp,
+	DCGAN.h,
+	DCGAN.iml,
+	DCGAN.lay,
+	DCGANLayer.cpp,
+	main.cpp;
 
-<DefList />
-
-<LinkList />
-
-<Precomp>ConvNet</Precomp>
+mainconfig
+	"" = "GUI",
+	"" = "GUI DEBUG";

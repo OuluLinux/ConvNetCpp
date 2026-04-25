@@ -1,17 +1,24 @@
-//BIGGAN
-//FILE
-//  BigGAN.cpp
-//END
-#include "BigGAN.h"
+description "BigGAN example\377";
 
-struct WithCtrlPanel : Ctrl {
-	TrainingGraph disc_graph;
-	TrainingGraph gen_graph;
+uses
+	CtrlLib,
+	ConvNet,
+	ConvNetCtrl,
+	Docking,
+	PlotCtrl,
+	plugin/z;
 
-	typedef WithCtrlPanel CLASSNAME;
-	WithCtrlPanel()
-	{
-		Add(disc_graph.SizePos());
-		Add(gen_graph.TopPos(1, 240).HSizePos());
-	}
-};
+options
+	"-I.";
+
+file
+	BigGAN.cpp,
+	BigGAN.h,
+	BigGAN.iml,
+	BigGAN.lay,
+	BigGANLayer.cpp,
+	main.cpp;
+
+mainconfig
+	"" = "GUI",
+	"" = "GUI DEBUG";

@@ -1,7 +1,6 @@
 #ifndef _ConvNet_GptLayers_h_
 #define _ConvNet_GptLayers_h_
 
-#include "ConvNet.h"
 #include "TransformerLayers.h"
 
 namespace ConvNet {
@@ -63,14 +62,16 @@ public:
     int GetEmbedDim() const { return embed_dim; }
     int GetNumHeads() const { return num_heads; }
     int GetNumLayers() const { return num_layers; }
-    
+
     // Tokenization utilities (simplified)
     Vector<int> Tokenize(const String& text);
     String Detokenize(const Vector<int>& tokens);
-    
+
+    // Input preparation (made public for access from session)
+    Volume& PrepareInputs(const Vector<int>& token_ids);
+
 private:
     // Helper functions
-    Volume& PrepareInputs(const Vector<int>& token_ids);
     Volume& ApplyCausalMask(Volume& attention_scores);
     void UpdateOutputWeights();  // Tie output weights with input embeddings
 };
@@ -93,7 +94,7 @@ public:
     
     // Training methods
     void TrainBatch(const Vector<Volume>& inputs, const Vector<Volume>& targets);
-    double ComputeLoss(Volume& predictions, Volume& targets);
+    double ComputeLoss(const Volume& predictions, const Volume& targets);
     
     // Generation methods
     Vector<int> GenerateText(const Vector<int>& context, int max_tokens, 
@@ -107,6 +108,9 @@ public:
     // Accessor
     GPTModel& GetModel() { return *model; }
     const GPTModel& GetModel() const { return *model; }
+
+    // Setters
+    void SetLearningRate(double rate) { learning_rate = rate; }
 };
 
 // Helper function to create a GPT model

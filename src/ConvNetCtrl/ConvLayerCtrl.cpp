@@ -13,13 +13,13 @@ ConvLayerCtrl::ConvLayerCtrl() {
 void ConvLayerCtrl::Paint(Draw& d) {
 	Size sz = GetSize();
 	
-	if (!ses) {d.DrawRect(sz, White()); return;}
+	if (!ses) {d.DrawRect(sz, SColorFace()); return;}
 	
 	//ses->Enter();
 	Net& net = ses->GetNetwork();
 	if (layer_id < 0 || layer_id >= net.GetLayers().GetCount()) {
 		ses->Leave();
-		d.DrawRect(sz, White());
+		d.DrawRect(sz, SColorFace());
 		return;
 	}
 	
@@ -52,15 +52,16 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 	int g = 128 + 64 + 32 + ((hash & 0xFF00) >> 8) / 8;
 	int b = 128 + 64 + 32 + ((hash & 0xFF) >> 0) / 8;
 	Color bg(r, g, b);
-	id.DrawRect(sz, bg);
+	id.DrawRect(sz, AdjustIfDark(bg));
 	
 	
 	String title;
 	title << type << "(" << l.output_width << "," << l.output_height << "," << l.output_depth << ")";
 	Font big_fnt = ArialZ(15);
 	Font fnt = ArialZ(11);
+	Color txt_color = IsDarkTheme() ? White() : Black();
 	Size txt_sz = GetTextSize(title, big_fnt);
-	id.DrawText(2, 0, title, big_fnt);
+	id.DrawText(2, 0, title, big_fnt, txt_color);
 	y += txt_sz.cy;
 	
 	
@@ -73,7 +74,7 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 				 f0.GetDepth() << ", stride " << l.GetStride();
 		}
 		txt_sz = GetTextSize(s, fnt);
-		id.DrawText(2, y, s, fnt);
+		id.DrawText(2, y, s, fnt, txt_color);
 		y += txt_sz.cy;
 		
 		int tot_params = l.filters.GetCount() * l.width * l.height * l.input_depth + l.filters.GetCount();
@@ -82,7 +83,7 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 			<< l.filters.GetCount() << " * " << l.width << " * " << l.height << " * " << l.input_depth << " + " << l.filters.GetCount()
 			<< " = " << tot_params;
 		txt_sz = GetTextSize(s, fnt);
-		id.DrawText(2, y, s, fnt);
+		id.DrawText(2, y, s, fnt, txt_color);
 		y += txt_sz.cy;
 		
 	}
@@ -91,7 +92,7 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 		s << "pooling size " <<
 			l.width << "x" << l.height << ", stride " << l.stride;
 		txt_sz = GetTextSize(s, fnt);
-		id.DrawText(2, y, s, fnt);
+		id.DrawText(2, y, s, fnt, txt_color);
 		y += txt_sz.cy;
 	}
 	else if (type == "fc") {
@@ -101,7 +102,7 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 			<< l.filters.GetCount() << " * " << l.GetInputCount() << " + " << l.filters.GetCount()
 			<< " = " << tot_params;
 		txt_sz = GetTextSize(s, fnt);
-		id.DrawText(2, y, s, fnt);
+		id.DrawText(2, y, s, fnt, txt_color);
 		y += txt_sz.cy;
 	}
 	
@@ -118,7 +119,7 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 
 		String s = Format("max activation: %8,n, min: %8,n", max, min);
 		txt_sz = GetTextSize(s, fnt);
-		id.DrawText(2, y, s, fnt);
+		id.DrawText(2, y, s, fnt, txt_color);
 		y += txt_sz.cy;
 	}
 	
@@ -134,7 +135,7 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 
 		String s = Format("max gradient: %8,n, min: %8,n", max, min);
 		txt_sz = GetTextSize(s, fnt);
-		id.DrawText(2, y, s, fnt);
+		id.DrawText(2, y, s, fnt, txt_color);
 		y += txt_sz.cy;
 	}
 	
@@ -148,7 +149,7 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 		String s;
 		s << "Activations:";
 		txt_sz = GetTextSize(s, fnt);
-		id.DrawText(pt.x, pt.y, s, fnt);
+		id.DrawText(pt.x, pt.y, s, fnt, txt_color);
 		pt.y += txt_sz.cy;
 		int depth = l.output_activation.GetDepth();
 		int w = sqrt((double)depth);
@@ -174,7 +175,7 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 		String s;
 		s << "Activations:";
 		txt_sz = GetTextSize(s, fnt);
-		id.DrawText(pt.x, pt.y, s, fnt);
+		id.DrawText(pt.x, pt.y, s, fnt, txt_color);
 		pt.y += txt_sz.cy;
 		int depth = l.output_activation.GetDepth();
 		int w = sqrt((double)depth);
@@ -200,7 +201,7 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 		String s;
 		s << "Activation Gradients:";
 		txt_sz = GetTextSize(s, fnt);
-		id.DrawText(pt.x, pt.y, s, fnt);
+		id.DrawText(pt.x, pt.y, s, fnt, txt_color);
 		pt.y += txt_sz.cy;
 		int depth = l.output_activation.GetDepth();
 		int w = sqrt((double)depth);
@@ -225,7 +226,7 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 			String s;
 			s << "Weights:";
 			txt_sz = GetTextSize(s, fnt);
-			id.DrawText(pt.x, pt.y, s, fnt);
+			id.DrawText(pt.x, pt.y, s, fnt, txt_color);
 			pt.x = xoff;
 			pt.y += txt_sz.cy;
 			for (int j = 0; j < count; j++) {
@@ -237,7 +238,7 @@ void ConvLayerCtrl::PaintSize(Draw& id, Size sz) {
 			s.Clear();
 			s << "Weight Gradients:";
 			txt_sz = GetTextSize(s, fnt);
-			id.DrawText(pt.x, pt.y, s, fnt);
+			id.DrawText(pt.x, pt.y, s, fnt, txt_color);
 			pt.y += txt_sz.cy;
 			for (int j = 0; j < count; j++) {
 				DrawActivations(id, sz, pt, l.filters[j], 2, true, j == count-1);
@@ -431,7 +432,8 @@ void SessionConvLayers::Clear() {
 
 void SessionConvLayers::SetSession(Session& ses) {
 	this->ses = &ses;
-	ses.WhenSessionLoaded << THISBACK(RefreshLayers);
+	ses.WhenSessionLoaded << [this]{PostCallback(THISBACK(RefreshLayers));};
+	RefreshLayers();
 }
 
 bool SessionConvLayers::Key(dword key, int) {
@@ -512,6 +514,47 @@ void SessionConvLayers::RefreshLayers() {
 	PostCallback(THISBACK(Layout));
 }
 
+void SessionConvLayers::Dump(bool verbose) {
+	if(!ses) {
+		Cout() << "SessionConvLayers: No session assigned.\n";
+		return;
+	}
+
+	ses->Enter();
+	Net& net = ses->GetNetwork();
+	net.Enter();
+
+	Cout() << "--- Neural Network Layer Activation Dump ---\n";
+	for(int i = 0; i < net.GetLayers().GetCount(); i++) {
+		LayerBase& l = net.GetLayers()[i];
+		Volume& v = l.output_activation;
+
+		double min_v = +DBL_MAX;
+		double max_v = -DBL_MAX;
+		for(int j = 0; j < v.GetLength(); j++) {
+			double d = v.Get(j);
+			if(d > max_v) max_v = d;
+			if(d < min_v) min_v = d;
+		}
+
+		Cout() << "Layer #" << i << " [" << l.GetKey() << "] (" 
+		       << l.output_width << "x" << l.output_height << "x" << l.output_depth << ") - Min: "
+		       << Format("%8.4f", min_v) << ", Max: " << Format("%8.4f", max_v) << "\n";
+
+		if(verbose && v.GetLength() > 0) {
+			Cout() << "  Values: ";
+			int limit = min(20, v.GetLength());
+			for(int j = 0; j < limit; j++) {
+				if(j > 0) Cout() << ", ";
+				Cout() << Format("%.4f", v.Get(j));
+			}
+			if(v.GetLength() > limit) Cout() << " ... (" << v.GetLength() - limit << " more)";
+			Cout() << "\n";
+		}
+	}
+	Cout() << "--------------------------------------------\n";
+
+	net.Leave();
+	ses->Leave();
 }
-
-
+}

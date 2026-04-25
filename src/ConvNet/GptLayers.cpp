@@ -5,19 +5,19 @@
 
 namespace ConvNet {
 
-GPTModel::GPTModel(int vocab_size, int embed_dim, int num_heads, 
-                   int num_layers, int ff_dim, int max_seq_len, 
+GPTModel::GPTModel(int vocab_size, int embed_dim, int num_heads,
+                   int num_layers, int ff_dim, int max_seq_len,
                    double dropout_rate)
     : vocab_size(vocab_size), embed_dim(embed_dim), num_heads(num_heads),
       num_layers(num_layers), ff_dim(ff_dim), max_seq_len(max_seq_len),
-      dropout_rate(dropout_rate) {
-    
+      dropout_rate(dropout_rate), positional_encoding(max_seq_len, embed_dim) {
+
     // Initialize the transformer with equal source and target vocab sizes
     // For GPT, source and target are the same (autoregressive language modeling)
     transformer = CreateTransformer(vocab_size, vocab_size, embed_dim, num_heads,
-                                   num_layers, num_layers, ff_dim, max_seq_len, 
+                                   num_layers, num_layers, ff_dim, max_seq_len,
                                    dropout_rate);
-    
+
     // Initialize output weights (tied with input embeddings in many GPT implementations)
     output_weights.Init(vocab_size, embed_dim, 1);
     for(int i = 0; i < output_weights.GetCount(); i++) {
@@ -73,9 +73,10 @@ Volume& GPTModel::GetNextTokenLogits(const Vector<int>& context) {
 int GPTModel::SampleNextToken(const Vector<double>& logits, double temperature, 
                               bool top_k, int k, bool nucleus, double p) {
     // Apply temperature scaling
-    Vector<double> scaled_logits = logits;
+    Vector<double> scaled_logits;
+    scaled_logits.SetCount(logits.GetCount());
     for (int i = 0; i < scaled_logits.GetCount(); i++) {
-        scaled_logits[i] /= temperature;
+        scaled_logits[i] = logits[i] / temperature;
     }
     
     // Apply softmax to get probabilities
@@ -214,7 +215,11 @@ void GPTModel::Load(const ValueMap& map) {
     
     // Load transformer parameters
     transformer->Load(map);
-    
+
+    // Load output weights
+    // This would require a deserialization method for Volume
+}
+
 void GPTModel::Serialize(Stream& s) {
     // Serialize model configuration
     s % vocab_size;
@@ -224,22 +229,17 @@ void GPTModel::Serialize(Stream& s) {
     s % ff_dim;
     s % max_seq_len;
     s % dropout_rate;
-    
+
     // Serialize core components
+    int transformer_exists = transformer ? 1 : 0;
+    s % transformer_exists;
     if (transformer) {
-        s % (int)1;  // flag indicating transformer exists
         transformer->Serialize(s);
-    } else {
-        s % (int)0;  // flag indicating no transformer
     }
-    
+
     // Serialize embedding layers
     s % token_embeddings;
     s % output_weights;
-}
-
-    // Load output weights
-    // This would require a deserialization method for Volume
 }
 
 Vector<int> GPTModel::Tokenize(const String& text) {
@@ -303,43 +303,47 @@ void GPTSession::TrainBatch(const Vector<Volume>& inputs, const Vector<Volume>& 
     // 2. Compute loss against targets
     // 3. Backward pass to compute gradients
     // 4. Update parameters using optimizer
-    
+
     // For now, this is a placeholder
     for (int i = 0; i < inputs.GetCount(); i++) {
-        Volume& output = model->Forward(inputs[i], true);
+        Volume input_copy = inputs[i];  // Make a non-const copy to pass to Forward
+        const Volume& output = model->Forward(input_copy, true);
         double loss = ComputeLoss(output, targets[i]);
         // In a complete implementation, we would perform backprop and parameter updates here
     }
 }
 
-double GPTSession::ComputeLoss(Volume& predictions, Volume& targets) {
+double GPTSession::ComputeLoss(const Volume& predictions, const Volume& targets) {
     // Compute cross-entropy loss between predictions and targets
     // This is a simplified implementation
-    
+
     int total_elements = predictions.GetSize();
     if (total_elements != targets.GetSize()) {
         throw std::runtime_error("Prediction and target dimensions don't match");
     }
-    
+
     double loss = 0.0;
     for (int i = 0; i < total_elements; i++) {
         double pred = predictions.Get(i);
         double target = targets.Get(i);
-        
+
         // Cross-entropy loss: -sum(target * log(prediction))
         // This is simplified - proper implementation would handle probability distributions
         double element_loss = -target * log(max(pred, 1e-8)); // Clamp to prevent log(0)
         loss += element_loss;
     }
-    
+
     return loss / total_elements;
 }
 
-Vector<int> GPTSession::GenerateText(const Vector<int>& context, int max_tokens, 
-                                    double temperature, bool top_k, int k, 
+Vector<int> GPTSession::GenerateText(const Vector<int>& context, int max_tokens,
+                                    double temperature, bool top_k, int k,
                                     bool nucleus, double p) {
     // Generate text autoregressively
-    Vector<int> current_context = context;
+    Vector<int> current_context;
+    for (int i = 0; i < context.GetCount(); i++) {
+        current_context.Add(context[i]);
+    }
     
     for (int i = 0; i < max_tokens; i++) {
         // Get logits for next token
@@ -385,7 +389,7 @@ double GPTSession::GetPerplexity(const Vector<int>& test_tokens) {
         for (int j = context.GetCount() - 1; j >= 0; j--) {
             actual_context.Add(context[j]);
         }
-        
+
         // Get next token logits
         Volume& logits_volume = model->GetNextTokenLogits(actual_context);
         
@@ -427,16 +431,16 @@ std::unique_ptr<GPTModel> CreateGPT(int vocab_size, int embed_dim, int num_heads
                                      num_layers, ff_dim, max_seq_len, dropout_rate);
 }
 
-std::unique_ptr<GPTSession> CreateGPTSession(int vocab_size, int embed_dim, 
-                                            int num_heads, int num_layers, 
-                                            int ff_dim, int max_seq_len, 
+std::unique_ptr<GPTSession> CreateGPTSession(int vocab_size, int embed_dim,
+                                            int num_heads, int num_layers,
+                                            int ff_dim, int max_seq_len,
                                             double dropout_rate,
                                             double learning_rate) {
-    auto model = CreateGPT(vocab_size, embed_dim, num_heads, num_layers, 
+    auto model = CreateGPT(vocab_size, embed_dim, num_heads, num_layers,
                           ff_dim, max_seq_len, dropout_rate);
     auto session = std::make_unique<GPTSession>(std::move(model));
-    session->learning_rate = learning_rate;
-    
+    session->SetLearningRate(learning_rate);
+
     return session;
 }
 

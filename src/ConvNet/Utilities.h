@@ -91,6 +91,7 @@ public:
 	int GetMaxColumn() const;
 	int GetSampledColumn() const;
 	int GetCount() const {return weights.GetCount();}
+	int GetSize() const {return weights.GetCount();}  // Alias for GetCount()
 	int GetGradientCount() const {return weight_gradients.GetCount();}
 	
 	static double Get(const Vector<double>& in, int x, int y, int d, int width, int depth) {
@@ -154,12 +155,20 @@ T& SingleRandomGaussianLock() {
 
 inline RandomGaussian& GetRandomGaussian(int length) {
 	SpinLock& lock = SingleRandomGaussianLock<SpinLock>(); // workaround
-	ArrayMap<int, RandomGaussian>& rands = Single<ArrayMap<int, RandomGaussian> >();
+	static ArrayMap<int, RandomGaussian>* rands_ptr = [] {
+		MemoryIgnoreLeaksBegin();
+		auto* p = new ArrayMap<int, RandomGaussian>();
+		MemoryIgnoreLeaksEnd();
+		return p;
+	}(); // intentional leak: avoids static-destruction-order crash with UPP heap
+	ArrayMap<int, RandomGaussian>& rands = *rands_ptr;
 	lock.Enter();
 	int i = rands.Find(length);
 	RandomGaussian* r;
 	if (i == -1) {
+		MemoryIgnoreLeaksBegin();
 		r = &rands.Add(length, new RandomGaussian(length));
+		MemoryIgnoreLeaksEnd();
 	} else {
 		r = &rands[i];
 	}

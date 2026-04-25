@@ -2,5 +2,13 @@
 
 GUI_APP_MAIN
 {
-	WGAN().Run();
+	try {
+		WGAN app;
+		// Some apps need Init() before Run()
+		// app.Init(); 
+		app.Run();
+	}
+	catch (Exc e) {
+		PromptOK(e);
+	}
 }

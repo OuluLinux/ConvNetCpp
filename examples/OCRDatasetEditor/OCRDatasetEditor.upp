@@ -1,0 +1,21 @@
+description "OCR Dataset Editor - Can be built standalone or embedded\377";
+
+uses
+	CtrlLib,
+	plugin/png,
+	plugin/jpg,
+	ConvNet,
+	OCR,
+	OCRCtrl,
+	Docking;
+
+file
+	OCRDatasetEditor.h,
+	OCRDatasetEditor.cpp,
+	OCRDatasetEditorApp.cpp;
+
+mainconfig
+	"Standalone (Posix)" = "GUI",
+	"Standalone (Windows)" = "GUI",
+	"Library (Posix)" = "GUI",
+	"Library (Windows)" = "GUI";

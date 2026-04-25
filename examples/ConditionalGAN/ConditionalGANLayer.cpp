@@ -17,7 +17,7 @@ void ConditionalGANLayer::Init(int stride, int num_classes, int noise_size) {
 
 	// Discriminator network - takes image and conditioning information
 	String disc_t =	"[\n"
-					"\t{\"type\":\"input\", \"input_width\":" + IntStr(input_width + num_classes) + ", \"input_height\":" + IntStr(input_height) + ", \"input_depth\":" + IntStr(input_depth) + "},\n"  // Concatenated image and condition
+					"\t{\"type\":\"input\", \"input_width\":" + FormatInt(input_width + num_classes) + ", \"input_height\":" + FormatInt(input_height) + ", \"input_depth\":" + FormatInt(input_depth) + "},\n"  // Concatenated image and condition
 					"\t{\"type\":\"fc\", \"neuron_count\":512, \"activation\":\"relu\"},\n"
 					"\t{\"type\":\"dropout\", \"drop_prob\":0.3},\n"
 					"\t{\"type\":\"fc\", \"neuron_count\":256, \"activation\":\"relu\"},\n"
@@ -31,11 +31,11 @@ void ConditionalGANLayer::Init(int stride, int num_classes, int noise_size) {
 
 	// Generator network - takes noise and conditioning information
 	String gen_t =	"[\n"
-					"\t{\"type\":\"input\", \"input_width\":" + IntStr(noise_size + num_classes) + ", \"input_height\":1, \"input_depth\":1},\n"  // Combined noise and condition
+					"\t{\"type\":\"input\", \"input_width\":" + FormatInt(noise_size + num_classes) + ", \"input_height\":1, \"input_depth\":1},\n"  // Combined noise and condition
 					"\t{\"type\":\"fc\", \"neuron_count\":256, \"activation\":\"relu\"},\n"
 					"\t{\"type\":\"fc\", \"neuron_count\":512, \"activation\":\"relu\"},\n"
 					"\t{\"type\":\"fc\", \"neuron_count\":1024, \"activation\":\"relu\"},\n"
-					"\t{\"type\":\"fc\", \"neuron_count\":" + IntStr(input_width * input_height * input_depth) + ", \"activation\":\"tanh\"},\n"  // Output image size
+					"\t{\"type\":\"fc\", \"neuron_count\":" + FormatInt(input_width * input_height * input_depth) + ", \"activation\":\"tanh\"},\n"  // Output image size
 					"\t{\"type\":\"adam\", \"learning_rate\":0.0002, \"beta1\":0.5, \"batch_size\":128, \"l2_decay\":0.0001}\n"
 					"]\n";
 
@@ -72,7 +72,7 @@ void ConditionalGANLayer::Train() {
 	// Sample real image
 	SessionData& data = disc.Data();
 	int real_idx = Random(data.GetDataCount());
-	const Vector<double>& real_image_vec = data.Get(real_idx); // Use reference to avoid copy
+	const Vector<double>& real_image_vec = clone(data.Get(real_idx)); // Use reference to avoid copy
 	
 	// Get the corresponding label for this real image
 	int real_label = data.GetLabel(real_idx) % num_classes; // Assuming labels are stored in SessionData

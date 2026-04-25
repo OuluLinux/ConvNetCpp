@@ -1,66 +1,60 @@
 #include "DiffusionModel.h"
 
 DiffusionModel::DiffusionModel() {
-	Icon(DiffusionModelImg::icon());
-	Sizeable().MaximizeBox().MinimizeBox().Zoomable();
+    Sizeable().MaximizeBox().MinimizeBox().Zoomable();
+    Title("DiffusionModel example");
+    running = false; stopped = true;
 
-	CtrlLayout(panel);
-	Add(panel.LeftPos(0,300).VSizePos());
-	Add(vsplit.HSizePos(300).VSizePos());
+    Add(options_panel.LeftPos(0, 300).VSizePos());
+    Add(vsplit.HSizePos(300, 0).VSizePos());
+    
+    options_panel.Add(ctrl_panel.SizePos());
+    ctrl_panel.CtrlLayout(ctrl_panel);
 
-	vsplit.Vert();
-	vsplit << model_layer_view;
+    vsplit.Vert();
+    vsplit << gen_layer_view << disc_layer_view;
 
-	model_layer_view.SetColor();
-
+    gen_layer_view.SetColor();
+    disc_layer_view.SetColor();
 }
 
 void DiffusionModel::Init() {
-
-	l.Init(0);
-
-	model_layer_view.SetSession(l.GetModel());
-
-	model_layer_view.RefreshLayers();
-
-	panel.graph.SetSession(l.GetModel()); // Using main model for graph
-	panel.graph.SetModeLoss();
-
-	Thread::Start(THISBACK(Training));
+    l.Init(0);
+    disc_layer_view.SetSession(l.GetDiscriminator());
+    gen_layer_view.SetSession(l.GetGenerator());
+    disc_layer_view.RefreshLayers();
+    gen_layer_view.RefreshLayers();
+    ctrl_panel.disc_graph.SetSession(l.GetDiscriminator());
+    ctrl_panel.gen_graph.SetSession(l.GetGenerator());
+    ctrl_panel.disc_graph.SetModeLoss();
+    ctrl_panel.gen_graph.SetModeLoss();
+    Thread::Start(THISBACK(Training));
 }
 
 void DiffusionModel::Training() {
-	running = true;
-	stopped = false;
-
-	TimeStop ts;
-
-	int iter = 0;
-
-	while (running) {
-
-		lock.Enter();
-		l.Train();
-		iter++;
-		lock.Leave();
-		//Sleep(100);
-
-		if (ts.Elapsed() >= 1000/60) {
-			PostCallback(THISBACK(RefreshData));
-			ts.Reset();
-		}
-
-		if (iter % 10 == 0) {
-			panel.graph.PostAddValue(l.PickAverageLoss());
-		}
-	}
-
-	stopped = true;
+    running = true; stopped = false;
+    TimeStop ts;
+    int iter = 0;
+    while (running) {
+        lock.Enter();
+        l.Train();
+        iter++;
+        lock.Leave();
+        if (ts.Elapsed() >= 1000/60) {
+            PostCallback(THISBACK(RefreshData));
+            ts.Reset();
+        }
+        if (iter % 10 == 0) {
+            ctrl_panel.disc_graph.PostAddValue(l.PickAverageDiscriminatorCost());
+            ctrl_panel.gen_graph.PostAddValue(l.PickAverageGeneratorCost());
+        }
+    }
+    stopped = true;
 }
 
 void DiffusionModel::RefreshData() {
-	//lock.Enter();
-	model_layer_view.Refresh();
-	panel.graph.RefreshData();
-	//lock.Leave();
+    disc_layer_view.Refresh();
+    gen_layer_view.Refresh();
+    ctrl_panel.disc_graph.RefreshData();
+    ctrl_panel.gen_graph.RefreshData();
 }

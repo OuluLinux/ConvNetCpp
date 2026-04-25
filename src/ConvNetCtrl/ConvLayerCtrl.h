@@ -54,6 +54,7 @@ public:
 	virtual void MouseWheel(Point, int zdelta, dword);
 	virtual void Layout();
 	void Clear();
+	void Dump(bool verbose = false);
 };
 
 }

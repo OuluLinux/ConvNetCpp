@@ -1,23 +1,24 @@
-<Pkg>
-<Id>StyleGAN</Id>
-<Package>StyleGAN</Package>
-<Target>Examples</Target>
-</Pkg>
+description "StyleGAN example\377";
 
-<SourceList>
-<Source>StyleGAN.cpp</Source>
-<Source>StyleGANLayer.cpp</Source>
-<Source>main.cpp</Source>
-</SourceList>
+uses
+	CtrlLib,
+	ConvNet,
+	ConvNetCtrl,
+	Docking,
+	PlotCtrl,
+	plugin/z;
 
-<IncludeList>
-<Include>StyleGAN.h</Include>
-</IncludeList>
+options
+	"-I.";
 
-<LibraryList />
+file
+	StyleGAN.cpp,
+	StyleGAN.h,
+	StyleGAN.iml,
+	StyleGAN.lay,
+	StyleGANLayer.cpp,
+	main.cpp;
 
-<DefList />
-
-<LinkList />
-
-<Precomp>ConvNet</Precomp>
+mainconfig
+	"" = "GUI",
+	"" = "GUI DEBUG";

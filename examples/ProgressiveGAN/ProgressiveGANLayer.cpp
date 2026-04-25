@@ -5,8 +5,8 @@ ProgressiveGANLayer::ProgressiveGANLayer() {
 
 void ProgressiveGANLayer::Init(int stride, const ProgressiveGANParams& params) {
     this->stride = stride;
-    this->prog_params = params;
-    this->current_resolution = prog_params.initial_resolution;
+    this->progressivegan_params = params;
+    this->current_resolution = progressivegan_params.initial_resolution;
 
     // Initialize with lowest resolution
     input_width = current_resolution;
@@ -18,7 +18,7 @@ void ProgressiveGANLayer::Init(int stride, const ProgressiveGANParams& params) {
 
     // Discriminator for initial resolution (4x4 to start)
     String disc_t =	"[\n"
-                    "\t{\"type\":\"input\", \"input_width\":" + IntStr(input_width) + ", \"input_height\":" + IntStr(input_height) + ", \"input_depth\":" + IntStr(input_depth) + "},\n"
+                    "\t{\"type\":\"input\", \"input_width\":" + FormatInt(input_width) + ", \"input_height\":" + FormatInt(input_height) + ", \"input_depth\":" + FormatInt(input_depth) + "},\n"
                     "\t{\"type\":\"conv\", \"sx\":3, \"sy\":3, \"stride\":1, \"pad\":1, \"filters\":512, \"activation\":\"relu\"},\n"
                     "\t{\"type\":\"lrn\", \"k\":2, \"n\":5, \"alpha\":0.0001, \"beta\":0.75},\n"
                     "\t{\"type\":\"conv\", \"sx\":4, \"sy\":4, \"stride\":2, \"pad\":1, \"filters\":512, \"activation\":\"relu\"},\n"  // From 4x4 -> 2x2
@@ -32,7 +32,7 @@ void ProgressiveGANLayer::Init(int stride, const ProgressiveGANParams& params) {
 
     // Generator for initial resolution
     String gen_t =	"[\n"
-                    "\t{\"type\":\"input\", \"input_width\":" + IntStr(noise_size) + ", \"input_height\":1, \"input_depth\":1},\n"
+                    "\t{\"type\":\"input\", \"input_width\":" + FormatInt(noise_size) + ", \"input_height\":1, \"input_depth\":1},\n"
                     "\t{\"type\":\"fc\", \"neuron_count\":2*2*512, \"activation\":\"relu\"},\n"  // Output 2x2x512
                     "\t{\"type\":\"lrn\", \"k\":2, \"n\":5, \"alpha\":0.0001, \"beta\":0.75},\n"
                     "\t{\"type\":\"unflatten\", \"width\":2, \"height\":2, \"depth\":512},\n"
@@ -69,7 +69,7 @@ void ProgressiveGANLayer::Train() {
     // Sample real image (at current resolution)
     SessionData& data = disc.Data();
     int real_idx = Random(data.GetDataCount());
-    Vector<double> real_image_vec = data.Get(real_idx);
+    Vector<double> real_image_vec = clone(data.Get(real_idx));
     
     // Resize real image to current resolution if needed
     Volume real_image;
@@ -126,7 +126,7 @@ void ProgressiveGANLayer::Train() {
 
 void ProgressiveGANLayer::UpdateResolution() {
     // Check if we should increase resolution
-    if (current_phase_step >= phase_steps && current_resolution < prog_params.target_resolution) {
+    if (current_phase_step >= phase_steps && current_resolution < progressivegan_params.target_resolution) {
         // Reset step counter
         current_phase_step = 0;
         
@@ -156,7 +156,7 @@ void ProgressiveGANLayer::AddResolutionBlock() {
 double ProgressiveGANLayer::GetAlpha() {
     // Calculate alpha value for fading in new layers
     // Alpha increases from 0 to 1 over the fade_in_duration of the phase
-    int fade_in_steps = (int)(phase_steps * prog_params.fade_in_duration);
+    int fade_in_steps = (int)(phase_steps * progressivegan_params.fade_in_duration);
     
     if (current_phase_step < fade_in_steps) {
         return (double)current_phase_step / fade_in_steps;

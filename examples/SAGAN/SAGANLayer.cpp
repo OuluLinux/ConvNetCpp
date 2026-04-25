@@ -17,7 +17,7 @@ void SAGANLayer::Init(int stride, const SAGANParams& params) {
     // Discriminator for SAGAN - includes self-attention layers conceptually
     // In a real SAGAN, there would be attention layers, but using available layers
     String disc_t =	"[\n"
-                    "\t{\"type\":\"input\", \"input_width\":" + IntStr(input_width) + ", \"input_height\":" + IntStr(input_height) + ", \"input_depth\":" + IntStr(input_depth) + "},\n"
+                    "\t{\"type\":\"input\", \"input_width\":" + FormatInt(input_width) + ", \"input_height\":" + FormatInt(input_height) + ", \"input_depth\":" + FormatInt(input_depth) + "},\n"
                     "\t{\"type\":\"conv\", \"sx\":4, \"sy\":4, \"stride\":2, \"pad\":1, \"filters\":64, \"activation\":\"relu\"},\n"  // 32x32 -> 16x16
                     "\t{\"type\":\"lrn\", \"k\":2, \"n\":5, \"alpha\":0.0001, \"beta\":0.75},\n"
                     "\t{\"type\":\"conv\", \"sx\":4, \"sy\":4, \"stride\":2, \"pad\":1, \"filters\":128, \"activation\":\"relu\"},\n"  // 16x16 -> 8x8
@@ -27,7 +27,7 @@ void SAGANLayer::Init(int stride, const SAGANParams& params) {
                     "\t{\"type\":\"conv\", \"sx\":4, \"sy\":4, \"stride\":1, \"pad\":0, \"filters\":512, \"activation\":\"relu\"},\n"  // 4x4 -> 1x1 (with appropriate padding/filter size)
                     "\t{\"type\":\"lrn\", \"k\":2, \"n\":5, \"alpha\":0.0001, \"beta\":0.75},\n"
                     "\t{\"type\":\"fc\", \"neuron_count\":1},\n"  // No activation for WGAN-style critic
-                    "\t{\"type\":\"adam\", \"learning_rate\":" + DoubleStr(sagan_params.learning_rate) + ", \"beta1\":0.0, \"beta2\":0.99, \"batch_size\":16, \"l2_decay\":0.0001}\n"
+                    "\t{\"type\":\"adam\", \"learning_rate\":" + FormatDouble(sagan_params.learning_rate) + ", \"beta1\":0.0, \"beta2\":0.99, \"batch_size\":16, \"l2_decay\":0.0001}\n"
                     "]\n";
 
     if (!disc.MakeLayers(disc_t))
@@ -35,7 +35,7 @@ void SAGANLayer::Init(int stride, const SAGANParams& params) {
 
     // Generator for SAGAN - includes conceptually where attention would be applied
     String gen_t =	"[\n"
-                    "\t{\"type\":\"input\", \"input_width\":" + IntStr(latent_size) + ", \"input_height\":1, \"input_depth\":1},\n"  // Latent vector z
+                    "\t{\"type\":\"input\", \"input_width\":" + FormatInt(latent_size) + ", \"input_height\":1, \"input_depth\":1},\n"  // Latent vector z
                     "\t{\"type\":\"fc\", \"neuron_count\":4*4*512, \"activation\":\"relu\"},\n"  // Output features for 4x4 resolution
                     "\t{\"type\":\"lrn\", \"k\":2, \"n\":5, \"alpha\":0.0001, \"beta\":0.75},\n"
                     "\t{\"type\":\"unflatten\", \"width\":4, \"height\":4, \"depth\":512},\n"
@@ -44,7 +44,7 @@ void SAGANLayer::Init(int stride, const SAGANParams& params) {
                     "\t{\"type\":\"deconv\", \"sx\":4, \"sy\":4, \"stride\":2, \"pad\":1, \"filters\":128, \"activation\":\"relu\"},\n"  // 8x8 -> 16x16
                     "\t{\"type\":\"lrn\", \"k\":2, \"n\":5, \"alpha\":0.0001, \"beta\":0.75},\n"
                     "\t{\"type\":\"deconv\", \"sx\":4, \"sy\":4, \"stride\":2, \"pad\":1, \"filters\":1, \"activation\":\"tanh\"},\n"  // 16x16 -> 32x32
-                    "\t{\"type\":\"adam\", \"learning_rate\":" + DoubleStr(sagan_params.learning_rate) + ", \"beta1\":0.0, \"beta2\":0.99, \"batch_size\":16, \"l2_decay\":0.0001}\n"
+                    "\t{\"type\":\"adam\", \"learning_rate\":" + FormatDouble(sagan_params.learning_rate) + ", \"beta1\":0.0, \"beta2\":0.99, \"batch_size\":16, \"l2_decay\":0.0001}\n"
                     "]\n";
 
     if (!gen.MakeLayers(gen_t))
@@ -68,7 +68,7 @@ void SAGANLayer::Train() {
     // Sample real image
     SessionData& data = disc.Data();
     int real_idx = Random(data.GetDataCount());
-    Vector<double> real_image_vec = data.Get(real_idx);
+    Vector<double> real_image_vec = clone(data.Get(real_idx));
     
     // Resize real image to match generator output if needed
     Volume real_image;

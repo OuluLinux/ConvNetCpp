@@ -36,8 +36,21 @@ public:
 };
 
 GUI_APP_MAIN {
+	const Vector<String>& args = CommandLine();
+	bool test_node = false;
+	for(int i = 0; i < args.GetCount(); i++) {
+		if(args[i] == "--test-node-render") {
+			test_node = true;
+			break;
+		}
+	}
+
 	int loader, type;
-	{
+	if(test_node) {
+		loader = LOADER_MNIST;
+		type = TYPE_LEARNER;
+	}
+	else {
 		OpenDialog odlg;
 		odlg.Run();
 		if (odlg.ret == -1) return;
@@ -49,6 +62,32 @@ GUI_APP_MAIN {
 	{
 		ClassifyImages ci(loader, type);
 		
+		if(test_node) {
+			// Initialize dummy data dimensions to avoid crash in TrainBegin
+			ci.GetSession().Data().BeginDataClass(10, 1, 24, 24, 1, 1);
+			ci.GetSession().Data().EndData();
+
+			// In test mode, we don't need real data, just the network
+			ci.Reload(); 
+			
+			// Give it a moment to settle (e.g. if any async loading or layout happens)
+			Sleep(1000);
+			
+			ci.SyncGraph();
+			
+			String path = GetExeDirFile("node_test.png");
+			Cout() << "Saving viewport image to: " << path << "\n";
+			ci.SaveViewportImage(path);
+			
+			if(ci.IsViewportWhite()) {
+				Cout() << "TEST_FAILED: Viewport is white\n";
+				Exit(1);
+			} else {
+				Cout() << "TEST_PASSED: Viewport is not white\n";
+				Exit(0);
+			}
+		}
+
 		{
 			if (loader == LOADER_MNIST){
 				LoaderMNIST l(ci.GetSession());

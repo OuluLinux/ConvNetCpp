@@ -1,28 +1,29 @@
 #include "T5Tester.h"
 
 T5App::T5App() {
+    Add(attentionVis.SizePos());
     Title("T5 (Text-to-Text Transfer Transformer) Demo");
     Sizeable().MaximizeBox().MinimizeBox();
 
     // Set up the layout
-    CtrlLayout(*this);
+    // manual layout
 
     // Initialize components
-    attentionVis.SetLabel("Attention Visualization");
-    modelInfo.SetLabel("Model Information");
-    seqInput.SetLabel("Input Sequence");
-    seqOutput.SetLabel("Output Sequence");
-    taskLabel.SetLabel("Task:");
+    // // // attentionVis.SetLabel("Attention Visualization");
+    // // modelInfo.SetLabel("Model Information");
+    // // seqInput.SetLabel("Input Sequence");
+    // // seqOutput.SetLabel("Output Sequence");
+    // // taskLabel.SetLabel("Task:");
 
     // Add controls to the layout
-    Add(CtrlLayout(controls));
+    // manual layout
 
     // Set up event handlers
-    trainBtn.SetLabel("Train Model");
-    testBtn.SetLabel("Test Model");
-    visualizeBtn.SetLabel("Visualize Attention");
-    encodeBtn.SetLabel("Encode");
-    decodeBtn.SetLabel("Decode");
+    // // trainBtn.SetLabel("Train Model");
+    // // testBtn.SetLabel("Test Model");
+    // // visualizeBtn.SetLabel("Visualize Attention");
+    // // encodeBtn.SetLabel("Encode");
+    // // decodeBtn.SetLabel("Decode");
 
     // Set up task selector for different T5 tasks
     taskSelect.Add(0, "Translation");
@@ -88,7 +89,7 @@ void T5App::OnTrain() {
 }
 
 void T5App::OnTest() {
-    String input_seq = inputEdit.GetText();
+    String input_seq = inputEdit.GetText().ToString().ToString();
     if (input_seq.IsEmpty()) {
         PromptOK("Please enter an input sequence");
         return;
@@ -123,7 +124,7 @@ void T5App::OnTest() {
 
 void T5App::OnEncode() {
     // In a real implementation, this would run the encoder part of the T5 model
-    String input_seq = inputEdit.GetText();
+    String input_seq = inputEdit.GetText().ToString().ToString();
     if (input_seq.IsEmpty()) {
         PromptOK("Please enter an input sequence");
         return;
@@ -154,7 +155,7 @@ void T5App::OnEncode() {
 void T5App::OnDecode() {
     // In a real implementation, this would run the decoder part of the T5 model
     // using the encoder's hidden states
-    String encoded_state = outputEdit.GetText();
+    String encoded_state = outputEdit.GetText().ToString().ToString();
     if (encoded_state.IsEmpty() || !encoded_state.StartsWith("Encoded representation:")) {
         PromptOK("Please encode a sequence first");
         return;
@@ -186,9 +187,9 @@ void T5App::OnVisualize() {
     for (int i = 0; i < 10; i++) {  // 10x10 grid for demo
         Vector<double> row;
         for (int j = 0; j < 10; j++) {
-            row.Add(Random(0.0, 1.0));
+            row.Add(0.0 + Randomf() * (1.0));
         }
-        att_data.Add(row);
+        att_data.Add(clone(row));
     }
 
     attentionVis.SetAttentionData(att_data);
@@ -196,7 +197,7 @@ void T5App::OnVisualize() {
 
 // Custom control for attention visualization
 T5AttentionControl::T5AttentionControl() {
-    SetLabel("Attention Visualization");
+    // SetLabel("Attention Visualization");
     attentionData.Clear();
 }
 
@@ -230,24 +231,24 @@ void T5AttentionControl::Paint(Draw& draw) {
                     Rect cellRect(j * cellWidth, i * cellHeight,
                                 (j + 1) * cellWidth, (i + 1) * cellHeight);
                     draw.DrawRect(cellRect, c);
-                    draw.DrawRect(cellRect, 1, Black);
+                    draw.DrawRect(cellRect, Black());
                 }
             }
         }
     } else {
         // Draw placeholder text
-        draw.DrawText(10, 10, "No attention data to visualize", StdFont(), Black);
+        draw.DrawText(10, 10, "No attention data to visualize", StdFont(), Black());
     }
 }
 
 void T5AttentionControl::SetAttentionData(const Vector<Vector<double>>& data) {
-    attentionData = data;
+    attentionData = clone(data);
     Refresh();
 }
 
 // Custom control for model performance metrics
 T5MetricsControl::T5MetricsControl() {
-    SetLabel("Performance Metrics");
+    // SetLabel("Performance Metrics");
     ClearMetrics();
 }
 
@@ -257,13 +258,13 @@ void T5MetricsControl::Paint(Draw& draw) {
 
     // Draw metrics
     int y = 10;
-    draw.DrawText(10, y, Format("Loss: %.4f", loss), StdFont(), Black);
+    draw.DrawText(10, y, Format("Loss: %.4f", loss), StdFont(), Black());
     y += 20;
-    draw.DrawText(10, y, Format("Accuracy: %.2f%%", accuracy * 100), StdFont(), Black);
+    draw.DrawText(10, y, Format("Accuracy: %.2f%%", accuracy * 100), StdFont(), Black());
     y += 20;
-    draw.DrawText(10, y, Format("Training Steps: %d", trainingSteps), StdFont(), Black);
+    draw.DrawText(10, y, Format("Training Steps: %d", trainingSteps), StdFont(), Black());
     y += 20;
-    draw.DrawText(10, y, Format("Tokens/sec: %.2f", tokensPerSecond), StdFont(), Black);
+    draw.DrawText(10, y, Format("Tokens/sec: %.2f", tokensPerSecond), StdFont(), Black());
 }
 
 void T5MetricsControl::UpdateMetrics(double newLoss, double newAccuracy,

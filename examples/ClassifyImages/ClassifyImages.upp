@@ -5,7 +5,10 @@ uses
 	ConvNetCtrl,
 	Docking,
 	PlotCtrl,
+	Node/Ctrl,
 	plugin/z;
+
+library(LINUX) "X11 Xrender Xft Xext Xinerama fontconfig freetype";
 
 file
 	main.cpp,
@@ -20,6 +23,6 @@ file
 	LoaderMNIST.cpp;
 
 mainconfig
-	"" = "GUI MT",
-	"" = "GUI MT NOGTK";
+	"" = "GUI",
+	"" = "GUI X11";
 

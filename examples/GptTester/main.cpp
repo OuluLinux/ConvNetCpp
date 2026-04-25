@@ -2,6 +2,12 @@
 
 GUI_APP_MAIN
 {
-    GptApp app;
-    app.Run();
+	try {
+		GptApp app;
+		app.Init(); 
+		app.Run();
+	}
+	catch (Exc e) {
+		PromptOK(e);
+	}
 }

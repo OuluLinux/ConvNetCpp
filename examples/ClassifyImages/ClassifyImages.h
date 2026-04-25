@@ -4,6 +4,10 @@
 #include <CtrlLib/CtrlLib.h>
 #include <Docking/Docking.h>
 #include <ConvNetCtrl/ConvNetCtrl.h>
+#include <Node/Script/Script.h>
+#include <Node/Core/Layout.h>
+#include <Node/Ctrl/Ctrl.h>
+
 using namespace Upp;
 using namespace ConvNet;
 
@@ -18,12 +22,20 @@ enum {LOADER_MNIST, LOADER_CIFAR10};
 enum {TYPE_LEARNER, TYPE_AUTOENCODER, TYPE_CONV};
 
 class ClassifyImages : public DockWindow {
+	TabCtrl tabs;
+	
+	Upp::Node::Graph             graph_node;
+	Upp::Node::EditorState       editor;
+	Upp::Node::HistoryStack      history;
+	Upp::Node::CommandDispatcher dispatcher;
+	Upp::Node::NodeViewportCtrl  viewport;
+	
 	ParentCtrl settings;
 	Label lrate, lmom, lbatch, ldecay;
 	EditDouble rate, mom, decay;
 	EditInt batch;
 	Button apply, save_net, load_net, pause;
-	TrainingGraph graph;
+	TrainingGraph loss_graph;
 	Label status;
 	SessionConvLayers layer_view;
 	ImagePrediction pred_view;
@@ -66,6 +78,9 @@ public:
 	void RefreshStatus();
 	void RefreshPredictions() {pred_view.Refresh();}
 	
+	void SyncGraph();
+	bool IsViewportWhite();
+	void SaveViewportImage(const String& path);
 	void UpdateNetParamDisplay();
 	void ResetAll();
 	void PostReload() {PostCallback(THISBACK(Reload));}

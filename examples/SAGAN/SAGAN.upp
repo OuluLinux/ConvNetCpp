@@ -1,23 +1,24 @@
-<Pkg>
-<Id>SAGAN</Id>
-<Package>SAGAN</Package>
-<Target>Examples</Target>
-</Pkg>
+description "SAGAN example\377";
 
-<SourceList>
-<Source>SAGAN.cpp</Source>
-<Source>SAGANLayer.cpp</Source>
-<Source>main.cpp</Source>
-</SourceList>
+uses
+	CtrlLib,
+	ConvNet,
+	ConvNetCtrl,
+	Docking,
+	PlotCtrl,
+	plugin/z;
 
-<IncludeList>
-<Include>SAGAN.h</Include>
-</IncludeList>
+options
+	"-I.";
 
-<LibraryList />
+file
+	SAGAN.cpp,
+	SAGAN.h,
+	SAGAN.iml,
+	SAGAN.lay,
+	SAGANLayer.cpp,
+	main.cpp;
 
-<DefList />
-
-<LinkList />
-
-<Precomp>ConvNet</Precomp>
+mainconfig
+	"" = "GUI",
+	"" = "GUI DEBUG";

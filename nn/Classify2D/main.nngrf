@@ -1,0 +1,151 @@
+// Template conversion from examples/Classify2D
+
+node convnet.module.layer.input:
+	out layer_stack : LAYER_STACK
+	input_width : int = 28 (EditIntSpin)
+	input_height : int = 28 (EditIntSpin)
+	input_depth : int = 1 (EditIntSpin)
+
+node convnet.module.layer.fc:
+	in layer_stack : LAYER_STACK
+	out layer_stack : LAYER_STACK
+	neuron_count : int = 64 (EditIntSpin)
+
+node convnet.module.layer.conv:
+	in layer_stack : LAYER_STACK
+	out layer_stack : LAYER_STACK
+	kernel_size : int = 5 (EditIntSpin)
+	out_channels : int = 16 (EditIntSpin)
+	stride : int = 1 (EditIntSpin)
+	padding : int = 2 (EditIntSpin)
+
+node convnet.module.layer.pool:
+	in layer_stack : LAYER_STACK
+	out layer_stack : LAYER_STACK
+	kernel_size : int = 2 (EditIntSpin)
+	stride : int = 2 (EditIntSpin)
+	padding : int = 0 (EditIntSpin)
+
+node convnet.module.layer.relu:
+	in layer_stack : LAYER_STACK
+	out layer_stack : LAYER_STACK
+
+node convnet.module.layer.sigmoid:
+	in layer_stack : LAYER_STACK
+	out layer_stack : LAYER_STACK
+
+node convnet.module.layer.regression:
+	in layer_stack : LAYER_STACK
+	out layer_stack : LAYER_STACK
+
+node convnet.module.layer.softmax:
+	in layer_stack : LAYER_STACK
+	out layer_stack : LAYER_STACK
+	class_count : int = 10 (EditIntSpin)
+
+node convnet.module.layer.vit_patch_embed:
+	in layer_stack : LAYER_STACK
+	out layer_stack : LAYER_STACK
+	patch_size : int = 4 (EditIntSpin)
+	embed_dim : int = 128 (EditIntSpin)
+	num_patches : int = 64 (EditIntSpin)
+
+node convnet.module.layer.vit_encoder:
+	in layer_stack : LAYER_STACK
+	out layer_stack : LAYER_STACK
+	embed_dim : int = 128 (EditIntSpin)
+	num_heads : int = 8 (EditIntSpin)
+	ff_dim : int = 512 (EditIntSpin)
+	num_layers : int = 3 (EditIntSpin)
+	dropout_rate : float = 0.1 (EditDoubleSpin)
+
+node convnet.module.layer.vit_classifier:
+	in layer_stack : LAYER_STACK
+	out layer_stack : LAYER_STACK
+	num_classes : int = 10 (EditIntSpin)
+	embed_dim : int = 128 (EditIntSpin)
+
+node convnet.compile:
+	in layer_stack : LAYER_STACK
+	out model : MODEL
+	out report : REPORT
+	mode : string = "compile" (DropList)
+
+node convnet.module.trainer.adadelta:
+	in model : MODEL
+	out model : MODEL
+	learning_rate : float = 0.01 (EditDoubleSpin)
+	batch_size : int = 1 (EditIntSpin)
+	l2_decay : float = 0.001 (EditDoubleSpin)
+
+node convnet.module.trainer.adam:
+	in model : MODEL
+	out model : MODEL
+	learning_rate : float = 0.001 (EditDoubleSpin)
+	batch_size : int = 32 (EditIntSpin)
+	l2_decay : float = 0.0001 (EditDoubleSpin)
+
+node convnet.module.trainer.sgd:
+	in model : MODEL
+	out model : MODEL
+	learning_rate : float = 0.01 (EditDoubleSpin)
+	momentum : float = 0.9 (EditDoubleSpin)
+	batch_size : int = 8 (EditIntSpin)
+	l2_decay : float = 0.001 (EditDoubleSpin)
+
+node convnet.module.trainer.adagrad:
+	in model : MODEL
+	out model : MODEL
+	learning_rate : float = 0.01 (EditDoubleSpin)
+	eps : float = 0.000001 (EditDoubleSpin)
+	batch_size : int = 8 (EditIntSpin)
+	l2_decay : float = 0.001 (EditDoubleSpin)
+
+node convnet.module.trainer.windowgrad:
+	in model : MODEL
+	out model : MODEL
+	learning_rate : float = 0.01 (EditDoubleSpin)
+	eps : float = 0.000001 (EditDoubleSpin)
+	ro : float = 0.95 (EditDoubleSpin)
+	batch_size : int = 8 (EditIntSpin)
+	l2_decay : float = 0.001 (EditDoubleSpin)
+
+node convnet.train:
+	in model : MODEL
+	out metrics : METRICS
+	epochs : int = 20 (EditIntSpin)
+	learning_rate : float = 0.001 (EditDoubleSpin)
+
+
+net classify2d:
+	n_input: convnet.module.layer.input
+		input_width = 1
+		input_height = 1
+		input_depth = 2
+
+	n_fc1: convnet.module.layer.fc
+		neuron_count = 6
+	n_relu1: convnet.module.layer.relu
+	n_fc2: convnet.module.layer.fc
+		neuron_count = 2
+	n_relu2: convnet.module.layer.relu
+	n_softmax: convnet.module.layer.softmax
+		class_count = 2
+	n_compile: convnet.compile
+	n_sgd: convnet.module.trainer.sgd
+		learning_rate = 0.01
+		momentum = 0.1
+		batch_size = 10
+		l2_decay = 0.001
+	n_train: convnet.train
+		epochs = 40
+		learning_rate = 0.01
+
+	n_input.layer_stack -> n_fc1.layer_stack
+	n_fc1.layer_stack -> n_relu1.layer_stack
+	n_relu1.layer_stack -> n_fc2.layer_stack
+	n_fc2.layer_stack -> n_relu2.layer_stack
+	n_relu2.layer_stack -> n_softmax.layer_stack
+	n_softmax.layer_stack -> n_compile.layer_stack
+	n_compile.model -> n_sgd.model
+	n_sgd.model -> n_train.model

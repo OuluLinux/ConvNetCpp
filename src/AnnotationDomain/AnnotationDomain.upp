@@ -1,0 +1,18 @@
+description "AnnotationDomain — NodeWorkbench domain plugin for AnnLay pipeline graphs\377";
+
+uses
+	Core,
+	Draw,
+	CtrlLib,
+	Docking,
+	NodeWorkbench,
+	AnnLayCore;
+
+file
+	AnnotationDomain.h,
+	AnnotationDomain.cpp,
+	main.cpp;
+
+mainconfig
+	"" = "GUI",
+	"X11" = "GUI X11";

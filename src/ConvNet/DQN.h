@@ -35,12 +35,20 @@ T& SingleRandomGaussianLock() {
 
 inline RandomGaussian& GetRandomGaussian(int length) {
 	SpinLock& lock = SingleRandomGaussianLock<SpinLock>(); // workaround
-	ArrayMap<int, RandomGaussian>& rands = Single<ArrayMap<int, RandomGaussian> >();
+	static ArrayMap<int, RandomGaussian>* rands_ptr = [] {
+		MemoryIgnoreLeaksBegin();
+		auto* p = new ArrayMap<int, RandomGaussian>();
+		MemoryIgnoreLeaksEnd();
+		return p;
+	}(); // intentional leak: avoids static-destruction-order crash with UPP heap
+	ArrayMap<int, RandomGaussian>& rands = *rands_ptr;
 	lock.Enter();
 	int i = rands.Find(length);
 	RandomGaussian* r;
 	if (i == -1) {
+		MemoryIgnoreLeaksBegin();
 		r = &rands.Add(length, new RandomGaussian(length));
+		MemoryIgnoreLeaksEnd();
 	} else {
 		r = &rands[i];
 	}

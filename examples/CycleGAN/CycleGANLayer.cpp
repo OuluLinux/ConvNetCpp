@@ -3,7 +3,7 @@
 CycleGANLayer::CycleGANLayer() {
 }
 
-void CycleGANLayer::Init(int stride) {
+void CycleGANLayer::Init(int stride, const CycleGANParams& params) {
 	this->stride = stride;
 
 	// Set the dimensions for input images (this can be adjusted for different datasets)
@@ -16,7 +16,7 @@ void CycleGANLayer::Init(int stride) {
 
 	// Discriminator for domain X (e.g., horses)
 	String disc_X_t =	"[\n"
-						"\t{\"type\":\"input\", \"input_width\":" + IntStr(input_width) + ", \"input_height\":" + IntStr(input_height) + ", \"input_depth\":" + IntStr(input_depth) + "},\n"
+						"\t{\"type\":\"input\", \"input_width\":" + FormatInt(input_width) + ", \"input_height\":" + FormatInt(input_height) + ", \"input_depth\":" + FormatInt(input_depth) + "},\n"
 						"\t{\"type\":\"conv\", \"filter_width\":4, \"filter_height\":4, \"filter_count\":64, \"stride\":2, \"pad\":1, \"activation\":\"leakyrelu\"},\n"
 						"\t{\"type\":\"conv\", \"filter_width\":4, \"filter_height\":4, \"filter_count\":128, \"stride\":2, \"pad\":1, \"activation\":\"leakyrelu\"},\n"
 						"\t{\"type\":\"conv\", \"filter_width\":4, \"filter_height\":4, \"filter_count\":256, \"stride\":2, \"pad\":1, \"activation\":\"leakyrelu\"},\n"
@@ -30,7 +30,7 @@ void CycleGANLayer::Init(int stride) {
 
 	// Discriminator for domain Y (e.g., zebras)
 	String disc_Y_t =	"[\n"
-						"\t{\"type\":\"input\", \"input_width\":" + IntStr(input_width) + ", \"input_height\":" + IntStr(input_height) + ", \"input_depth\":" + IntStr(input_depth) + "},\n"
+						"\t{\"type\":\"input\", \"input_width\":" + FormatInt(input_width) + ", \"input_height\":" + FormatInt(input_height) + ", \"input_depth\":" + FormatInt(input_depth) + "},\n"
 						"\t{\"type\":\"conv\", \"filter_width\":4, \"filter_height\":4, \"filter_count\":64, \"stride\":2, \"pad\":1, \"activation\":\"leakyrelu\"},\n"
 						"\t{\"type\":\"conv\", \"filter_width\":4, \"filter_height\":4, \"filter_count\":128, \"stride\":2, \"pad\":1, \"activation\":\"leakyrelu\"},\n"
 						"\t{\"type\":\"conv\", \"filter_width\":4, \"filter_height\":4, \"filter_count\":256, \"stride\":2, \"pad\":1, \"activation\":\"leakyrelu\"},\n"
@@ -44,7 +44,7 @@ void CycleGANLayer::Init(int stride) {
 
 	// Generator X to Y (e.g., horse to zebra)
 	String gen_XtoY_t =	"[\n"
-						"\t{\"type\":\"input\", \"input_width\":" + IntStr(input_width) + ", \"input_height\":" + IntStr(input_height) + ", \"input_depth\":" + IntStr(input_depth) + "},\n"
+						"\t{\"type\":\"input\", \"input_width\":" + FormatInt(input_width) + ", \"input_height\":" + FormatInt(input_height) + ", \"input_depth\":" + FormatInt(input_depth) + "},\n"
 						"\t{\"type\":\"conv\", \"filter_width\":7, \"filter_height\":7, \"filter_count\":32, \"stride\":1, \"pad\":3, \"activation\":\"relu\"},\n"  // Input layer
 						"\t{\"type\":\"conv\", \"filter_width\":3, \"filter_height\":3, \"filter_count\":64, \"stride\":2, \"pad\":1, \"activation\":\"relu\"},\n"  // Downsample
 						"\t{\"type\":\"conv\", \"filter_width\":3, \"filter_height\":3, \"filter_count\":128, \"stride\":2, \"pad\":1, \"activation\":\"relu\"},\n" // Downsample
@@ -70,7 +70,7 @@ void CycleGANLayer::Init(int stride) {
 
 	// Generator Y to X (e.g., zebra to horse)
 	String gen_YtoX_t =	"[\n"
-						"\t{\"type\":\"input\", \"input_width\":" + IntStr(input_width) + ", \"input_height\":" + IntStr(input_height) + ", \"input_depth\":" + IntStr(input_depth) + "},\n"
+						"\t{\"type\":\"input\", \"input_width\":" + FormatInt(input_width) + ", \"input_height\":" + FormatInt(input_height) + ", \"input_depth\":" + FormatInt(input_depth) + "},\n"
 						"\t{\"type\":\"conv\", \"filter_width\":7, \"filter_height\":7, \"filter_count\":32, \"stride\":1, \"pad\":3, \"activation\":\"relu\"},\n"  // Input layer
 						"\t{\"type\":\"conv\", \"filter_width\":3, \"filter_height\":3, \"filter_count\":64, \"stride\":2, \"pad\":1, \"activation\":\"relu\"},\n"  // Downsample
 						"\t{\"type\":\"conv\", \"filter_width\":3, \"filter_height\":3, \"filter_count\":128, \"stride\":2, \"pad\":1, \"activation\":\"relu\"},\n" // Downsample
@@ -109,8 +109,8 @@ void CycleGANLayer::Train() {
 	int real_X_idx = Random(data_X.GetDataCount());
 	int real_Y_idx = Random(data_Y.GetDataCount());
 	
-	const Vector<double>& real_X_vec = data_X.Get(real_X_idx);
-	const Vector<double>& real_Y_vec = data_Y.Get(real_Y_idx);
+	const Vector<double>& real_X_vec = clone(data_X.Get(real_X_idx));
+	const Vector<double>& real_Y_vec = clone(data_Y.Get(real_Y_idx));
 	
 	Volume real_X_image(input_width, input_height, input_depth);
 	Volume real_Y_image(input_width, input_height, input_depth);

@@ -3,15 +3,10 @@
 GUI_APP_MAIN
 {
 	try {
-		VisionTransformer vit;
-
-		// Load CIFAR-10 data
-		LoaderCIFAR10 l(vit.GetSession());
-		l.Run();
-		if (l.IsFail()) return;
-
-		vit.PostReload();
-		vit.Run();
+		VisionTransformer app;
+		// Some apps need Init() before Run()
+		// app.Init(); 
+		app.Run();
 	}
 	catch (Exc e) {
 		PromptOK(e);

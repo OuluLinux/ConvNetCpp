@@ -1,4 +1,5 @@
 #include "LayerBase.h"
+#include "RuntimeFlexibility.h"
 
 
 namespace ConvNet {

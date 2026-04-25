@@ -33,7 +33,7 @@ void DiffusionModelLayer::Init(int stride, int timesteps, int img_width, int img
 	// Diffusion model architecture - U-Net is common for diffusion models
 	// This implementation uses a U-Net-like architecture to predict noise
 	String model_t =	"[\n"
-						"\t{\"type\":\"input\", \"input_width\":" + IntStr(input_width) + ", \"input_height\":" + IntStr(input_height) + ", \"input_depth\":" + IntStr(input_depth + 1) + "},\n"  // +1 for timestep embedding
+						"\t{\"type\":\"input\", \"input_width\":" + FormatInt(input_width) + ", \"input_height\":" + FormatInt(input_height) + ", \"input_depth\":" + FormatInt(input_depth + 1) + "},\n"  // +1 for timestep embedding
 						"\t{\"type\":\"conv\", \"filter_width\":3, \"filter_height\":3, \"filter_count\":128, \"stride\":1, \"pad\":1, \"activation\":\"relu\"},\n"
 						"\t{\"type\":\"conv\", \"filter_width\":3, \"filter_height\":3, \"filter_count\":128, \"stride\":1, \"pad\":1, \"activation\":\"relu\"},\n"
 						"\t{\"type\":\"conv\", \"filter_width\":3, \"filter_height\":3, \"filter_count\":128, \"stride\":1, \"pad\":1, \"activation\":\"relu\"},\n"
@@ -52,7 +52,7 @@ void DiffusionModelLayer::Init(int stride, int timesteps, int img_width, int img
 						"\t{\"type\":\"tconv\", \"filter_width\":3, \"filter_height\":3, \"filter_count\":256, \"stride\":2, \"pad\":1, \"activation\":\"relu\"},\n"  // Upsample
 						"\t{\"type\":\"conv\", \"filter_width\":3, \"filter_height\":3, \"filter_count\":128, \"stride\":1, \"pad\":1, \"activation\":\"relu\"},\n"
 						"\t{\"type\":\"tconv\", \"filter_width\":3, \"filter_height\":3, \"filter_count\":128, \"stride\":2, \"pad\":1, \"activation\":\"relu\"},\n"  // Upsample
-						"\t{\"type\":\"conv\", \"filter_width\":3, \"filter_height\":3, \"filter_count\":" + IntStr(input_depth) + ", \"stride\":1, \"pad\":1, \"activation\":\"tanh\"},\n"  // Output same depth as input
+						"\t{\"type\":\"conv\", \"filter_width\":3, \"filter_height\":3, \"filter_count\":" + FormatInt(input_depth) + ", \"stride\":1, \"pad\":1, \"activation\":\"tanh\"},\n"  // Output same depth as input
 						"\t{\"type\":\"adam\", \"learning_rate\":0.0002, \"beta1\":0.5, \"batch_size\":16, \"l2_decay\":0.0001}\n"
 						"]\n";
 
@@ -66,7 +66,7 @@ void DiffusionModelLayer::Train() {
 	// Sample real image
 	SessionData& data = model.Data();
 	int real_idx = Random(data.GetDataCount());
-	const Vector<double>& real_image_vec = data.Get(real_idx); // Use reference to avoid copy
+	const Vector<double>& real_image_vec = clone(data.Get(real_idx)); // Use reference to avoid copy
 
 	// Convert to Volume
 	Volume real_image(input_width, input_height, input_depth);
@@ -96,8 +96,8 @@ void DiffusionModelLayer::Train() {
 	for (int w = 0; w < input_width; w++) {
 		for (int h = 0; h < input_height; h++) {
 			for (int d = 0; d < input_depth; d++) {
-				double original_pixel = real_image.Get(w, h, d);
-				double noise_pixel = noise.Get(w, h, d);
+				double original_pixel = clone(real_image.Get(w, h, d));
+				double noise_pixel = clone(noise.Get(w, h, d));
 				double noised_pixel = sqrt_alpha_bar_t * original_pixel + sqrt_one_minus_alpha_bar_t * noise_pixel;
 				// Clamp to [-1, 1] range
 				noised_pixel = max(-1.0, min(1.0, noised_pixel));
@@ -197,8 +197,8 @@ Volume& DiffusionModelLayer::DenoiseStep(Volume& x, int t, int condition_label) 
 	for (int w = 0; w < input_width; w++) {
 		for (int h = 0; h < input_height; h++) {
 			for (int d = 0; d < input_depth; d++) {
-				double current_pixel = x.Get(w, h, d);
-				double predicted_noise_pixel = predicted_noise.Get(w, h, d);
+				double current_pixel = clone(x.Get(w, h, d));
+				double predicted_noise_pixel = clone(predicted_noise.Get(w, h, d));
 				
 				// Apply reverse process formula
 				double mean = coeff1 * (current_pixel - coeff2 * predicted_noise_pixel);

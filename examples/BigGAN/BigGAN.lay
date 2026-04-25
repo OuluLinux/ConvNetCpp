@@ -1,7 +1,3 @@
-<TOPIC version=2>
-<DOC>
-<TT>BigGAN</TT>
-<BR>
-<BR>
-</DOC>
-</TOPIC>
+LAYOUT(BigGANLayout, 800, 600)
+	ITEM(ParentCtrl, panel, LeftPos(0, 300).VSizePos(0, 0))
+END_LAYOUT

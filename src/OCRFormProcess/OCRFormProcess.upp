@@ -1,0 +1,14 @@
+description "OCRForm VideoServer feedback-loop processor";
+
+uses
+	Core,
+	Draw,
+	plugin/png,
+	OCR,
+	OCRForm;
+
+file
+	main.cpp;
+
+mainconfig
+	"" = "GUI";

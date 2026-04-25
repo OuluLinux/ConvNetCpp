@@ -1,0 +1,12 @@
+description "Headless console runner with ConvNet support\377";
+
+uses
+    ScriptCLI,
+    ConvNetPlugin;
+
+file
+    main.cpp;
+
+mainconfig
+    ""           = "",
+    "USEMALLOC"  = "USEMALLOC";

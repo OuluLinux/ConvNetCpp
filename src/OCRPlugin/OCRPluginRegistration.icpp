@@ -1,0 +1,9 @@
+#include "OCRPlugin.h"
+
+NAMESPACE_UPP
+
+INITBLOCK {
+	GetInternalPluginFactories().Add([]() -> IPlugin* { return new OcrPlugin(); });
+}
+
+END_UPP_NAMESPACE

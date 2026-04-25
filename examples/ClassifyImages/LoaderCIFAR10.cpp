@@ -67,14 +67,18 @@ void LoaderCIFAR10::Load() {
 	int total = cifar_data_count * 2 + 1;
 	for(int i = 0; i < cifar_data_count && !IsFail(); i++) {
 		String file = i < 5 ? "data_batch_" + IntStr(i+1) + ".bin" : "test_batch.bin";
-		if (!FileExists(GetExeDirFile(file))) {
-			PromptOK("Error: CIFAR-10 dataset file " + file + " is not included with this executable.");
-			ret_value = 1;
-			PostCallback(THISBACK(Close0));
-			return;
+		String path  = AppendFileName(GetCurrentDirectory(), file);
+		if (!FileExists(path)) {
+			path = GetExeDirFile(file);
+			if (!FileExists(path)) {
+				PromptOK("Error: CIFAR-10 dataset file " + file + " is not included with this executable.");
+				ret_value = 1;
+				PostCallback(THISBACK(Close0));
+				return;
+			}
 		}
 		
-		FileIn in(GetExeDirFile(file));
+		FileIn in(path);
 		
 		int length = in.GetSize();
 		LOG("Load " <<  file << " size: " << length);

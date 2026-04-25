@@ -1,7 +1,7 @@
 #ifndef _ConvNet_MemoryPool_h_
 #define _ConvNet_MemoryPool_h_
 
-#include "ConvNet.h"
+#include "Utilities.h"
 #include <unordered_map>
 #include <memory>
 

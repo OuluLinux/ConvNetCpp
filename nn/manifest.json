@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "generator": "convert_examples_to_nn.py",
+  "available_templates": [
+    "Classify2D",
+    "ClassifyImagesCIFAR",
+    "ClassifyImagesMNIST",
+    "ClassifyImagesSuite",
+    "EfficientNet",
+    "NetworkOptimization",
+    "Regression1D",
+    "RegressionPainter",
+    "SwinTransformer",
+    "TrainerBenchmark",
+    "VisionTransformer"
+  ],
+  "generated": [
+    {
+      "name": "Classify2D",
+      "source_example": "Classify2D",
+      "solution": "nn/Classify2D/Classify2D.nnsln",
+      "project": "nn/Classify2D/Classify2D.nnprj",
+      "graph": "nn/Classify2D/main.nngrf",
+      "solutions": [
+        "nn/Classify2D/Classify2D.nnsln"
+      ],
+      "projects": [
+        "nn/Classify2D/Classify2D.nnprj"
+      ],
+      "graphs": [
+        "nn/Classify2D/main.nngrf"
+      ]
+    }
+  ]
+}

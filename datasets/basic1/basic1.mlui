@@ -1,0 +1,14 @@
+{
+  "format": "AnnotationEditorScript",
+  "version": 1,
+  "name": "basic1_scidoc",
+  "description": "Basic scientific document layout example",
+  "author": "",
+  "created": null,
+  "reference_image": {
+    "file_path": "images/sample_page_001.png",
+    "width": 1600,
+    "height": 2200
+  },
+  "slots": []
+}

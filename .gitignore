@@ -32,3 +32,8 @@ docs/*.png
 # Other
 trash/
 tmp/
+.tmp/
+plan/
+__pycache__/
+*.pyc
+*.annmdl

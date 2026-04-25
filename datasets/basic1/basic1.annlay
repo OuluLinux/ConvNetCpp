@@ -1,0 +1,630 @@
+{
+  "description": "Basic scientific-document example showcasing AnnotationEditor pipeline features",
+  "format": "annlay",
+  "version": "1",
+  "image_width_ref": 1600,
+  "image_height_ref": 2200,
+  "bbox_expand": 0.1,
+  "slots": [
+    {
+      "id": "doc_title",
+      "method": "ocr_text",
+      "color_mode": "grayscale",
+      "crop_size": {
+        "cx": 320,
+        "cy": 80
+      },
+      "anchor": {
+        "cx": 0.5,
+        "cy": 0.07,
+        "w": 0.4,
+        "std_cx": 0.0,
+        "std_cy": 0.0,
+        "n_annotations": 1,
+        "h": 0.04
+      },
+      "anchor_candidates": [],
+      "classes": [],
+      "template_w": 0,
+      "template_h": 0,
+      "template_crop_x": 0,
+      "template_crop_y": 0,
+      "template_crop_w": 0,
+      "template_crop_h": 0,
+      "composite_type": "none",
+      "split_policy": "none",
+      "group": "",
+      "head_id": "",
+      "sub_groups": {},
+      "sub_heads": {},
+      "presence_threshold": 0.5,
+      "fixed_rotation_deg": 0,
+      "ocr_preprocess_mode": "",
+      "ocr_psm": 6,
+      "ocr_whitelist": "",
+      "ocr_blacklist": "",
+      "gate": "",
+      "sub_layout_json": ""
+    },
+    {
+      "id": "figure_token_1",
+      "method": "classifier_label",
+      "color_mode": "color",
+      "crop_size": {
+        "cx": 40,
+        "cy": 80
+      },
+      "anchor": {
+        "cx": 0.2,
+        "cy": 0.45,
+        "w": 0.04,
+        "std_cx": 0.0,
+        "std_cy": 0.0,
+        "n_annotations": 1,
+        "h": 0.08
+      },
+      "anchor_candidates": [],
+      "classes": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "template_w": 132,
+      "template_h": 174,
+      "template_crop_x": 10,
+      "template_crop_y": 10,
+      "template_crop_w": 40,
+      "template_crop_h": 80,
+      "composite_type": "token",
+      "split_policy": "vertical_halves",
+      "group": "",
+      "head_id": "",
+      "sub_groups": {
+        "presence": "token_presence_gate",
+        "category": "token_family"
+      },
+      "sub_heads": {
+        "presence": "token_presence_gate",
+        "category": "token_family"
+      },
+      "presence_threshold": 0.5,
+      "fixed_rotation_deg": 0,
+      "ocr_preprocess_mode": "",
+      "ocr_psm": -1,
+      "ocr_whitelist": "",
+      "ocr_blacklist": "",
+      "gate": "",
+      "sub_layout_json": ""
+    },
+    {
+      "id": "figure_token_2",
+      "method": "classifier_label",
+      "color_mode": "color",
+      "crop_size": {
+        "cx": 40,
+        "cy": 80
+      },
+      "anchor": {
+        "cx": 0.28,
+        "cy": 0.45,
+        "w": 0.04,
+        "std_cx": 0.0,
+        "std_cy": 0.0,
+        "n_annotations": 1,
+        "h": 0.08
+      },
+      "anchor_candidates": [],
+      "classes": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "template_w": 132,
+      "template_h": 174,
+      "template_crop_x": 10,
+      "template_crop_y": 10,
+      "template_crop_w": 40,
+      "template_crop_h": 80,
+      "composite_type": "token",
+      "split_policy": "vertical_halves",
+      "group": "",
+      "head_id": "",
+      "sub_groups": {
+        "presence": "token_presence_gate",
+        "category": "token_family"
+      },
+      "sub_heads": {
+        "presence": "token_presence_gate",
+        "category": "token_family"
+      },
+      "presence_threshold": 0.5,
+      "fixed_rotation_deg": 0,
+      "ocr_preprocess_mode": "",
+      "ocr_psm": -1,
+      "ocr_whitelist": "",
+      "ocr_blacklist": "",
+      "gate": "",
+      "sub_layout_json": ""
+    },
+    {
+      "id": "figure_token_3",
+      "method": "classifier_label",
+      "color_mode": "color",
+      "crop_size": {
+        "cx": 40,
+        "cy": 80
+      },
+      "anchor": {
+        "cx": 0.36,
+        "cy": 0.45,
+        "w": 0.04,
+        "std_cx": 0.0,
+        "std_cy": 0.0,
+        "n_annotations": 1,
+        "h": 0.08
+      },
+      "anchor_candidates": [],
+      "classes": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "template_w": 132,
+      "template_h": 174,
+      "template_crop_x": 10,
+      "template_crop_y": 10,
+      "template_crop_w": 40,
+      "template_crop_h": 80,
+      "composite_type": "token",
+      "split_policy": "vertical_halves",
+      "group": "",
+      "head_id": "",
+      "sub_groups": {
+        "presence": "token_presence_gate",
+        "category": "token_family"
+      },
+      "sub_heads": {
+        "presence": "token_presence_gate",
+        "category": "token_family"
+      },
+      "presence_threshold": 0.5,
+      "fixed_rotation_deg": 0,
+      "ocr_preprocess_mode": "",
+      "ocr_psm": -1,
+      "ocr_whitelist": "",
+      "ocr_blacklist": "",
+      "gate": "",
+      "sub_layout_json": ""
+    },
+    {
+      "id": "figure_token_4",
+      "method": "classifier_label",
+      "color_mode": "color",
+      "crop_size": {
+        "cx": 40,
+        "cy": 80
+      },
+      "anchor": {
+        "cx": 0.44,
+        "cy": 0.45,
+        "w": 0.04,
+        "std_cx": 0.0,
+        "std_cy": 0.0,
+        "n_annotations": 1,
+        "h": 0.08
+      },
+      "anchor_candidates": [],
+      "classes": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "template_w": 132,
+      "template_h": 174,
+      "template_crop_x": 10,
+      "template_crop_y": 10,
+      "template_crop_w": 40,
+      "template_crop_h": 80,
+      "composite_type": "token",
+      "split_policy": "vertical_halves",
+      "group": "",
+      "head_id": "",
+      "sub_groups": {
+        "presence": "token_presence_gate",
+        "category": "token_family"
+      },
+      "sub_heads": {
+        "presence": "token_presence_gate",
+        "category": "token_family"
+      },
+      "presence_threshold": 0.5,
+      "fixed_rotation_deg": 0,
+      "ocr_preprocess_mode": "",
+      "ocr_psm": -1,
+      "ocr_whitelist": "",
+      "ocr_blacklist": "",
+      "gate": "",
+      "sub_layout_json": ""
+    },
+    {
+      "id": "figure_token_5",
+      "method": "classifier_label",
+      "color_mode": "color",
+      "crop_size": {
+        "cx": 40,
+        "cy": 80
+      },
+      "anchor": {
+        "cx": 0.52,
+        "cy": 0.45,
+        "w": 0.04,
+        "std_cx": 0.0,
+        "std_cy": 0.0,
+        "n_annotations": 1,
+        "h": 0.08
+      },
+      "anchor_candidates": [],
+      "classes": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "template_w": 132,
+      "template_h": 174,
+      "template_crop_x": 10,
+      "template_crop_y": 10,
+      "template_crop_w": 40,
+      "template_crop_h": 80,
+      "composite_type": "token",
+      "split_policy": "vertical_halves",
+      "group": "",
+      "head_id": "",
+      "sub_groups": {
+        "presence": "token_presence_gate",
+        "category": "token_family"
+      },
+      "sub_heads": {
+        "presence": "token_presence_gate",
+        "category": "token_family"
+      },
+      "presence_threshold": 0.5,
+      "fixed_rotation_deg": 0,
+      "ocr_preprocess_mode": "",
+      "ocr_psm": -1,
+      "ocr_whitelist": "",
+      "ocr_blacklist": "",
+      "gate": "",
+      "sub_layout_json": ""
+    },
+    {
+      "id": "header_token_1",
+      "method": "classifier_label",
+      "color_mode": "color",
+      "crop_size": {
+        "cx": 40,
+        "cy": 80
+      },
+      "anchor": {
+        "cx": 0.64,
+        "cy": 0.1,
+        "w": 0.04,
+        "std_cx": 0.0,
+        "std_cy": 0.0,
+        "n_annotations": 1,
+        "h": 0.08
+      },
+      "anchor_candidates": [],
+      "classes": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "template_w": 132,
+      "template_h": 174,
+      "template_crop_x": 10,
+      "template_crop_y": 10,
+      "template_crop_w": 40,
+      "template_crop_h": 80,
+      "composite_type": "token",
+      "split_policy": "vertical_halves",
+      "group": "",
+      "head_id": "",
+      "sub_groups": {
+        "presence": "token_presence_gate",
+        "category": "token_family"
+      },
+      "sub_heads": {
+        "presence": "token_presence_gate",
+        "category": "token_family"
+      },
+      "presence_threshold": 0.5,
+      "fixed_rotation_deg": -4,
+      "ocr_preprocess_mode": "",
+      "ocr_psm": -1,
+      "ocr_whitelist": "",
+      "ocr_blacklist": "",
+      "gate": "",
+      "sub_layout_json": ""
+    },
+    {
+      "id": "header_token_2",
+      "method": "classifier_label",
+      "color_mode": "color",
+      "crop_size": {
+        "cx": 40,
+        "cy": 80
+      },
+      "anchor": {
+        "cx": 0.72,
+        "cy": 0.1,
+        "w": 0.04,
+        "std_cx": 0.0,
+        "std_cy": 0.0,
+        "n_annotations": 1,
+        "h": 0.08
+      },
+      "anchor_candidates": [],
+      "classes": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "template_w": 132,
+      "template_h": 174,
+      "template_crop_x": 10,
+      "template_crop_y": 10,
+      "template_crop_w": 40,
+      "template_crop_h": 80,
+      "composite_type": "token",
+      "split_policy": "vertical_halves",
+      "group": "",
+      "head_id": "",
+      "sub_groups": {
+        "presence": "token_presence_gate",
+        "category": "token_family"
+      },
+      "sub_heads": {
+        "presence": "token_presence_gate",
+        "category": "token_family"
+      },
+      "presence_threshold": 0.5,
+      "fixed_rotation_deg": 4,
+      "ocr_preprocess_mode": "",
+      "ocr_psm": -1,
+      "ocr_whitelist": "",
+      "ocr_blacklist": "",
+      "gate": "",
+      "sub_layout_json": ""
+    },
+    {
+      "id": "figure_block",
+      "method": "classifier_bool",
+      "color_mode": "grayscale",
+      "crop_size": {
+        "cx": 96,
+        "cy": 96
+      },
+      "anchor": {
+        "cx": 0.3,
+        "cy": 0.52,
+        "w": 0.12,
+        "std_cx": 0.0,
+        "std_cy": 0.0,
+        "n_annotations": 1,
+        "h": 0.12
+      },
+      "anchor_candidates": [],
+      "classes": [
+        "false",
+        "true"
+      ],
+      "template_w": 0,
+      "template_h": 0,
+      "template_crop_x": 0,
+      "template_crop_y": 0,
+      "template_crop_w": 0,
+      "template_crop_h": 0,
+      "composite_type": "none",
+      "split_policy": "none",
+      "group": "figure_gate",
+      "head_id": "",
+      "sub_groups": {},
+      "sub_heads": {},
+      "presence_threshold": 0.5,
+      "fixed_rotation_deg": 0,
+      "ocr_preprocess_mode": "",
+      "ocr_psm": -1,
+      "ocr_whitelist": "",
+      "ocr_blacklist": "",
+      "gate": "",
+      "sub_layout_json": ""
+    },
+    {
+      "id": "equation_block",
+      "method": "classifier_bool",
+      "color_mode": "grayscale",
+      "crop_size": {
+        "cx": 96,
+        "cy": 96
+      },
+      "anchor": {
+        "cx": 0.68,
+        "cy": 0.58,
+        "w": 0.12,
+        "std_cx": 0.0,
+        "std_cy": 0.0,
+        "n_annotations": 1,
+        "h": 0.12
+      },
+      "anchor_candidates": [],
+      "classes": [
+        "false",
+        "true"
+      ],
+      "template_w": 0,
+      "template_h": 0,
+      "template_crop_x": 0,
+      "template_crop_y": 0,
+      "template_crop_w": 0,
+      "template_crop_h": 0,
+      "composite_type": "none",
+      "split_policy": "none",
+      "group": "equation_gate",
+      "head_id": "",
+      "sub_groups": {},
+      "sub_heads": {},
+      "presence_threshold": 0.5,
+      "fixed_rotation_deg": 0,
+      "ocr_preprocess_mode": "",
+      "ocr_psm": -1,
+      "ocr_whitelist": "",
+      "ocr_blacklist": "",
+      "gate": "",
+      "sub_layout_json": ""
+    },
+    {
+      "id": "caption_block",
+      "method": "classifier_bool",
+      "color_mode": "grayscale",
+      "crop_size": {
+        "cx": 96,
+        "cy": 96
+      },
+      "anchor": {
+        "cx": 0.3,
+        "cy": 0.66,
+        "w": 0.12,
+        "std_cx": 0.0,
+        "std_cy": 0.0,
+        "n_annotations": 1,
+        "h": 0.12
+      },
+      "anchor_candidates": [],
+      "classes": [
+        "false",
+        "true"
+      ],
+      "template_w": 0,
+      "template_h": 0,
+      "template_crop_x": 0,
+      "template_crop_y": 0,
+      "template_crop_w": 0,
+      "template_crop_h": 0,
+      "composite_type": "none",
+      "split_policy": "none",
+      "group": "caption_gate",
+      "head_id": "",
+      "sub_groups": {},
+      "sub_heads": {},
+      "presence_threshold": 0.5,
+      "fixed_rotation_deg": 0,
+      "ocr_preprocess_mode": "",
+      "ocr_psm": -1,
+      "ocr_whitelist": "",
+      "ocr_blacklist": "",
+      "gate": "",
+      "sub_layout_json": ""
+    }
+  ],
+  "groups": [
+    {
+      "id": "token_presence_gate",
+      "method": "classifier_bool",
+      "crop_size": {
+        "cx": 40,
+        "cy": 80
+      },
+      "classes": [
+        "false",
+        "true"
+      ],
+      "color_mode": "grayscale",
+      "display_name": "token_presence_gate",
+      "legacy_aliases": [],
+      "head_role": "presence",
+      "preprocess": "high_luma_bin",
+      "export_dataset_dir": "token_presence"
+    },
+    {
+      "id": "token_family",
+      "method": "classifier_label",
+      "crop_size": {
+        "cx": 22,
+        "cy": 22
+      },
+      "classes": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "color_mode": "color",
+      "display_name": "token_family",
+      "legacy_aliases": [],
+      "head_role": "category",
+      "preprocess": "color_raw",
+      "export_dataset_dir": "token_family"
+    },
+    {
+      "id": "figure_gate",
+      "method": "classifier_bool",
+      "crop_size": {
+        "cx": 96,
+        "cy": 96
+      },
+      "classes": [
+        "false",
+        "true"
+      ],
+      "color_mode": "grayscale",
+      "display_name": "figure_gate",
+      "legacy_aliases": [],
+      "head_role": "figure",
+      "preprocess": "grayscale",
+      "export_dataset_dir": "figure_gate"
+    },
+    {
+      "id": "equation_gate",
+      "method": "classifier_bool",
+      "crop_size": {
+        "cx": 96,
+        "cy": 96
+      },
+      "classes": [
+        "false",
+        "true"
+      ],
+      "color_mode": "grayscale",
+      "display_name": "equation_gate",
+      "legacy_aliases": [],
+      "head_role": "equation",
+      "preprocess": "grayscale",
+      "export_dataset_dir": "equation_gate"
+    },
+    {
+      "id": "caption_gate",
+      "method": "classifier_bool",
+      "crop_size": {
+        "cx": 96,
+        "cy": 96
+      },
+      "classes": [
+        "false",
+        "true"
+      ],
+      "color_mode": "grayscale",
+      "display_name": "caption_gate",
+      "legacy_aliases": [],
+      "head_role": "caption",
+      "preprocess": "grayscale",
+      "export_dataset_dir": "caption_gate"
+    }
+  ]
+}

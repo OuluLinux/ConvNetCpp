@@ -1,0 +1,31 @@
+description "AnnotationPlugin — ScriptIDE plugin for .annlib dataset authoring and detector bootstrap\377";
+
+uses
+	Core,
+	Draw,
+	CtrlLib,
+	plugin/png,
+	plugin/jpg,
+	plugin/zip,
+	ScriptIDE;
+
+file
+	AnnotationTool.h,
+	AnnotationTool.cpp,
+	AnnotationData.h,
+	AnnLib.h,
+	AnnLib.cpp,
+	VideoCaptureModal.h,
+	VideoCaptureModal.cpp,
+	AnnotationToolWindow.h,
+	AnnotationToolWindow.cpp,
+	AnnotationDocumentHost.h,
+	AnnotationDocumentHost.cpp,
+	AnnotationFileTypeHandler.h,
+	AnnotationFileTypeHandler.cpp,
+	AnnotationPlugin.h,
+	AnnotationPlugin.cpp,
+	AnnotationRegistration.icpp;
+
+mainconfig
+	"GUI" = "GUI";

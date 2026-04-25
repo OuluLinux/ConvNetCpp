@@ -1,7 +1,6 @@
 #ifndef _ConvNet_TransformerLayers_h_
 #define _ConvNet_TransformerLayers_h_
 
-#include "ConvNet.h"
 #include "CrtpLayers.h"
 #include "RuntimeFlexibility.h"  // For layer normalization implementation
 
@@ -58,14 +57,96 @@ public:
     MultiHeadAttentionCRTP(int embed_dim, int num_heads);
     MultiHeadAttentionCRTP(ValueMap values) { LoadImpl(values); }
 
+    // Copy constructor
+    MultiHeadAttentionCRTP(const MultiHeadAttentionCRTP& other)
+        : embed_dim(other.embed_dim), num_heads(other.num_heads), head_dim(other.head_dim),
+          wq(other.wq), wk(other.wk), wv(other.wv), wo(other.wo),
+          bq(other.bq), bk(other.bk), bv(other.bv), bo(other.bo),
+          output_activation(other.output_activation), input_activation(other.input_activation),
+          scores(other.scores), attention_weights(other.attention_weights), output(other.output) {
+        // Explicitly copy Vector members using deep copy
+        for(int i = 0; i < other.queries.GetCount(); i++) {
+            queries.Add() = other.queries[i];
+        }
+        for(int i = 0; i < other.keys.GetCount(); i++) {
+            keys.Add() = other.keys[i];
+        }
+        for(int i = 0; i < other.values.GetCount(); i++) {
+            values.Add() = other.values[i];
+        }
+        for(int i = 0; i < other.attention_scores.GetCount(); i++) {
+            attention_scores.Add() = other.attention_scores[i];
+        }
+        for(int i = 0; i < other.attention_outputs.GetCount(); i++) {
+            attention_outputs.Add() = other.attention_outputs[i];
+        }
+    }
+
+    // Copy assignment operator
+    MultiHeadAttentionCRTP& operator=(const MultiHeadAttentionCRTP& other) {
+        if (this != &other) {
+            embed_dim = other.embed_dim;
+            num_heads = other.num_heads;
+            head_dim = other.head_dim;
+            wq = other.wq;
+            wk = other.wk;
+            wv = other.wv;
+            wo = other.wo;
+            bq = other.bq;
+            bk = other.bk;
+            bv = other.bv;
+            bo = other.bo;
+            output_activation = other.output_activation;
+            input_activation = other.input_activation;
+            scores = other.scores;
+            attention_weights = other.attention_weights;
+            output = other.output;
+
+            // Explicitly copy Vector members using deep copy
+            queries.Clear();
+            for(int i = 0; i < other.queries.GetCount(); i++) {
+                queries.Add() = other.queries[i];
+            }
+            keys.Clear();
+            for(int i = 0; i < other.keys.GetCount(); i++) {
+                keys.Add() = other.keys[i];
+            }
+            values.Clear();
+            for(int i = 0; i < other.values.GetCount(); i++) {
+                values.Add() = other.values[i];
+            }
+            attention_scores.Clear();
+            for(int i = 0; i < other.attention_scores.GetCount(); i++) {
+                attention_scores.Add() = other.attention_scores[i];
+            }
+            attention_outputs.Clear();
+            for(int i = 0; i < other.attention_outputs.GetCount(); i++) {
+                attention_outputs.Add() = other.attention_outputs[i];
+            }
+        }
+        return *this;
+    }
+
     // Public interface
     int GetEmbedDim() const { return embed_dim; }
     int GetNumHeads() const { return num_heads; }
     int GetHeadDim() const { return head_dim; }
-    
+
     // Scaled Dot-Product Attention helper
-    Volume& ScaledDotProductAttention(Volume& query, Volume& key, Volume& value, 
+    Volume& ScaledDotProductAttention(Volume& query, Volume& key, Volume& value,
                                      const Volume* mask = nullptr);
+
+    // Serialization support for U++ containers
+    void Serialize(Stream& s) {
+        s % embed_dim % num_heads % head_dim;
+        s % wq % wk % wv % wo;
+        s % bq % bk % bv % bo;
+        s % output_activation % input_activation;
+        s % queries % keys % values % attention_scores % attention_outputs;
+        s % scores % attention_weights % output;
+    }
+
+    typedef MultiHeadAttentionCRTP CLASSNAME;
 };
 
 // Transformer Encoder Layer
@@ -125,6 +206,34 @@ public:
     }
     EncoderLayerCRTP(ValueMap values) : self_attention(0, 0), feed_forward(0), dropout1(0.0), dropout2(0.0) { LoadImpl(values); }
 
+    // Copy constructor
+    EncoderLayerCRTP(const EncoderLayerCRTP& other)
+        : self_attention(other.self_attention), feed_forward(other.feed_forward),
+          norm1_weights(other.norm1_weights), norm1_biases(other.norm1_biases),
+          norm2_weights(other.norm2_weights), norm2_biases(other.norm2_biases),
+          dropout1(other.dropout1), dropout2(other.dropout2),
+          dropout_rate(other.dropout_rate),
+          output_activation(other.output_activation), input_activation(other.input_activation) {
+    }
+
+    // Copy assignment operator
+    EncoderLayerCRTP& operator=(const EncoderLayerCRTP& other) {
+        if (this != &other) {
+            self_attention = other.self_attention;
+            feed_forward = other.feed_forward;
+            norm1_weights = other.norm1_weights;
+            norm1_biases = other.norm1_biases;
+            norm2_weights = other.norm2_weights;
+            norm2_biases = other.norm2_biases;
+            dropout1 = other.dropout1;
+            dropout2 = other.dropout2;
+            dropout_rate = other.dropout_rate;
+            output_activation = other.output_activation;
+            input_activation = other.input_activation;
+        }
+        return *this;
+    }
+
     // Serialization support for U++ containers
     void Serialize(Stream& s) {
         s % self_attention % feed_forward % dropout1 % dropout2
@@ -134,9 +243,11 @@ public:
     // Public interface
     int GetEmbedDim() const { return self_attention.GetEmbedDim(); }
     int GetNumHeads() const { return self_attention.GetNumHeads(); }
-    
+
     // Helper for layer normalization
     void ApplyLayerNorm(Volume& input, const Volume& gamma, const Volume& beta, int d_model, int seq_len);
+
+    typedef EncoderLayerCRTP CLASSNAME;
 };
 
 // Transformer Decoder Layer
@@ -205,6 +316,39 @@ public:
     }
     DecoderLayerCRTP(ValueMap values) : self_attention(0, 0), cross_attention(0, 0), feed_forward(0), dropout1(0.0), dropout2(0.0), dropout3(0.0) { LoadImpl(values); }
 
+    // Copy constructor
+    DecoderLayerCRTP(const DecoderLayerCRTP& other)
+        : self_attention(other.self_attention), cross_attention(other.cross_attention), feed_forward(other.feed_forward),
+          norm1_weights(other.norm1_weights), norm1_biases(other.norm1_biases),
+          norm2_weights(other.norm2_weights), norm2_biases(other.norm2_biases),
+          norm3_weights(other.norm3_weights), norm3_biases(other.norm3_biases),
+          dropout1(other.dropout1), dropout2(other.dropout2), dropout3(other.dropout3),
+          dropout_rate(other.dropout_rate),
+          output_activation(other.output_activation), input_activation(other.input_activation) {
+    }
+
+    // Copy assignment operator
+    DecoderLayerCRTP& operator=(const DecoderLayerCRTP& other) {
+        if (this != &other) {
+            self_attention = other.self_attention;
+            cross_attention = other.cross_attention;
+            feed_forward = other.feed_forward;
+            norm1_weights = other.norm1_weights;
+            norm1_biases = other.norm1_biases;
+            norm2_weights = other.norm2_weights;
+            norm2_biases = other.norm2_biases;
+            norm3_weights = other.norm3_weights;
+            norm3_biases = other.norm3_biases;
+            dropout1 = other.dropout1;
+            dropout2 = other.dropout2;
+            dropout3 = other.dropout3;
+            dropout_rate = other.dropout_rate;
+            output_activation = other.output_activation;
+            input_activation = other.input_activation;
+        }
+        return *this;
+    }
+
     // Serialization support for U++ containers
     void Serialize(Stream& s) {
         s % self_attention % cross_attention % feed_forward % dropout1 % dropout2 % dropout3
@@ -215,9 +359,11 @@ public:
     // Public interface
     int GetEmbedDim() const { return self_attention.GetEmbedDim(); }
     int GetNumHeads() const { return self_attention.GetNumHeads(); }
-    
+
     // Helper for layer normalization
     void ApplyLayerNorm(Volume& input, const Volume& gamma, const Volume& beta, int d_model, int seq_len);
+
+    typedef DecoderLayerCRTP CLASSNAME;
 };
 
 // Positional Encoding Layer
@@ -260,6 +406,8 @@ public:
     void Serialize(Stream& s) {
         s % max_len % embed_dim % pe;
     }
+
+    typedef PositionalEncodingCRTP CLASSNAME;
 };
 
 // Complete Transformer Model
@@ -317,6 +465,8 @@ private:
     // Helper functions
     Volume& GenerateSubsequentMask(int size);  // For causal masking in decoder
     int num_heads;
+
+    typedef TransformerCRTP CLASSNAME;
 };
 
 // Helper function to create a transformer
@@ -362,6 +512,28 @@ public:
     ViTPatchEmbeddingCRTP(int patch_size, int embed_dim, int num_patches);
     ViTPatchEmbeddingCRTP(ValueMap values) : proj_weight(0, 0, 0), proj_bias(0, 0, 0), pos_embed(0, 0, 0) { LoadImpl(values); }
 
+    // Copy constructor
+    ViTPatchEmbeddingCRTP(const ViTPatchEmbeddingCRTP& other)
+        : patch_size(other.patch_size), embed_dim(other.embed_dim), num_patches(other.num_patches),
+          proj_weight(other.proj_weight), proj_bias(other.proj_bias), pos_embed(other.pos_embed),
+          output_activation(other.output_activation), input_activation(other.input_activation) {
+    }
+
+    // Copy assignment operator
+    ViTPatchEmbeddingCRTP& operator=(const ViTPatchEmbeddingCRTP& other) {
+        if (this != &other) {
+            patch_size = other.patch_size;
+            embed_dim = other.embed_dim;
+            num_patches = other.num_patches;
+            proj_weight = other.proj_weight;
+            proj_bias = other.proj_bias;
+            pos_embed = other.pos_embed;
+            output_activation = other.output_activation;
+            input_activation = other.input_activation;
+        }
+        return *this;
+    }
+
     // Public interface
     int GetPatchSize() const { return patch_size; }
     int GetEmbedDim() const { return embed_dim; }
@@ -369,6 +541,8 @@ public:
 
     // Helper to create patches from input image
     Volume CreatePatches(const Volume& input);
+
+    typedef ViTPatchEmbeddingCRTP CLASSNAME;
 };
 
 // ViT Encoder (stack of transformer encoder layers)
@@ -409,11 +583,47 @@ public:
     ViTEncoderCRTP(int embed_dim, int num_heads, int ff_dim, int num_layers, double dropout_rate = 0.1);
     ViTEncoderCRTP(ValueMap values) { LoadImpl(values); }
 
+    // Copy constructor
+    ViTEncoderCRTP(const ViTEncoderCRTP& other)
+        : embed_dim(other.embed_dim), num_heads(other.num_heads), ff_dim(other.ff_dim),
+          num_layers(other.num_layers), dropout_rate(other.dropout_rate),
+          class_token(other.class_token), class_token_expanded(other.class_token_expanded),
+          output_activation(other.output_activation), input_activation(other.input_activation) {
+        // Explicitly copy Vector members
+        for(int i = 0; i < other.encoder_layers.GetCount(); i++) {
+            encoder_layers.Add() = other.encoder_layers[i];
+        }
+    }
+
+    // Copy assignment operator
+    ViTEncoderCRTP& operator=(const ViTEncoderCRTP& other) {
+        if (this != &other) {
+            embed_dim = other.embed_dim;
+            num_heads = other.num_heads;
+            ff_dim = other.ff_dim;
+            num_layers = other.num_layers;
+            dropout_rate = other.dropout_rate;
+            class_token = other.class_token;
+            class_token_expanded = other.class_token_expanded;
+            output_activation = other.output_activation;
+            input_activation = other.input_activation;
+
+            // Explicitly copy Vector members
+            encoder_layers.Clear();
+            for(int i = 0; i < other.encoder_layers.GetCount(); i++) {
+                encoder_layers.Add() = other.encoder_layers[i];
+            }
+        }
+        return *this;
+    }
+
     // Public interface
     int GetEmbedDim() const { return embed_dim; }
     int GetNumHeads() const { return num_heads; }
     int GetFFDim() const { return ff_dim; }
     int GetNumLayers() const { return num_layers; }
+
+    typedef ViTEncoderCRTP CLASSNAME;
 };
 
 // ViT Classifier Head
@@ -448,9 +658,31 @@ public:
     ViTClassifierCRTP(int num_classes, int embed_dim);
     ViTClassifierCRTP(ValueMap values) : classifier_weight(0, 0, 0), classifier_bias(0, 0, 0) { LoadImpl(values); }
 
+    // Copy constructor
+    ViTClassifierCRTP(const ViTClassifierCRTP& other)
+        : num_classes(other.num_classes), embed_dim(other.embed_dim),
+          classifier_weight(other.classifier_weight), classifier_bias(other.classifier_bias),
+          output_activation(other.output_activation), input_activation(other.input_activation) {
+    }
+
+    // Copy assignment operator
+    ViTClassifierCRTP& operator=(const ViTClassifierCRTP& other) {
+        if (this != &other) {
+            num_classes = other.num_classes;
+            embed_dim = other.embed_dim;
+            classifier_weight = other.classifier_weight;
+            classifier_bias = other.classifier_bias;
+            output_activation = other.output_activation;
+            input_activation = other.input_activation;
+        }
+        return *this;
+    }
+
     // Public interface
     int GetNumClasses() const { return num_classes; }
     int GetEmbedDim() const { return embed_dim; }
+
+    typedef ViTClassifierCRTP CLASSNAME;
 };
 
 // Swin Transformer Patch Merging Layer
@@ -486,9 +718,31 @@ public:
     SwinPatchMergingCRTP(int dim, int out_dim);
     SwinPatchMergingCRTP(ValueMap values) : reduction_weight(0, 0, 0), reduction_bias(0, 0, 0) { LoadImpl(values); }
 
+    // Copy constructor
+    SwinPatchMergingCRTP(const SwinPatchMergingCRTP& other)
+        : dim(other.dim), out_dim(other.out_dim),
+          reduction_weight(other.reduction_weight), reduction_bias(other.reduction_bias),
+          output_activation(other.output_activation), input_activation(other.input_activation) {
+    }
+
+    // Copy assignment operator
+    SwinPatchMergingCRTP& operator=(const SwinPatchMergingCRTP& other) {
+        if (this != &other) {
+            dim = other.dim;
+            out_dim = other.out_dim;
+            reduction_weight = other.reduction_weight;
+            reduction_bias = other.reduction_bias;
+            output_activation = other.output_activation;
+            input_activation = other.input_activation;
+        }
+        return *this;
+    }
+
     // Public interface
     int GetInputDim() const { return dim; }
     int GetOutputDim() const { return out_dim; }
+
+    typedef SwinPatchMergingCRTP CLASSNAME;
 };
 
 // Window-based Multi-Head Self-Attention (W-MSA) Layer
@@ -539,10 +793,56 @@ public:
                                           bq(0, 0, 0), bk(0, 0, 0), bv(0, 0, 0), bo(0, 0, 0),
                                           relative_position_bias_table(0, 0, 0) { LoadImpl(values); }
 
+    // Copy constructor
+    WindowAttentionCRTP(const WindowAttentionCRTP& other)
+        : window_size(other.window_size), num_heads(other.num_heads), head_dim(other.head_dim), input_dim(other.input_dim),
+          wq(other.wq), wk(other.wk), wv(other.wv), wo(other.wo),
+          bq(other.bq), bk(other.bk), bv(other.bv), bo(other.bo),
+          relative_position_bias_table(other.relative_position_bias_table),
+          output_activation(other.output_activation), input_activation(other.input_activation) {
+        // Copy the relative position index array
+        for(int i = 0; i < 49; i++) {
+            for(int j = 0; j < 49; j++) {
+                relative_position_index[i][j] = other.relative_position_index[i][j];
+            }
+        }
+    }
+
+    // Copy assignment operator
+    WindowAttentionCRTP& operator=(const WindowAttentionCRTP& other) {
+        if (this != &other) {
+            window_size = other.window_size;
+            num_heads = other.num_heads;
+            head_dim = other.head_dim;
+            input_dim = other.input_dim;
+            wq = other.wq;
+            wk = other.wk;
+            wv = other.wv;
+            wo = other.wo;
+            bq = other.bq;
+            bk = other.bk;
+            bv = other.bv;
+            bo = other.bo;
+            relative_position_bias_table = other.relative_position_bias_table;
+            output_activation = other.output_activation;
+            input_activation = other.input_activation;
+
+            // Copy the relative position index array
+            for(int i = 0; i < 49; i++) {
+                for(int j = 0; j < 49; j++) {
+                    relative_position_index[i][j] = other.relative_position_index[i][j];
+                }
+            }
+        }
+        return *this;
+    }
+
     // Public interface
     int GetWindowSize() const { return window_size; }
     int GetNumHeads() const { return num_heads; }
     int GetInputDim() const { return input_dim; }
+
+    typedef WindowAttentionCRTP CLASSNAME;
 };
 
 // Swin Transformer Block
@@ -589,11 +889,50 @@ public:
     SwinTransformerBlockCRTP(ValueMap values) : window_attn(7, 0, 0), feed_forward(0),
                                                norm1(), norm2(), dropout1(0.0), dropout2(0.0) { LoadImpl(values); }
 
+    // Copy constructor
+    SwinTransformerBlockCRTP(const SwinTransformerBlockCRTP& other)
+        : dim(other.dim), num_heads(other.num_heads), window_size(other.window_size),
+          shift_size(other.shift_size), mlp_ratio(other.mlp_ratio), mlp_bias(other.mlp_bias),
+          mlp_dropout(other.mlp_dropout),
+          window_attn(other.window_attn), feed_forward(other.feed_forward),
+          norm1(other.norm1), norm2(other.norm2),
+          dropout1(other.dropout1), dropout2(other.dropout2),
+          output_activation(other.output_activation), input_activation(other.input_activation) {
+        input_resolution[0] = other.input_resolution[0];
+        input_resolution[1] = other.input_resolution[1];
+    }
+
+    // Copy assignment operator
+    SwinTransformerBlockCRTP& operator=(const SwinTransformerBlockCRTP& other) {
+        if (this != &other) {
+            dim = other.dim;
+            num_heads = other.num_heads;
+            window_size = other.window_size;
+            shift_size = other.shift_size;
+            mlp_ratio = other.mlp_ratio;
+            mlp_bias = other.mlp_bias;
+            mlp_dropout = other.mlp_dropout;
+            window_attn = other.window_attn;
+            feed_forward = other.feed_forward;
+            norm1 = other.norm1;
+            norm2 = other.norm2;
+            dropout1 = other.dropout1;
+            dropout2 = other.dropout2;
+            output_activation = other.output_activation;
+            input_activation = other.input_activation;
+            input_resolution[0] = other.input_resolution[0];
+            input_resolution[1] = other.input_resolution[1];
+        }
+        return *this;
+    }
+
     // Public interface
     int GetDim() const { return dim; }
     int GetNumHeads() const { return num_heads; }
     int GetWindowSize() const { return window_size; }
     int GetShiftSize() const { return shift_size; }
+
+    typedef SwinTransformerBlockCRTP CLASSNAME;
 };
 
 // Masked Multi-Head Attention Layer for BERT
@@ -605,6 +944,7 @@ private:
     int embed_dim;      // Total embedding dimension
     int num_heads;      // Number of attention heads
     int head_dim;       // Dimension per head (embed_dim / num_heads)
+    int input_depth;    // Input depth dimension (needed for weight matrix dimensions)
 
     // Weight matrices for Q, K, V projections
     Volume wq;          // Query weight matrix
@@ -638,7 +978,38 @@ public:
     MaskedMultiHeadAttentionCRTP(int embed_dim, int num_heads);
     MaskedMultiHeadAttentionCRTP(ValueMap values) : wq(0, 0, 0), wk(0, 0, 0), wv(0, 0, 0), wo(0, 0, 0),
                                                    bq(0, 0, 0), bk(0, 0, 0), bv(0, 0, 0), bo(0, 0, 0),
-                                                   mask(0, 0, 0) { LoadImpl(values); }
+                                                   input_depth(0), mask(0, 0, 0) { LoadImpl(values); }
+
+    // Copy constructor
+    MaskedMultiHeadAttentionCRTP(const MaskedMultiHeadAttentionCRTP& other)
+        : embed_dim(other.embed_dim), num_heads(other.num_heads), head_dim(other.head_dim), input_depth(other.input_depth),
+          wq(other.wq), wk(other.wk), wv(other.wv), wo(other.wo),
+          bq(other.bq), bk(other.bk), bv(other.bv), bo(other.bo),
+          output_activation(other.output_activation), input_activation(other.input_activation),
+          mask(other.mask) {
+    }
+
+    // Copy assignment operator
+    MaskedMultiHeadAttentionCRTP& operator=(const MaskedMultiHeadAttentionCRTP& other) {
+        if (this != &other) {
+            embed_dim = other.embed_dim;
+            num_heads = other.num_heads;
+            head_dim = other.head_dim;
+            input_depth = other.input_depth;
+            wq = other.wq;
+            wk = other.wk;
+            wv = other.wv;
+            wo = other.wo;
+            bq = other.bq;
+            bk = other.bk;
+            bv = other.bv;
+            bo = other.bo;
+            output_activation = other.output_activation;
+            input_activation = other.input_activation;
+            mask = other.mask;
+        }
+        return *this;
+    }
 
     // Public interface
     int GetEmbedDim() const { return embed_dim; }
@@ -647,8 +1018,15 @@ public:
 
     // Set attention mask
     void SetMask(const Volume& mask_volume) { mask = mask_volume; }
-};
 
+    typedef MaskedMultiHeadAttentionCRTP CLASSNAME;
+};
 } // namespace ConvNet
+
+namespace Upp {
+  template<> inline constexpr bool is_trivially_relocatable<ConvNet::MultiHeadAttentionCRTP> = true;
+  template<> inline constexpr bool is_trivially_relocatable<ConvNet::EncoderLayerCRTP> = true;
+  template<> inline constexpr bool is_trivially_relocatable<ConvNet::DecoderLayerCRTP> = true;
+}
 
 #endif

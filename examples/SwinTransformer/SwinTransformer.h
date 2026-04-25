@@ -1,20 +1,22 @@
+#include <Core/Core.h>
 #ifndef _SwinTransformer_SwinTransformer_h
 #define _SwinTransformer_SwinTransformer_h
 
 #include <CtrlLib/CtrlLib.h>
 #include <Docking/Docking.h>
 #include <ConvNetCtrl/ConvNetCtrl.h>
+#include <PlotCtrl/PlotCtrl.h>
+
 using namespace Upp;
 using namespace ConvNet;
 
-#include "LoaderCIFAR10.h"  // Using CIFAR-10 loader as per the transformer implementation
-
-#define IMAGECLASS SwinTransformerImg
-#define IMAGEFILE <SwinTransformer/SwinTransformer.iml>
-#include <Draw/iml_header.h>
+#include "LoaderCIFAR10.h"
 
 // Swin Transformer example application
 class SwinTransformer : public DockWindow {
+public:
+    void Init() {}
+
 	ParentCtrl settings;
 	Label lrate, lmom, lbatch, ldecay;
 	EditDouble rate, mom, decay;
@@ -23,7 +25,6 @@ class SwinTransformer : public DockWindow {
 	TrainingGraph graph;
 	Label status;
 	SessionConvLayers layer_view;
-	ImagePrediction pred_view;
 
 	// Network
 	ParentCtrl net_ctrl;
@@ -35,15 +36,16 @@ class SwinTransformer : public DockWindow {
 	Session ses;
 	String t;
 	SpinLock ticking_lock;
-	Size img_sz;
 	int average_size;
 	int max_diff_imgs;
 	int augmentation;
 	bool is_training;
-	bool do_flip;
-	bool has_colors;
+
+	LoaderCIFAR10 loader;
 
 public:
+    
+
 	typedef SwinTransformer CLASSNAME;
 	SwinTransformer();
 	~SwinTransformer();
@@ -59,11 +61,12 @@ public:
 	void Reload();
 	void Pause();
 	void RefreshStatus();
-	void RefreshPredictions() {pred_view.Refresh();}
 
 	void UpdateNetParamDisplay();
 	void ResetAll();
 	void PostReload() {PostCallback(THISBACK(Reload));}
+
+	String BuildSwinConfig();
 };
 
 #endif

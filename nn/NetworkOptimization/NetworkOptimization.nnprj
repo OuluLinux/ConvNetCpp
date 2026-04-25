@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "name": "NetworkOptimization",
+  "graphs": [
+    "main.nngrf"
+  ],
+  "startup_graph": "main.nngrf",
+  "metadata": {
+    "source_example": "examples/NetworkOptimization",
+    "generator": "convert_examples_to_nn.py"
+  }
+}

@@ -7,12 +7,9 @@
 using namespace Upp;
 using namespace ConvNet;
 
-#define IMAGECLASS BERTTesterImg
-#define IMAGEFILE <BERTTester/BERTTester.iml>
-#include <Draw/iml_header.h>
-
 // BERTTester example application with MLM and NSP functionality
 class BERTTester : public DockWindow {
+public:
 	ParentCtrl settings;
 	Label lrate, lmom, lbatch, ldecay;
 	EditDouble rate, mom, decay;
@@ -55,6 +52,7 @@ public:
 	BERTTester();
 	~BERTTester();
 
+	void Init() {}
 	virtual void DockInit();
 
 	Session& GetSession() {return ses;}

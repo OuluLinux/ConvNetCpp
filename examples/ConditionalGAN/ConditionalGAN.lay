@@ -1,28 +1,3 @@
-#ifndef _ConditionalGAN_ConditionalGAN_lay_h
-#define _ConditionalGAN_ConditionalGAN_lay_h
-
-class WithCtrlPanel : public Ctrl {
-public:
-	virtual void FrameLayout(Rect& r) { Ctrl::FrameLayout(r); }
-	virtual void FrameAddSize(Size& sz) { Ctrl::FrameAddSize(sz); }
-	virtual bool FrameDrop(Point p, PasteClip& d) { return Ctrl::FrameDrop(p, d); }
-	virtual void FrameGotFocus() { Ctrl::FrameGotFocus(); }
-	
-	Draw&  CtrlImage() { return GetDraw(); }
-	
-	Size GetFrameSize() const { return Size(0, 0); }
-
-	typedef WithCtrlPanel CLASSNAME;
-	WithCtrlPanel();
-	virtual ~WithCtrlPanel();
-	
-	ParentCtrl  main_pctrl;
-	StaticRect  main_sizer;
-	ParentCtrl  disc_pctrl;
-	ParentCtrl  gen_pctrl;
-	DrawCtrl    disc_graph;
-	DrawCtrl    gen_graph;
-	Button      button;
-};
-
-#endif
+LAYOUT(ConditionalGANLayout, 800, 600)
+	ITEM(ParentCtrl, panel, LeftPos(0, 300).VSizePos(0, 0))
+END_LAYOUT

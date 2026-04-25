@@ -16,7 +16,7 @@ void BigGANLayer::Init(int stride, int noise_size, int num_classes, int img_widt
 	
 	// Discriminator network with self-attention
 	String disc_t =	"[\n"
-					"\t{\"type\":\"input\", \"input_width\":" + IntStr(input_width) + ", \"input_height\":" + IntStr(input_height) + ", \"input_depth\":" + IntStr(input_depth) + "},\n"
+					"\t{\"type\":\"input\", \"input_width\":" + FormatInt(input_width) + ", \"input_height\":" + FormatInt(input_height) + ", \"input_depth\":" + FormatInt(input_depth) + "},\n"
 					"\t{\"type\":\"conv\", \"filter_width\":3, \"filter_height\":3, \"filter_count\":64, \"stride\":1, \"pad\":1, \"activation\":\"relu\"},\n"
 					"\t{\"type\":\"conv\", \"filter_width\":4, \"filter_height\":4, \"filter_count\":128, \"stride\":2, \"pad\":1, \"activation\":\"relu\"},\n"
 					"\t{\"type\":\"conv\", \"filter_width\":3, \"filter_height\":3, \"filter_count\":128, \"stride\":1, \"pad\":1, \"activation\":\"relu\"},\n"
@@ -36,7 +36,7 @@ void BigGANLayer::Init(int stride, int noise_size, int num_classes, int img_widt
 
 	// Generator network with self-attention and conditioning
 	String gen_t =	"[\n"
-					"\t{\"type\":\"input\", \"input_width\":" + IntStr(noise_size + num_classes) + ", \"input_height\":1, \"input_depth\":1},\n"  // Combined noise and condition
+					"\t{\"type\":\"input\", \"input_width\":" + FormatInt(noise_size + num_classes) + ", \"input_height\":1, \"input_depth\":1},\n"  // Combined noise and condition
 					"\t{\"type\":\"linear_projection\", \"output_size\":4096},\n"  // Project to intermediate representation
 					"\t{\"type\":\"biggan_generator_block\", \"out_channels\":512, \"input_size\":4, \"output_size\":4},\n"  // Initial block
 					"\t{\"type\":\"biggan_generator_block\", \"out_channels\":256, \"input_size\":4, \"output_size\":8},\n"
@@ -85,7 +85,7 @@ void BigGANLayer::Train() {
 	// Sample real image
 	SessionData& data = disc.Data();
 	int real_idx = Random(data.GetDataCount());
-	const Vector<double>& real_image_vec = data.Get(real_idx); // Use reference to avoid copy
+	const Vector<double>& real_image_vec = clone(data.Get(real_idx)); // Use reference to avoid copy
 
 	// Get the corresponding label for this real image
 	int real_label = data.GetLabel(real_idx) % num_classes; // Assuming labels are stored in SessionData
@@ -168,7 +168,7 @@ Volume& BigGANLayer::Generate(Volume& noise_input, int condition_label) {
 
 	// Fill with noise input
 	for (int i = 0; i < noise_size; i++) {
-		double noise_val = noise_input.Get(i, 0, 0);
+		double noise_val = clone(noise_input.Get(i, 0, 0));
 		// Apply truncation trick if needed
 		noise_val = max(-truncation_factor, min(truncation_factor, noise_val));
 		input_with_condition.Set(i, 0, 0, noise_val);

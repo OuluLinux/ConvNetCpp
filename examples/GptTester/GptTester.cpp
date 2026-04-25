@@ -11,7 +11,7 @@ void GptAttentionControl::Paint(Draw& draw) {
     
     // Draw title
     if (!title.IsEmpty()) {
-        draw.DrawText(5, 5, title, StdFont(), Black);
+        draw.DrawText(5, 5, title, StdFont(), Black());
     }
     
     // Draw a simple grid to represent attention weights
@@ -51,13 +51,13 @@ void GptAttentionControl::Paint(Draw& draw) {
                     Rect cellRect(offsetX + j * cellWidth, offsetY + i * cellHeight, 
                                 offsetX + (j + 1) * cellWidth, offsetY + (i + 1) * cellHeight);
                     draw.DrawRect(cellRect, c);
-                    draw.DrawRect(cellRect, 1, Gray);
+                    draw.DrawRect(cellRect, Gray());
                 }
             }
         }
     } else {
         // Draw placeholder text
-        draw.DrawText(10, 30, "No attention data to visualize", StdFont(), Black);
+        draw.DrawText(10, 30, "No attention data to visualize", StdFont(), Black());
     }
 }
 
@@ -73,7 +73,7 @@ GptTextDisplay::GptTextDisplay() {
 
 void GptTextDisplay::Paint(Draw& draw) {
     Size sz = GetSize();
-    draw.DrawRect(sz, White);
+    draw.DrawRect(sz, White());
     
     // Draw the generated text
     // We'll use simple text wrapping
@@ -105,7 +105,7 @@ void GptTextDisplay::Paint(Draw& draw) {
     for (int i = 0; i < lines.GetCount(); i++) {
         if (y + lineHeight > sz.cy - 10) break; // Stop if we run out of space
         
-        draw.DrawText(x, y, lines[i], StdFont(), Black);
+        draw.DrawText(x, y, lines[i], StdFont(), Black());
         y += lineHeight;
     }
     
@@ -114,7 +114,7 @@ void GptTextDisplay::Paint(Draw& draw) {
         // Draw cursor at the end of text
         int cursorX = x + GetTextWidth(lines.GetCount() > 0 ? lines.Top() : String(), StdFont());
         int cursorY = y - lineHeight + 2;
-        draw.DrawRect(cursorX, cursorY, 2, lineHeight - 4, Black);
+        draw.DrawRect(cursorX, cursorY, 2, lineHeight - 4, Black());
     }
 }
 
@@ -144,13 +144,13 @@ GptApp::GptApp() {
     Size(800, 600);
     
     // Create controls
-    promptEdit.SetLabel("Prompt:");
-    generateBtn.SetLabel("Generate");
-    clearBtn.SetLabel("Clear");
-    temperatureCtrl.SetLabel("Temperature:");
-    topKCtrl.SetLabel("Top-K:");
-    nucleusPCtrl.SetLabel("Nucleus (p):");
-    maxTokensCtrl.SetLabel("Max Tokens:");
+    // promptEdit.SetLabel("Prompt:");
+    // generateBtn.SetLabel("Generate");
+    // clearBtn.SetLabel("Clear");
+    // temperatureCtrl.SetLabel("Temperature:");
+    // topKCtrl.SetLabel("Top-K:");
+    // nucleusPCtrl.SetLabel("Nucleus (p):");
+    // maxTokensCtrl.SetLabel("Max Tokens:");
     
     // Add controls to the window
     WithStdLayout(*this);
@@ -192,10 +192,10 @@ void GptApp::InitModel() {
     
     // Create a simple network configuration for text generation
     String net_config = "[\n"
-        "{\"type\":\"input\", \"input_width\":" + IntStr(max_seq_len) + ", \"input_height\":1, \"input_depth\":" + IntStr(vocab_size) + "},\n"
-        "{\"type\":\"fc\", \"neuron_count\":" + IntStr(embed_dim) + ", \"activation\":\"relu\"},\n"
-        "{\"type\":\"fc\", \"neuron_count\":" + IntStr(ff_dim) + ", \"activation\":\"relu\"},\n"
-        "{\"type\":\"regression\", \"neuron_count\":" + IntStr(vocab_size) + "},\n"
+        "{\"type\":\"input\", \"input_width\":" + FormatInt(max_seq_len) + ", \"input_height\":1, \"input_depth\":" + FormatInt(vocab_size) + "},\n"
+        "{\"type\":\"fc\", \"neuron_count\":" + FormatInt(embed_dim) + ", \"activation\":\"relu\"},\n"
+        "{\"type\":\"fc\", \"neuron_count\":" + FormatInt(ff_dim) + ", \"activation\":\"relu\"},\n"
+        "{\"type\":\"regression\", \"neuron_count\":" + FormatInt(vocab_size) + "},\n"
         "{\"type\":\"adam\", \"learning_rate\":0.001, \"momentum\":0.9, \"batch_size\":32, \"l2_decay\":0.0001}\n"
         "]\n";
     
@@ -207,7 +207,7 @@ void GptApp::InitModel() {
 }
 
 void GptApp::OnGenerate() {
-    String prompt = promptEdit.GetText();
+    String prompt = promptEdit.GetText().ToString();
     if (prompt.IsEmpty()) {
         prompt = "The future of artificial intelligence";
     }

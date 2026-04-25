@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "name": "NetworkOptimization",
+  "projects": [
+    "NetworkOptimization.nnprj"
+  ],
+  "active_project": "NetworkOptimization.nnprj",
+  "metadata": {
+    "source_example": "examples/NetworkOptimization",
+    "generator": "convert_examples_to_nn.py"
+  }
+}

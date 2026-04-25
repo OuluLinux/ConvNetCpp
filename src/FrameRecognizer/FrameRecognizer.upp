@@ -1,0 +1,26 @@
+description "FrameRecognizer - reusable video slot detection UI\377";
+
+uses
+	Core,
+	CtrlLib,
+	Docking,
+	plugin/jpg,
+	plugin/png,
+	AnnLayCore,
+	ConvNetCtrl;
+
+file
+	FrameRecognizer.h,
+	FrameRecognizer.cpp,
+	VideoFeedView.h,
+	VideoFeedView.cpp,
+	CaptureSource.h,
+	RemoteCaptureSource.h,
+	RemoteCaptureSource.cpp;
+
+mainconfig
+	"" = "GUI",
+	"X11" = "GUI X11",
+	"USEMALLOC" = "GUI USEMALLOC",
+	"X11 USEMALLOC" = "GUI X11 USEMALLOC";
+

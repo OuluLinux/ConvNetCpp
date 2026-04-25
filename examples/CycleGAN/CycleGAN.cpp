@@ -1,84 +1,60 @@
 #include "CycleGAN.h"
 
 CycleGAN::CycleGAN() {
-	Icon(CycleGANImg::icon());
-	Sizeable().MaximizeBox().MinimizeBox().Zoomable();
+    Sizeable().MaximizeBox().MinimizeBox().Zoomable();
+    Title("CycleGAN example");
+    running = false; stopped = true;
 
-	CtrlLayout(panel);
-	Add(panel.LeftPos(0,300).VSizePos());
-	Add(vsplit.HSizePos(300).VSizePos());
+    Add(options_panel.LeftPos(0, 300).VSizePos());
+    Add(vsplit.HSizePos(300, 0).VSizePos());
+    
+    options_panel.Add(ctrl_panel.SizePos());
+    ctrl_panel.CtrlLayout(ctrl_panel);
 
-	vsplit.Vert();
-	vsplit << gen_XtoY_layer_view << disc_Y_layer_view;
-	vsplit << gen_YtoX_layer_view << disc_X_layer_view;
+    vsplit.Vert();
+    vsplit << gen_layer_view << disc_layer_view;
 
-	gen_XtoY_layer_view.SetColor();
-	gen_YtoX_layer_view.SetColor();
-	disc_X_layer_view.SetColor();
-	disc_Y_layer_view.SetColor();
-
+    gen_layer_view.SetColor();
+    disc_layer_view.SetColor();
 }
 
 void CycleGAN::Init() {
-
-	l.Init(0);
-
-
-	disc_X_layer_view.SetSession(l.GetDiscriminatorX());
-	disc_Y_layer_view.SetSession(l.GetDiscriminatorY());
-	gen_XtoY_layer_view.SetSession(l.GetGeneratorXtoY());
-	gen_YtoX_layer_view.SetSession(l.GetGeneratorYtoX());
-	
-	disc_X_layer_view.RefreshLayers();
-	disc_Y_layer_view.RefreshLayers();
-	gen_XtoY_layer_view.RefreshLayers();
-	gen_YtoX_layer_view.RefreshLayers();
-
-	panel.disc_graph.SetSession(l.GetDiscriminatorX()); // Using X discriminator for primary graph
-	panel.gen_graph.SetSession(l.GetGeneratorXtoY());    // Using X->Y generator for primary graph
-	panel.disc_graph.SetModeLoss();
-	panel.gen_graph.SetModeLoss();
-
-	Thread::Start(THISBACK(Training));
+    l.Init(0);
+    disc_layer_view.SetSession(l.GetDiscriminator());
+    gen_layer_view.SetSession(l.GetGenerator());
+    disc_layer_view.RefreshLayers();
+    gen_layer_view.RefreshLayers();
+    ctrl_panel.disc_graph.SetSession(l.GetDiscriminator());
+    ctrl_panel.gen_graph.SetSession(l.GetGenerator());
+    ctrl_panel.disc_graph.SetModeLoss();
+    ctrl_panel.gen_graph.SetModeLoss();
+    Thread::Start(THISBACK(Training));
 }
 
 void CycleGAN::Training() {
-	running = true;
-	stopped = false;
-
-	TimeStop ts;
-
-	int iter = 0;
-
-	while (running) {
-
-		lock.Enter();
-		l.Train();
-		iter++;
-		lock.Leave();
-		//Sleep(100);
-
-		if (ts.Elapsed() >= 1000/60) {
-			PostCallback(THISBACK(RefreshData));
-			ts.Reset();
-		}
-
-		if (iter % 10 == 0) {
-			panel.disc_graph.PostAddValue(l.PickAverageDiscriminatorXCost() + l.PickAverageDiscriminatorYCost());
-			panel.gen_graph.PostAddValue(l.PickAverageGeneratorXtoYCost() + l.PickAverageGeneratorYtoXCost());
-		}
-	}
-
-	stopped = true;
+    running = true; stopped = false;
+    TimeStop ts;
+    int iter = 0;
+    while (running) {
+        lock.Enter();
+        l.Train();
+        iter++;
+        lock.Leave();
+        if (ts.Elapsed() >= 1000/60) {
+            PostCallback(THISBACK(RefreshData));
+            ts.Reset();
+        }
+        if (iter % 10 == 0) {
+            ctrl_panel.disc_graph.PostAddValue(l.PickAverageDiscriminatorCost());
+            ctrl_panel.gen_graph.PostAddValue(l.PickAverageGeneratorCost());
+        }
+    }
+    stopped = true;
 }
 
 void CycleGAN::RefreshData() {
-	//lock.Enter();
-	disc_X_layer_view.Refresh();
-	disc_Y_layer_view.Refresh();
-	gen_XtoY_layer_view.Refresh();
-	gen_YtoX_layer_view.Refresh();
-	panel.disc_graph.RefreshData();
-	panel.gen_graph.RefreshData();
-	//lock.Leave();
+    disc_layer_view.Refresh();
+    gen_layer_view.Refresh();
+    ctrl_panel.disc_graph.RefreshData();
+    ctrl_panel.gen_graph.RefreshData();
 }

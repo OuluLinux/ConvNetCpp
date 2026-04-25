@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "name": "Regression1D",
+  "projects": [
+    "Regression1D.nnprj"
+  ],
+  "active_project": "Regression1D.nnprj",
+  "metadata": {
+    "source_example": "examples/Regression1D",
+    "generator": "convert_examples_to_nn.py"
+  }
+}

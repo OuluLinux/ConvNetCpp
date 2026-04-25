@@ -1,7 +1,23 @@
-<?xml version="1.0" encoding="utf-8"?>
-<package name="T5Tester" type="0">
-<module name="examples" enabled="true" />
-<file name="T5Tester.cpp" />
-<file name="T5Tester.h" />
-<file name="main.cpp" />
-</package>
+description "T5Tester example\377";
+
+uses
+	CtrlLib,
+	ConvNet,
+	ConvNetCtrl,
+	Docking,
+	PlotCtrl,
+	plugin/z;
+
+options
+	"-I.";
+
+file
+	T5Tester.cpp,
+	T5Tester.h,
+	T5Tester.iml,
+	T5Tester.lay,
+	main.cpp;
+
+mainconfig
+	"" = "GUI",
+	"" = "GUI DEBUG";

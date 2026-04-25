@@ -5,21 +5,21 @@ TransformerApp::TransformerApp() {
     Sizeable().MaximizeBox().MinimizeBox();
     
     // Set up the layout
-    CtrlLayout(*this);
+    // manual layout
     
     // Initialize components
-    attentionVis.SetLabel("Attention Visualization");
-    modelInfo.SetLabel("Model Information");
-    seqInput.SetLabel("Sequence Input");
-    seqOutput.SetLabel("Sequence Output");
+    // attentionVis.SetLabel("Attention Visualization");
+    // modelInfo.SetLabel("Model Information");
+    // seqInput.SetLabel("Sequence Input");
+    // seqOutput.SetLabel("Sequence Output");
     
     // Add controls to the layout
     Add(CtrlLayout(controls));
     
     // Set up event handlers
-    trainBtn.SetLabel("Train Model");
-    testBtn.SetLabel("Test Model");
-    visualizeBtn.SetLabel("Visualize Attention");
+    // trainBtn.SetLabel("Train Model");
+    // testBtn.SetLabel("Test Model");
+    // visualizeBtn.SetLabel("Visualize Attention");
     
     // Initialize the transformer model
     InitModel();
@@ -61,7 +61,7 @@ void TransformerApp::OnTrain() {
 
 void TransformerApp::OnTest() {
     // Placeholder for testing functionality
-    String input_seq = inputEdit.GetText();
+    String input_seq = inputEdit.GetText().ToString();
     if (input_seq.IsEmpty()) {
         PromptOK("Please enter an input sequence");
         return;
@@ -118,13 +118,13 @@ void TransformerAttentionControl::Paint(Draw& draw) {
                     Rect cellRect(j * cellWidth, i * cellHeight, 
                                 (j + 1) * cellWidth, (i + 1) * cellHeight);
                     draw.DrawRect(cellRect, c);
-                    draw.DrawRect(cellRect, 1, Black);
+                    draw.DrawRect(cellRect, Black());
                 }
             }
         }
     } else {
         // Draw placeholder text
-        draw.DrawText(10, 10, "No attention data to visualize", StdFont(), Black);
+        draw.DrawText(10, 10, "No attention data to visualize", StdFont(), Black());
     }
 }
 
@@ -145,13 +145,13 @@ void TransformerMetricsControl::Paint(Draw& draw) {
     
     // Draw metrics
     int y = 10;
-    draw.DrawText(10, y, Format("Loss: %.4f", loss), StdFont(), Black);
+    draw.DrawText(10, y, Format("Loss: %.4f", loss), StdFont(), Black());
     y += 20;
-    draw.DrawText(10, y, Format("Accuracy: %.2f%%", accuracy * 100), StdFont(), Black);
+    draw.DrawText(10, y, Format("Accuracy: %.2f%%", accuracy * 100), StdFont(), Black());
     y += 20;
-    draw.DrawText(10, y, Format("Training Steps: %d", trainingSteps), StdFont(), Black);
+    draw.DrawText(10, y, Format("Training Steps: %d", trainingSteps), StdFont(), Black());
     y += 20;
-    draw.DrawText(10, y, Format("Tokens/sec: %.2f", tokensPerSecond), StdFont(), Black);
+    draw.DrawText(10, y, Format("Tokens/sec: %.2f", tokensPerSecond), StdFont(), Black());
 }
 
 void TransformerMetricsControl::UpdateMetrics(double newLoss, double newAccuracy, 

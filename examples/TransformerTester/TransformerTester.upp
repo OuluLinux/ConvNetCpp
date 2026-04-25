@@ -1,5 +1,22 @@
-<target name="TransformerTester" type="exe" use="ConvNet CtrlLib">
-	<file name="TransformerTester.cpp"/>
-	<file name="TransformerTester.iml"/>
-	<file name="TransformerTester.lay"/>
-</target>
+description "TransformerTester example\377";
+
+uses
+	CtrlLib,
+	ConvNet,
+	ConvNetCtrl,
+	Docking,
+	PlotCtrl,
+	plugin/z;
+
+options
+	"-I.";
+
+file
+	TransformerTester.cpp,
+	TransformerTester.h,
+	TransformerTester.lay,
+	main.cpp;
+
+mainconfig
+	"" = "GUI",
+	"" = "GUI DEBUG";

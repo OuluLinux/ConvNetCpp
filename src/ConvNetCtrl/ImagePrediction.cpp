@@ -34,17 +34,48 @@ void ImagePrediction::RefreshData() {
 	Net& net = ses->GetNetwork();
 	SessionData& d = ses->Data();
 	int layer_count = net.GetLayers().GetCount();
-	ASSERT(layer_count);
+	if(layer_count <= 0 || d.GetDataCount() <= 0) {
+		imgs.Clear();
+		preds.Clear();
+		lock.Leave();
+		PostCallback(THISBACK(Layout));
+		PostCallback(THISBACK(Refresh0));
+		return;
+	}
 	
 	int num_classes = net.GetLayers()[layer_count-1].output_depth;
+	if(num_classes <= 0) {
+		imgs.Clear();
+		preds.Clear();
+		lock.Leave();
+		PostCallback(THISBACK(Layout));
+		PostCallback(THISBACK(Refresh0));
+		return;
+	}
 	
 	int data_w = d.GetDataWidth();
 	int data_h = d.GetDataHeight();
 	int data_d = d.GetDataDepth();
+	if(data_w <= 0 || data_h <= 0 || data_d <= 0) {
+		imgs.Clear();
+		preds.Clear();
+		lock.Leave();
+		PostCallback(THISBACK(Layout));
+		PostCallback(THISBACK(Refresh0));
+		return;
+	}
 	
 	// grab a random test image
-	int tests = 50;
+	int tests = min(50, d.GetDataCount());
 	imgs.SetCount(tests);
+	auto GetClassName = [&](int cls) -> String {
+		if(cls >= 0 && cls < d.GetClassCount()) {
+			String name = d.GetClass(cls);
+			if(!name.IsEmpty())
+				return name;
+		}
+		return Format("#%d", cls);
+	};
 	for (int num = 0; num < tests; num++) {
 		
 		int i = Random(d.GetDataCount());
@@ -97,7 +128,12 @@ void ImagePrediction::RefreshData() {
 		}
 		SortByValue(preds, StdGreater<double>());
 		
-		Add(img, d.GetClass(label), label_val, d.GetClass(preds.GetKey(0)), preds[0], d.GetClass(preds.GetKey(1)), preds[1]);
+		Vector<PredValue> values;
+		int show_count = min(3, max(1, num_classes));
+		values.Add(MakeTuple(label_val, GetClassName(label), true));
+		for(int j = 0; j < preds.GetCount() && values.GetCount() < show_count; j++)
+			values.Add(MakeTuple(preds[j], GetClassName(preds.GetKey(j)), false));
+		Add(img, values);
 		
 	}
 	
@@ -107,17 +143,16 @@ void ImagePrediction::RefreshData() {
 	PostCallback(THISBACK(Refresh0));
 }
 
-void ImagePrediction::Add(Image& img, String l0, double p0, String l1, double p1, String l2, double p2) {
+void ImagePrediction::Add(Image& img, const Vector<PredValue>& values) {
 	while (preds.GetCount() >= max_count) preds.Remove(0);
 	Prediction& pred = preds.Add();
 	pred.img = &img;
-	pred.values.SetCount(3);
-	PredValue& v0 = pred.values[0];
-	PredValue& v1 = pred.values[1];
-	PredValue& v2 = pred.values[2];
-	v0.a = max(0.0, min(1.0, p0));	v0.b = l0;	v0.c = true;
-	v1.a = max(0.0, min(1.0, p1));	v1.b = l1;	v1.c = false;
-	v2.a = max(0.0, min(1.0, p2));	v2.b = l2;	v2.c = false;
+	pred.values.SetCount(values.GetCount());
+	for(int i = 0; i < values.GetCount(); i++) {
+		pred.values[i].a = max(0.0, min(1.0, values[i].a));
+		pred.values[i].b = values[i].b;
+		pred.values[i].c = values[i].c;
+	}
 	Sort(pred.values, Prediction());
 }
 
@@ -125,7 +160,9 @@ void ImagePrediction::Paint(Draw& d) {
 	Size sz = GetSize();
 	
 	ImageDraw id(sz);
-	id.DrawRect(sz, SWhite);
+	Color bg = IsDarkTheme() ? Color(30, 30, 30) : White();
+	Color txt_color = IsDarkTheme() ? White() : Black();
+	id.DrawRect(sz, bg);
 	
 	Font fnt = ArialZ(12);
 	
@@ -167,7 +204,7 @@ void ImagePrediction::Paint(Draw& d) {
 					sub_w2,
 					sub_h,
 					val.c ? Color(85,187,85) : Color(187,85,85));
-				id.DrawText(line_x, line_y, val.b, fnt);
+				id.DrawText(line_x, line_y, val.b, fnt, txt_color);
 			}
 		}
 		

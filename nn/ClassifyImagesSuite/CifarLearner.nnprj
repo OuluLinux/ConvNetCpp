@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "name": "CifarLearner",
+  "graphs": [
+    "cifar_learner.nngrf"
+  ],
+  "startup_graph": "cifar_learner.nngrf",
+  "metadata": {
+    "source_example": "examples/ClassifyImages",
+    "variant": "cifar_learner",
+    "generator": "convert_examples_to_nn.py"
+  }
+}

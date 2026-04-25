@@ -1,23 +1,24 @@
-<Pkg>
-<Id>ProgressiveGAN</Id>
-<Package>ProgressiveGAN</Package>
-<Target>Examples</Target>
-</Pkg>
+description "ProgressiveGAN example\377";
 
-<SourceList>
-<Source>ProgressiveGAN.cpp</Source>
-<Source>ProgressiveGANLayer.cpp</Source>
-<Source>main.cpp</Source>
-</SourceList>
+uses
+	CtrlLib,
+	ConvNet,
+	ConvNetCtrl,
+	Docking,
+	PlotCtrl,
+	plugin/z;
 
-<IncludeList>
-<Include>ProgressiveGAN.h</Include>
-</IncludeList>
+options
+	"-I.";
 
-<LibraryList />
+file
+	ProgressiveGAN.cpp,
+	ProgressiveGAN.h,
+	ProgressiveGAN.iml,
+	ProgressiveGAN.lay,
+	ProgressiveGANLayer.cpp,
+	main.cpp;
 
-<DefList />
-
-<LinkList />
-
-<Precomp>ConvNet</Precomp>
+mainconfig
+	"" = "GUI",
+	"" = "GUI DEBUG";

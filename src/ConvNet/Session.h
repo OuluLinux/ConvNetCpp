@@ -28,24 +28,24 @@ protected:
 	Net net;
 	Volume x;
 	Vector<double> session_last_input_array;
-	int predict_interval, step_num;
-	int train_iter_limit;
-	int iter;
-	int forward_time, backward_time;
-	int step_cb_interal;
-	int iter_cb_interal;
-	int augmentation;
-	bool is_training, is_training_stopped;
-	bool test_predict;
-	bool augmentation_do_flip;
+	int predict_interval = 0, step_num = 0;
+	int train_iter_limit = 0;
+	int iter = 0;
+	int forward_time = 0, backward_time = 0;
+	int step_cb_interal = 0;
+	int iter_cb_interal = 0;
+	int augmentation = 0;
+	bool is_training = false, is_training_stopped = false;
+	bool test_predict = false;
+	bool augmentation_do_flip = false;
 	
 	
 	// Temp vars
 	TimeStop ts;
 	SessionData* used_data = NULL;
-	SpinLock lock;
+	Mutex lock;
 	
-	const Value& ChkNotNull(const String& key, const Value& v);
+	const Value& ChkNotNull(const String& key, const Value& v); Value GetLegacyArg(Value& row, const char* s);
 	void Train();
 	
 public:
@@ -65,6 +65,7 @@ public:
 	void TrainOnce(Volume& x, const Vector<double>& y);
 	void Enter() {lock.Enter();}
 	void Leave() {lock.Leave();}
+	bool TryEnter() {return lock.TryEnter();}
 	void ClearLayers();
 	void Clear();
 	void ClearData();
@@ -101,6 +102,7 @@ public:
 	int					GetLayerCount() const {return net.GetLayers().GetCount();}
 	void				Tick();
 	Vector<double>		Predict(const Vector<double>& input);
+	Vector<double>		Predict0(const Vector<double>& input);
 	
 	Net& GetNetwork();
 	LayerBase* GetInput();
@@ -124,10 +126,18 @@ public:
 	
 	bool MakeLayers(const String& json);
 	void Serialize(Stream& s);
+	void SerializeWeights(Stream& s);
+	void SerializeTrainData(Stream& s);
 	void Xmlize(XmlIO& xml);
 	void SetMaxTrainIters(int count) {train_iter_limit = count;}
 	void SetPredictInterval(int i) {predict_interval = i;}
+	void SetStepCallbackInterval(int i) {step_cb_interal = i;}
+	void SetIterationCallbackInterval(int i) {iter_cb_interal = i;}
 	void SetTestPredict(bool b) {test_predict = b;}
+	
+	int GetStepNum() const {return step_num;}
+	int GetPredictInterval() const {return predict_interval;}
+
 	void SetAugmentation(int i=0, bool flip=false) {augmentation = 0; augmentation_do_flip = flip;}
 	Session& SetWindowSize(int size, int min_size=1);
 	

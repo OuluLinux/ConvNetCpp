@@ -11,6 +11,9 @@ namespace ConvNet {
 #define M_LOG2E 1.44269504088896340736 //log2(e)
 #endif
 
+// Forward declaration for GPTModel to avoid circular include issues
+class GPTModel;
+
 inline long double log2(const long double x){
     return  log(x) * M_LOG2E;
 }

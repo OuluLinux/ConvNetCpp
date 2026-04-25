@@ -1,0 +1,32 @@
+description "AnnLayCore - shared annlay recognition types\377";
+
+uses
+	Core,
+	ConvNet,
+	ByteVM,
+	OCR,
+	ComputerVision;
+
+file
+	AnnLay.h,
+	AnnLay.cpp,
+	AnnSln.h,
+	AnnSln.cpp,
+	AnnMdl.h,
+	AnnMdl.cpp,
+	AiTrainState.h,
+	AiTrainState.cpp,
+	AiTrainFile.h,
+	AiTrainFile.cpp,
+	GroupRegistry.h,
+	GroupRegistry.cpp,
+	AnchoredSlotClassifier.h,
+	AnchoredSlotClassifier.cpp,
+	AnchoredSlotRecognizer.h,
+	AnchoredSlotRecognizer.cpp,
+	RecognitionScript.h,
+	RecognitionScript.cpp;
+
+mainconfig
+	"" = "GUI USEMALLOC",
+	"" = "GUI";

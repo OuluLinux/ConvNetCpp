@@ -23,6 +23,10 @@ void SessionData::Serialize(Stream& s) {
 	  % is_data_result;
 }
 
+void SessionData::SerializeClasses(Stream& s) {
+	s % classes;
+}
+
 void SessionData::ClearData() {
 	data.Clear();
 	test_data.Clear();

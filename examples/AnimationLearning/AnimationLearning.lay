@@ -1,0 +1,3 @@
+LAYOUT(AnimationOptionsLayout, 400, 400)
+	ITEM(ParentCtrl, anim_ctrl, HSizePos(0, 0).VSizePos(0, 0))
+END_LAYOUT

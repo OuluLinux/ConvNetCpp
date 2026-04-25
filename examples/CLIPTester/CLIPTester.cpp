@@ -5,18 +5,18 @@ CLIPApp::CLIPApp() {
     Sizeable().MaximizeBox().MinimizeBox();
 
     // Set up the layout
-    CtrlLayout(*this);
+    // manual layout
 
     // Initialize components
-    imageLabel.SetLabel("Image:");
-    textLabel.SetLabel("Text Prompt:");
-    similarityLabel.SetLabel("Similarity Scores:");
-    imageUrlLabel.SetLabel("Image URL:");
-    loadButton.SetLabel("Load Image");
-    computeButton.SetLabel("Compute Similarity");
-    embedImageBtn.SetLabel("Encode Image");
-    embedTextBtn.SetLabel("Encode Text");
-    compareBtn.SetLabel("Compare Embeddings");
+    // imageLabel.SetLabel("Image:");
+    // textLabel.SetLabel("Text Prompt:");
+    // similarityLabel.SetLabel("Similarity Scores:");
+    // imageUrlLabel.SetLabel("Image URL:");
+    // loadButton.SetLabel("Load Image");
+    // computeButton.SetLabel("Compute Similarity");
+    // embedImageBtn.SetLabel("Encode Image");
+    // embedTextBtn.SetLabel("Encode Text");
+    // compareBtn.SetLabel("Compare Embeddings");
 
     // Add controls to the layout
     Add(CtrlLayout(controls));
@@ -70,7 +70,7 @@ void CLIPApp::OnEmbedImage() {
         return;
     }
 
-    String image_path = imageUrlEdit.GetText();
+    String image_path = imageUrlEdit.GetText().ToString();
     if (image_path.IsEmpty()) {
         PromptOK("Please load an image first");
         return;
@@ -93,7 +93,7 @@ void CLIPApp::OnEmbedText() {
         return;
     }
 
-    String text_prompt = textPromptEdit.GetText();
+    String text_prompt = textPromptEdit.GetText().ToString();
     if (text_prompt.IsEmpty()) {
         PromptOK("Please enter a text prompt");
         return;
@@ -116,8 +116,8 @@ void CLIPApp::OnCompare() {
         return;
     }
 
-    String image_path = imageUrlEdit.GetText();
-    String text_prompt = textPromptEdit.GetText();
+    String image_path = imageUrlEdit.GetText().ToString();
+    String text_prompt = textPromptEdit.GetText().ToString();
 
     if (image_path.IsEmpty()) {
         PromptOK("Please load an image first");
@@ -180,7 +180,7 @@ void CLIPImageControl::Paint(Draw& draw) {
         draw.DrawImage(offsetX, offsetY, newWidth, newHeight, image);
     } else {
         // Draw placeholder text
-        draw.DrawText(10, 10, "No image loaded", StdFont(), Black);
+        draw.DrawText(10, 10, "No image loaded", StdFont(), Black());
     }
 }
 
@@ -213,9 +213,9 @@ void CLIPTextControl::Paint(Draw& draw) {
 
     // Draw the text
     if (!text.IsEmpty()) {
-        draw.DrawText(10, 10, text, StdFont(), Black);
+        draw.DrawText(10, 10, text, StdFont(), Black());
     } else {
-        draw.DrawText(10, 10, "No text", StdFont(), Black);
+        draw.DrawText(10, 10, "No text", StdFont(), Black());
     }
 }
 
@@ -240,12 +240,12 @@ void CLIPSimilarityControl::Paint(Draw& draw) {
         double score = similarities[i];
         
         String displayText = Format("%s: %.3f", label, score);
-        draw.DrawText(10, y, displayText, StdFont(), Black);
+        draw.DrawText(10, y, displayText, StdFont(), Black());
         y += 20;
         
         // Draw a bar for the score
         int barWidth = (int)(score * (sz.cx - 40));  // Scale to 0-100% of available width
-        draw.DrawRect(10, y-8, barWidth, 6, LtBlue);
+        draw.DrawRect(10, y-8, barWidth, 6, LtBlue());
         
         y += 15;  // Extra spacing
         
@@ -253,7 +253,7 @@ void CLIPSimilarityControl::Paint(Draw& draw) {
     }
     
     if (similarities.GetCount() == 0) {
-        draw.DrawText(10, 10, "No similarity data", StdFont(), Black);
+        draw.DrawText(10, 10, "No similarity data", StdFont(), Black());
     }
 }
 

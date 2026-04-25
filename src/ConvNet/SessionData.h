@@ -24,6 +24,7 @@ public:
 	~SessionData();
 	
 	void Serialize(Stream& s);
+	void SerializeClasses(Stream& s);
 	
 	void BeginData(int cls_count, int count, int column_count, int test_count=0) {BeginDataClass(cls_count, count, 1, 1, column_count, test_count);}
 	void BeginData(int cls_count, int count, int width, int height, int depth, int test_count=0) {BeginDataClass(cls_count, count, width, height, depth, test_count);}

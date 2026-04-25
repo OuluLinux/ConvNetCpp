@@ -18,7 +18,7 @@ CONSOLE_APP_MAIN
         "\t{\"type\":\"input\", \"input_width\":1, \"input_height\":1, \"input_depth\":2},\n"
         "\t{\"type\":\"fc\", \"neuron_count\":10, \"activation\":\"tanh\"},\n"
         "\t{\"type\":\"regression\", \"neuron_count\":1},\n"
-        "\t{\"optimizer_placeholder\"}\n"
+        "\t\"optimizer_placeholder\"\n"
         "]\n";
     
     // Test SGD optimizer

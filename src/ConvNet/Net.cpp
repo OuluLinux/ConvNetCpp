@@ -44,7 +44,7 @@ void Net::CheckLayer() {
 		}
 	}
 	
-	layer.Init(input_width, input_height, input_depth);
+	if (!layer.IsInputLayer()) if (!layer.IsInputLayer()) layer.Init(input_width, input_height, input_depth);
 }
 
 Volume& Net::Forward(const Vector<VolumePtr>& inputs, bool is_training) {

@@ -162,7 +162,7 @@ void Classify2D::SpiralData(int count) {
 
 void Classify2D::Refresher() {
 	if (session.IsTraining()) {
-		#ifndef flagMT
+		#ifdef flagST
 		session.TrainIteration();
 		#endif
 		pctrl.Refresh();

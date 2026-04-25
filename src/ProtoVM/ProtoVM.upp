@@ -1,0 +1,18 @@
+description "ProtoVM electric circuit domain plugin for NodeWorkbench\377";
+
+uses
+	Core,
+	CtrlLib,
+	Docking,
+	NodeWorkbench;
+
+file
+	ProtoVM.h,
+	ProtoVM.cpp,
+	ProtoVMCompiler.h,
+	ProtoVMCompiler.cpp,
+	main.cpp;
+
+mainconfig
+	"" = "GUI",
+	"X11" = "GUI X11";

@@ -1,0 +1,9 @@
+#include "ConvNetPlugin.h"
+
+NAMESPACE_UPP
+
+INITBLOCK {
+    GetInternalPluginFactories().Add([]() -> IPlugin* { return new ConvNetPlugin(); });
+}
+
+END_UPP_NAMESPACE

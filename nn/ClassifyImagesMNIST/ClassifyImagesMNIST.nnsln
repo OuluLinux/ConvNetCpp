@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "name": "ClassifyImagesMNIST",
+  "projects": [
+    "ClassifyImagesMNIST.nnprj"
+  ],
+  "active_project": "ClassifyImagesMNIST.nnprj",
+  "metadata": {
+    "source_example": "examples/ClassifyImagesMNIST",
+    "generator": "convert_examples_to_nn.py"
+  }
+}

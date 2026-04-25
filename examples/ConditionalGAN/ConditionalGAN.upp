@@ -1,11 +1,24 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<TheSetup>
-   <Package id="APP" label="ConditionalGAN" type="main" target="yes" cpp="98" threads="yes">
-      <File name="ConditionalGAN.cpp" mod="1715888609" size="1165"/>
-      <File name="ConditionalGAN.h" mod="1715888609" size="2652"/>
-      <File name="ConditionalGANLayer.cpp" mod="1715888609" size="2940"/>
-      <File name="ConditionalGAN.lay.cpp" mod="1715888609" size="450"/>
-      <File name="main.cpp" mod="1715888609" size="323"/>
-      <FileTag id="SOURCES"/>
-   </Package>
-</TheSetup>
+description "ConditionalGAN example\377";
+
+uses
+	CtrlLib,
+	ConvNet,
+	ConvNetCtrl,
+	Docking,
+	PlotCtrl,
+	plugin/z;
+
+options
+	"-I.";
+
+file
+	ConditionalGAN.cpp,
+	ConditionalGAN.h,
+	ConditionalGAN.iml,
+	ConditionalGAN.lay,
+	ConditionalGANLayer.cpp,
+	main.cpp;
+
+mainconfig
+	"" = "GUI",
+	"" = "GUI DEBUG";

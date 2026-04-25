@@ -1,0 +1,5 @@
+{
+  "script": "test_convnet_plugin.py",
+  "entry_script": "test_convnet_plugin.py",
+  "description": "XOR ConvNetPlugin smoke test"
+}

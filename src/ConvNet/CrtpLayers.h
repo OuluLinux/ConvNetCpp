@@ -1,9 +1,10 @@
 #ifndef _ConvNet_CrtpLayers_h_
 #define _ConvNet_CrtpLayers_h_
 
-#include "ConvNet.h"
+#include "Utilities.h"
 #include "MemoryPool.h"
-#include "RuntimeFlexibility.h"
+#include "MemoryPool.h"
+
 
 namespace ConvNet {
 
@@ -43,11 +44,11 @@ public:
     String ToString() const {
         return static_cast<const Derived*>(this)->ToStringImpl();
     }
-    
+
     Volume& GetOutput() {
         return static_cast<Derived*>(this)->GetOutputImpl();
     }
-    
+
     // Default implementations for common methods
     virtual ~LayerBaseCRTP() = default;
 };
@@ -81,21 +82,39 @@ private:
     void LoadImpl(const ValueMap& map);
     String ToStringImpl() const;
     Volume& GetOutputImpl() { return output_activation; }
+    void SerializeImpl(Stream& s) {
+        s % width % height % filter_count % l1_decay_mul % l2_decay_mul % stride % pad;
+        s % biases;
+        s % filters;
+        s % output_activation;
+        s % input_activation;
+        s % weighted_input;
+    }
     
 public:
     ConvLayerCRTP(int width, int height, int filter_count);
     ConvLayerCRTP(ValueMap values) { LoadImpl(values); }
-    
+
     // Public interface
     int GetStride() const { return stride; }
     int GetPad() const { return pad; }
-    
+
     // Access to internal data for compatibility
     int GetWidth() const { return width; }
     int GetHeight() const { return height; }
     int GetFilterCount() const { return filter_count; }
     const Vector<Volume>& GetFilters() const { return filters; }
     const Volume& GetBiases() const { return biases; }
+
+    // Serialization support for U++ containers
+    void Serialize(Stream& s) {
+        s % width % height % filter_count % l1_decay_mul % l2_decay_mul % stride % pad;
+        s % biases;
+        s % filters;
+        s % output_activation;
+        s % input_activation;
+        s % weighted_input;
+    }
 };
 
 // CRTP Fully Connected Layer implementation
@@ -123,16 +142,64 @@ private:
     void LoadImpl(const ValueMap& map);
     String ToStringImpl() const;
     Volume& GetOutputImpl() { return output_activation; }
+    void SerializeImpl(Stream& s) {
+        s % input_count % neuron_count % l1_decay_mul % l2_decay_mul;
+        s % biases;
+        s % filters;
+        s % output_activation;
+        s % input_activation;
+    }
     
 public:
     FullyConnLayerCRTP(int neuron_count);
     FullyConnLayerCRTP(ValueMap values) { LoadImpl(values); }
-    
+
+    // Copy constructor
+    FullyConnLayerCRTP(const FullyConnLayerCRTP& other)
+        : input_count(other.input_count), biases(other.biases),
+          neuron_count(other.neuron_count), l1_decay_mul(other.l1_decay_mul),
+          l2_decay_mul(other.l2_decay_mul), output_activation(other.output_activation),
+          input_activation(other.input_activation) {
+        // Explicitly copy Vector members using deep copy
+        for(int i = 0; i < other.filters.GetCount(); i++) {
+            filters.Add() = other.filters[i];
+        }
+    }
+
+    // Copy assignment operator
+    FullyConnLayerCRTP& operator=(const FullyConnLayerCRTP& other) {
+        if (this != &other) {
+            input_count = other.input_count;
+            biases = other.biases;
+            neuron_count = other.neuron_count;
+            l1_decay_mul = other.l1_decay_mul;
+            l2_decay_mul = other.l2_decay_mul;
+            output_activation = other.output_activation;
+            input_activation = other.input_activation;
+
+            // Explicitly copy Vector members using deep copy
+            filters.Clear();
+            for(int i = 0; i < other.filters.GetCount(); i++) {
+                filters.Add() = other.filters[i];
+            }
+        }
+        return *this;
+    }
+
     // Public interface
     int GetInputCount() const { return input_count; }
     int GetNeuronCount() const { return neuron_count; }
     const Vector<Volume>& GetFilters() const { return filters; }
     const Volume& GetBiases() const { return biases; }
+
+    // Serialization support for U++ containers
+    void Serialize(Stream& s) {
+        s % input_count % neuron_count % l1_decay_mul % l2_decay_mul;
+        s % biases;
+        s % filters;
+        s % output_activation;
+        s % input_activation;
+    }
 };
 
 // CRTP Activation Layer Base (for ReLU, Sigmoid, etc.)
@@ -156,7 +223,23 @@ protected:
     virtual void LoadImpl(const ValueMap& map);
     virtual String ToStringImpl() const;
     virtual Volume& GetOutputImpl() { return output_activation; }
-    
+    virtual void SerializeImpl(Stream& s) {
+        s % output_activation;
+        s % input_activation;
+        s % switchx;
+        s % switchy;
+        s % switchd;
+    }
+
+    // Serialization support for U++ containers
+    void Serialize(Stream& s) {
+        s % output_activation;
+        s % input_activation;
+        s % switchx;
+        s % switchy;
+        s % switchd;
+    }
+
 public:
     virtual ~ActivationLayerBaseCRTP() = default;
 };
@@ -229,16 +312,34 @@ private:
     void LoadImpl(const ValueMap& map);
     String ToStringImpl() const;
     Volume& GetOutputImpl() { return output_activation; }
+    void SerializeImpl(Stream& s) {
+        s % width % height % stride % pad;
+        s % output_activation;
+        s % input_activation;
+        s % switchx;
+        s % switchy;
+        s % switchd;
+    }
     
 public:
     PoolLayerCRTP(int width, int height);
     PoolLayerCRTP(ValueMap values) { LoadImpl(values); }
-    
+
     // Public interface
     int GetWidth() const { return width; }
     int GetHeight() const { return height; }
     int GetStride() const { return stride; }
     int GetPad() const { return pad; }
+
+    // Serialization support for U++ containers
+    void Serialize(Stream& s) {
+        s % width % height % stride % pad;
+        s % output_activation;
+        s % input_activation;
+        s % switchx;
+        s % switchy;
+        s % switchd;
+    }
 };
 
 // CRTP Softmax Layer implementation (for classification)
@@ -262,13 +363,27 @@ private:
     void LoadImpl(const ValueMap& map);
     String ToStringImpl() const;
     Volume& GetOutputImpl() { return output_activation; }
+    void SerializeImpl(Stream& s) {
+        s % class_count;
+        s % output_activation;
+        s % input_activation;
+        s % es;
+    }
     
 public:
     SoftmaxLayerCRTP(int class_count);
     SoftmaxLayerCRTP(ValueMap values) { LoadImpl(values); }
-    
+
     // Public interface
     int GetClassCount() const { return class_count; }
+
+    // Serialization support for U++ containers
+    void Serialize(Stream& s) {
+        s % class_count;
+        s % output_activation;
+        s % input_activation;
+        s % es;
+    }
 };
 
 // CRTP Dropout Layer implementation
@@ -292,13 +407,53 @@ private:
     void LoadImpl(const ValueMap& map);
     String ToStringImpl() const;
     Volume& GetOutputImpl() { return output_activation; }
+    void SerializeImpl(Stream& s) {
+        s % drop_prob;
+        s % dropped;
+        s % output_activation;
+        s % input_activation;
+    }
     
 public:
     DropOutLayerCRTP(double drop_prob);
     DropOutLayerCRTP(ValueMap values) { LoadImpl(values); }
-    
+
+    // Copy constructor
+    DropOutLayerCRTP(const DropOutLayerCRTP& other)
+        : drop_prob(other.drop_prob), output_activation(other.output_activation),
+          input_activation(other.input_activation) {
+        // Explicitly copy Vector members
+        for(int i = 0; i < other.dropped.GetCount(); i++) {
+            dropped.Add() = other.dropped[i];
+        }
+    }
+
+    // Copy assignment operator
+    DropOutLayerCRTP& operator=(const DropOutLayerCRTP& other) {
+        if (this != &other) {
+            drop_prob = other.drop_prob;
+            output_activation = other.output_activation;
+            input_activation = other.input_activation;
+
+            // Explicitly copy Vector members
+            dropped.Clear();
+            for(int i = 0; i < other.dropped.GetCount(); i++) {
+                dropped.Add() = other.dropped[i];
+            }
+        }
+        return *this;
+    }
+
     // Public interface
     double GetDropProb() const { return drop_prob; }
+
+    // Serialization support for U++ containers
+    void Serialize(Stream& s) {
+        s % drop_prob;
+        s % dropped;
+        s % output_activation;
+        s % input_activation;
+    }
 };
 
 // CRTP Input Layer implementation
@@ -319,6 +474,9 @@ private:
     void LoadImpl(const ValueMap& map);
     String ToStringImpl() const;
     Volume& GetOutputImpl() { return output_activation; }
+    void SerializeImpl(Stream& s) {
+        s % output_activation;
+    }
 
 public:
     InputLayerCRTP(int input_width, int input_height, int input_depth);
@@ -326,6 +484,11 @@ public:
 
     // Public interface
     Volume& ForwardImpl(bool is_training);
+
+    // Serialization support for U++ containers
+    void Serialize(Stream& s) {
+        s % output_activation;
+    }
 };
 
 // CRTP Layer Normalization implementation
@@ -355,6 +518,15 @@ private:
     void LoadImpl(const ValueMap& map);
     String ToStringImpl() const;
     Volume& GetOutputImpl() { return output_activation; }
+    void SerializeImpl(Stream& s) {
+        s % normalized_shape % eps;
+        s % gamma;
+        s % beta;
+        s % output_activation;
+        s % input_activation;
+        s % mean_cache;
+        s % var_cache;
+    }
 
 public:
     LayerNormCRTP(int normalized_shape, double eps = 1e-5);
@@ -366,6 +538,17 @@ public:
     double GetEps() const { return eps; }
     const Volume& GetGamma() const { return gamma; }
     const Volume& GetBeta() const { return beta; }
+
+    // Serialization support for U++ containers
+    void Serialize(Stream& s) {
+        s % normalized_shape % eps;
+        s % gamma;
+        s % beta;
+        s % output_activation;
+        s % input_activation;
+        s % mean_cache;
+        s % var_cache;
+    }
 };
 
 // CRTP-based Network class for maximum performance
