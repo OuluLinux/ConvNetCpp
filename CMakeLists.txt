@@ -30,14 +30,35 @@ set_target_properties(convnet_cuda PROPERTIES
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
-# Benchmarks executable
+# Benchmarks & Evaluators
 add_executable(gpu_benchmark src/ConvNet/Cuda/GpuBenchmark.cpp)
 target_link_libraries(gpu_benchmark PRIVATE convnet_cuda pthread)
 
-# Evaluator executable
 add_executable(gpu_evaluator src/ConvNet/Cuda/GpuEvaluator.cpp)
 target_link_libraries(gpu_evaluator PRIVATE convnet_cuda pthread)
 
-# Edge case test executable
 add_executable(edge_case_tests src/ConvNet/Cuda/EdgeCaseTestSuite.cpp)
 target_link_libraries(edge_case_tests PRIVATE convnet_cuda pthread)
+
+# CUDA Tutorials
+add_executable(tutorial03_cuda tutorial/ConvNet03_CudaBasics/ConvNet03_CudaBasics.cpp)
+target_link_libraries(tutorial03_cuda PRIVATE convnet_cuda pthread)
+
+add_executable(tutorial04_cuda tutorial/ConvNet04_CudaKernels/ConvNet04_CudaKernels.cpp)
+target_link_libraries(tutorial04_cuda PRIVATE convnet_cuda pthread)
+
+add_executable(tutorial05_cuda tutorial/ConvNet05_CudaBatchInference/ConvNet05_CudaBatchInference.cpp)
+target_link_libraries(tutorial05_cuda PRIVATE convnet_cuda pthread)
+
+add_executable(tutorial06_cuda tutorial/ConvNet06_CudaConv2D/ConvNet06_CudaConv2D.cpp)
+target_link_libraries(tutorial06_cuda PRIVATE convnet_cuda pthread)
+
+# Classify2D CUDA
+add_library(classify2d_cuda_lib STATIC
+    examples/Classify2D_Cuda/Classify2DCuda.cu
+)
+target_include_directories(classify2d_cuda_lib PUBLIC examples/Classify2D_Cuda)
+
+add_executable(classify2d_cuda examples/Classify2D_Cuda/main.cpp)
+target_include_directories(classify2d_cuda PUBLIC examples/Classify2D_Cuda)
+target_link_libraries(classify2d_cuda PRIVATE classify2d_cuda_lib convnet_cuda pthread)

@@ -1,0 +1,14 @@
+description "Classify2D CUDA Accelerated Example\377";
+
+uses
+	Core,
+	ConvNet;
+
+file
+	Classify2DCuda.h,
+	Classify2DCuda.cu,
+	main.cpp;
+
+mainconfig
+	"" = "MT",
+	"" = "MT USEMALLOC";

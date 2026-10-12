@@ -1,0 +1,12 @@
+description "ConvNet CUDA Basics & Memory Management Tutorial\377";
+
+uses
+	Core,
+	ConvNet;
+
+file
+	ConvNet03_CudaBasics.cpp;
+
+mainconfig
+	"" = "MT",
+	"" = "MT USEMALLOC";

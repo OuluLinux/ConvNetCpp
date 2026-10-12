@@ -1,0 +1,12 @@
+description "ConvNet CUDA Kernels & Epilogue Fusion Tutorial\377";
+
+uses
+	Core,
+	ConvNet;
+
+file
+	ConvNet04_CudaKernels.cpp;
+
+mainconfig
+	"" = "MT",
+	"" = "MT USEMALLOC";
