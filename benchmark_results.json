@@ -1,0 +1,106 @@
+{
+  "device": {
+    "name": "NVIDIA GeForce GTX 1060 6GB",
+    "compute": "6.1",
+    "peak_fp32_tflops": 4.56832,
+    "bandwidth_gbps": 192.192
+  },
+  "gemm_benchmarks": [
+    {
+      "size": 128,
+      "cpu_ms": 3.03659,
+      "gpu_naive_ms": 0.0224256,
+      "gpu_tiled_ms": 0.011017,
+      "gpu_fused_ms": 0.0116531,
+      "gpu_fp16_ms": 0.0130048,
+      "gflops": 380.713,
+      "speedup_vs_cpu": 275.628
+    },
+    {
+      "size": 256,
+      "cpu_ms": 23.6448,
+      "gpu_naive_ms": 0.141414,
+      "gpu_tiled_ms": 0.0723149,
+      "gpu_fused_ms": 0.0736237,
+      "gpu_fp16_ms": 0.0784365,
+      "gflops": 464.005,
+      "speedup_vs_cpu": 326.97
+    },
+    {
+      "size": 512,
+      "cpu_ms": 283.823,
+      "gpu_naive_ms": 1.11002,
+      "gpu_tiled_ms": 0.528097,
+      "gpu_fused_ms": 0.52949,
+      "gpu_fp16_ms": 0.593449,
+      "gflops": 508.307,
+      "speedup_vs_cpu": 537.445
+    },
+    {
+      "size": 1024,
+      "cpu_ms": 2270.59,
+      "gpu_naive_ms": 10.5837,
+      "gpu_tiled_ms": 4.45594,
+      "gpu_fused_ms": 4.0343,
+      "gpu_fp16_ms": 4.0662,
+      "gflops": 481.938,
+      "speedup_vs_cpu": 509.565
+    },
+    {
+      "size": 2048,
+      "cpu_ms": 18164.7,
+      "gpu_naive_ms": -1,
+      "gpu_tiled_ms": 28.7378,
+      "gpu_fused_ms": 28.7098,
+      "gpu_fp16_ms": 30.1493,
+      "gflops": 597.814,
+      "speedup_vs_cpu": 632.084
+    }
+  ],
+  "conv_benchmarks": [
+    {
+      "name": "CIFAR-10 Conv1 (3->32, 32x32)",
+      "cpu_ms": 74.5021,
+      "gpu_ms": 0.328858,
+      "gflops": 172.181,
+      "images_per_sec": 97306.6,
+      "speedup": 226.548
+    },
+    {
+      "name": "Mid-layer Conv2 (32->64, 32x32)",
+      "cpu_ms": 773.761,
+      "gpu_ms": 3.03974,
+      "gflops": 198.694,
+      "images_per_sec": 5263.6,
+      "speedup": 254.548
+    },
+    {
+      "name": "Deep Feature Conv3 (64->128, 16x16)",
+      "cpu_ms": 344.59,
+      "gpu_ms": 1.52279,
+      "gflops": 198.313,
+      "images_per_sec": 5253.51,
+      "speedup": 226.288
+    }
+  ],
+  "memory_benchmarks": [
+    {
+      "size_bytes": 65536,
+      "raw_cuda_malloc_ms": 57.3804,
+      "pool_malloc_ms": 0.13417,
+      "speedup": 427.669
+    },
+    {
+      "size_bytes": 1048576,
+      "raw_cuda_malloc_ms": 2.75767,
+      "pool_malloc_ms": 0.130334,
+      "speedup": 21.1585
+    },
+    {
+      "size_bytes": 16777216,
+      "raw_cuda_malloc_ms": 225.833,
+      "pool_malloc_ms": 0.129263,
+      "speedup": 1747.08
+    }
+  ]
+}

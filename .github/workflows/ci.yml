@@ -1,0 +1,65 @@
+name: ConvNetCpp Continuous Integration
+
+on:
+  push:
+    branches: [ master, AnnotationEditor ]
+  pull_request:
+    branches: [ master, AnnotationEditor ]
+
+jobs:
+  cpu-build-and-test:
+    name: CPU Build & Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up compiler and Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Compile and run CPU tests
+        run: |
+          mkdir -p bin
+          g++ -O3 -std=c++17 -Isrc/ConvNet/Cuda -Isrc \
+            src/ConvNet/Cuda/CpuBaseline.cpp \
+            src/ConvNet/Cuda/EdgeCaseTestSuite.cpp \
+            -lpthread -o bin/cpu_edge_tests
+          echo "CPU test harness built successfully."
+
+  cuda-evaluator-ci:
+    name: CUDA Backend & Evaluator Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Install CUDA Toolkit
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nvidia-cuda-toolkit gcc-11 g++-11
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Build CUDA Library & Evaluator
+        run: |
+          mkdir -p bin build/obj
+          nvcc -arch=sm_60 -O3 -std=c++17 \
+            -I/usr/include -Isrc/ConvNet/Cuda -Isrc \
+            -c src/ConvNet/Cuda/CudaMemoryPool.cu -o build/obj/CudaMemoryPool.o
+          nvcc -arch=sm_60 -O3 -std=c++17 \
+            -I/usr/include -Isrc/ConvNet/Cuda -Isrc \
+            -c src/ConvNet/Cuda/CudaKernels.cu -o build/obj/CudaKernels.o
+          g++ -O3 -std=c++17 -I/usr/include -Isrc/ConvNet/Cuda -Isrc \
+            -c src/ConvNet/Cuda/CpuBaseline.cpp -o build/obj/CpuBaseline.o
+          g++ -O3 -std=c++17 -I/usr/include -Isrc/ConvNet/Cuda -Isrc \
+            -c src/ConvNet/Cuda/BatchInference.cpp -o build/obj/BatchInference.o
+          ar rcs build/obj/libconvnet_cuda.a \
+            build/obj/CudaMemoryPool.o build/obj/CudaKernels.o build/obj/CpuBaseline.o build/obj/BatchInference.o
+          g++ -O3 -std=c++17 -I/usr/include -Isrc/ConvNet/Cuda -Isrc \
+            src/ConvNet/Cuda/GpuEvaluator.cpp build/obj/libconvnet_cuda.a -lcudart -lpthread -o bin/gpu_evaluator
+          echo "CUDA evaluator built successfully for CI."

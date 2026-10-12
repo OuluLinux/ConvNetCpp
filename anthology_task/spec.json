@@ -1,0 +1,26 @@
+{
+  "task_id": "anthology_gpu_gemm_fused_101",
+  "title": "Fused Bias-ReLU GEMM in CUDA",
+  "difficulty": "medium",
+  "domain": "gpu_programming",
+  "timeout_seconds": 30,
+  "hardware_requirements": {
+    "gpu_architecture": ["sm_60", "sm_61", "sm_70", "sm_75", "sm_80", "sm_86", "sm_89", "sm_90"],
+    "minimum_vram_mb": 1024
+  },
+  "constraints": {
+    "precision": "FP32",
+    "forbidden_libraries": ["cublas", "cutlass"],
+    "max_abs_tolerance": 1e-4,
+    "max_rel_tolerance": 1e-4,
+    "perf_target_1024_max_ms": 6.0,
+    "min_gflops_1024": 400.0
+  },
+  "test_cases": [
+    {"name": "tiny_1x1", "M": 1, "N": 1, "K": 1, "weight": 0.05},
+    {"name": "odd_17x31", "M": 17, "N": 31, "K": 23, "weight": 0.15},
+    {"name": "prime_127x255", "M": 127, "N": 255, "K": 131, "weight": 0.20},
+    {"name": "square_512x512", "M": 512, "N": 512, "K": 512, "weight": 0.30},
+    {"name": "perf_1024x1024", "M": 1024, "N": 1024, "K": 1024, "weight": 0.30}
+  ]
+}

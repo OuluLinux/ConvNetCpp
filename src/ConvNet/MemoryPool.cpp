@@ -3,6 +3,10 @@
 #include <cstdlib>
 #include <cstring>
 
+#ifdef CONVNET_ENABLE_CUDA
+#include <cuda_runtime.h>
+#endif
+
 namespace ConvNet {
 
 // Define static member
@@ -266,9 +270,12 @@ void* GPUMemoryPool::Allocate(size_t size) {
         // Size is too large, allocate directly on GPU
         // In a real implementation, this would use CUDA malloc or similar
         void* ptr = nullptr;
-        // CUDA: cudaMalloc(&ptr, size);
-        // For now we'll use a stub implementation
+#ifdef CONVNET_ENABLE_CUDA
+        cudaError_t err = cudaMalloc(&ptr, size);
+        if (err != cudaSuccess) ptr = nullptr;
+#else
         ptr = malloc(size);
+#endif
         if (ptr) {
             allocated_blocks[ptr] = size;
         }
@@ -290,9 +297,12 @@ void* GPUMemoryPool::Allocate(size_t size) {
 
     // No free blocks, allocate a new one
     void* new_ptr = nullptr;
-    // CUDA: cudaMalloc(&new_ptr, pool_size);
-    // For now we'll use a stub implementation
+#ifdef CONVNET_ENABLE_CUDA
+    cudaError_t err = cudaMalloc(&new_ptr, pool_size);
+    if (err != cudaSuccess) new_ptr = nullptr;
+#else
     new_ptr = malloc(pool_size);
+#endif
     if (new_ptr) {
         pool.emplace_back(new_ptr, pool_size);
         auto& block = pool.back();
@@ -327,9 +337,11 @@ void GPUMemoryPool::Deallocate(void* ptr) {
             }
         }
         // If not found in pooled blocks, it was allocated directly, so free it
-        // CUDA: cudaFree(ptr);
-        // For now we'll use a stub implementation
+#ifdef CONVNET_ENABLE_CUDA
+        cudaFree(ptr);
+#else
         free(ptr);
+#endif
         allocated_blocks.erase(ptr);
     }
     lock.Leave();
@@ -339,10 +351,12 @@ void GPUMemoryPool::Clear() {
     lock.Enter();
 
     // Free all allocated GPU blocks
-    // In real CUDA implementation: cudaFree on each pointer
     for (const auto& pair : allocated_blocks) {
-        // CUDA: cudaFree(pair.first); 
+#ifdef CONVNET_ENABLE_CUDA
+        cudaFree(pair.first);
+#else
         free(pair.first);
+#endif
     }
     allocated_blocks.clear();
 
@@ -350,8 +364,11 @@ void GPUMemoryPool::Clear() {
     for (auto& size_pool : size_pools) {
         for (auto& block : size_pool.second) {
             if (block.ptr) {
-                // CUDA: cudaFree(block.ptr);
+#ifdef CONVNET_ENABLE_CUDA
+                cudaFree(block.ptr);
+#else
                 free(block.ptr);
+#endif
             }
         }
     }
@@ -426,17 +443,23 @@ String GPUMemoryPool::GetMemoryUsageInfo() const {
 }
 
 bool GPUMemoryPool::CopyToGPU(void* gpu_ptr, const void* host_ptr, size_t size) {
-    // In real CUDA implementation: cudaMemcpy(gpu_ptr, host_ptr, size, cudaMemcpyHostToDevice);
-    // For now we'll use a stub implementation with plain memcpy
+    if (!gpu_ptr || !host_ptr || size == 0) return false;
+#ifdef CONVNET_ENABLE_CUDA
+    return cudaMemcpy(gpu_ptr, host_ptr, size, cudaMemcpyHostToDevice) == cudaSuccess;
+#else
     memcpy(gpu_ptr, host_ptr, size);
-    return true; // Assume success for stub implementation
+    return true;
+#endif
 }
 
 bool GPUMemoryPool::CopyFromGPU(void* host_ptr, const void* gpu_ptr, size_t size) {
-    // In real CUDA implementation: cudaMemcpy(host_ptr, gpu_ptr, size, cudaMemcpyDeviceToHost);
-    // For now we'll use a stub implementation with plain memcpy
+    if (!host_ptr || !gpu_ptr || size == 0) return false;
+#ifdef CONVNET_ENABLE_CUDA
+    return cudaMemcpy(host_ptr, gpu_ptr, size, cudaMemcpyDeviceToHost) == cudaSuccess;
+#else
     memcpy(host_ptr, gpu_ptr, size);
-    return true; // Assume success for stub implementation
+    return true;
+#endif
 }
 
 GPUMemoryPool& GPUMemoryPool::Get() {
