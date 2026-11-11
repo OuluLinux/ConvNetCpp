@@ -43,7 +43,7 @@ Volume& GPTModel::Generate(Volume& context, int max_new_tokens) {
     // Autoregressive generation: generate one token at a time
     // This is a simplified version - a full implementation would be more complex
     
-    Volume current_context = context;  // Copy the input context
+    generation_output = context;  // Copy the input context into persistent member
     
     for (int i = 0; i < max_new_tokens; i++) {
         // Get next token logits
@@ -54,7 +54,7 @@ Volume& GPTModel::Generate(Volume& context, int max_new_tokens) {
     }
     
     // Return the completed sequence
-    return current_context;
+    return generation_output;
 }
 
 Volume& GPTModel::GetNextTokenLogits(const Vector<int>& context) {

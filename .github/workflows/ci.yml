@@ -1,39 +1,224 @@
-name: ConvNetCpp Continuous Integration
+name: ConvNetCpp CI
 
 on:
   push:
-    branches: [ master, AnnotationEditor ]
+    branches: [ master, main, AnnotationEditor ]
   pull_request:
-    branches: [ master, AnnotationEditor ]
+    branches: [ master, main, AnnotationEditor ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  cpu-build-and-test:
-    name: CPU Build & Unit Tests
-    runs-on: ubuntu-latest
+  build-posix:
+    name: POSIX (${{ matrix.os }} - ${{ matrix.compiler }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            compiler: clang++
+            bm: CLANG
+          - os: ubuntu-latest
+            compiler: g++
+            bm: GCC
+          - os: macos-latest
+            compiler: clang++
+            bm: CLANG_macOS
+
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-
-      - name: Set up compiler and Python
-        uses: actions/setup-python@v4
+      - name: Checkout ConvNetCpp
+        uses: actions/checkout@v4
         with:
-          python-version: "3.10"
+          path: ConvNetCpp
 
-      - name: Compile and run CPU tests
+      - name: Checkout UppBootstrap
+        uses: actions/checkout@v4
+        with:
+          repository: OuluBSD/UppBootstrap
+          path: UppBootstrap
+
+      - name: Checkout UppBuilder
+        uses: actions/checkout@v4
+        with:
+          repository: OuluBSD/UppBuilder
+          path: UppBuilder
+
+      - name: Checkout BazaarCore
+        uses: actions/checkout@v4
+        with:
+          repository: OuluBSD/BazaarCore
+          path: BazaarCore
+
+      - name: Checkout Upstream U++ (ultimatepp)
+        uses: actions/checkout@v4
+        with:
+          repository: ultimatepp/ultimatepp
+          path: ultimatepp
+          sparse-checkout: |
+            mkumk_blitz.cpp
+            Makefile
+            uppsrc/**
+          sparse-checkout-cone-mode: false
+
+      - name: Install System Dependencies (Linux)
+        if: runner.os == 'Linux'
         run: |
-          mkdir -p bin
-          g++ -O3 -std=c++17 -Isrc/ConvNet/Cuda -Isrc \
-            src/ConvNet/Cuda/CpuBaseline.cpp \
-            src/ConvNet/Cuda/EdgeCaseTestSuite.cpp \
-            -lpthread -o bin/cpu_edge_tests
-          echo "CPU test harness built successfully."
+          sudo apt-get update
+          sudo apt-get install -y make clang g++ libbz2-dev libexpat1-dev libfontconfig1-dev libfreetype-dev liblz4-dev liblzma-dev libpcre2-dev libpng-dev libjpeg-dev libx11-dev libxcb1-dev libxxhash-dev libzstd-dev zlib1g-dev libgtk-3-dev libnotify-dev xvfb
+
+      - name: Install System Dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install libpng lz4 pcre2 xxhash zstd xz bzip2
+          echo "CPATH=/opt/homebrew/include" >> "$GITHUB_ENV"
+          echo "LIBRARY_PATH=/opt/homebrew/lib" >> "$GITHUB_ENV"
+
+      - name: Bootstrap umk with UppBootstrap
+        env:
+          CXX: ${{ matrix.compiler }}
+        run: |
+          cd UppBootstrap
+          chmod +x ./bootstrap.sh
+          ./bootstrap.sh --upp-root "$GITHUB_WORKSPACE/ultimatepp" --verbose
+          echo "$GITHUB_WORKSPACE/ultimatepp/bin" >> "$GITHUB_PATH"
+
+      - name: Bootstrap UppBuilder
+        env:
+          CXX: ${{ matrix.compiler }}
+        run: |
+          cd UppBuilder
+          chmod +x ./bootstrap.sh
+          ./bootstrap.sh
+          echo "$GITHUB_WORKSPACE/UppBuilder" >> "$GITHUB_PATH"
+
+      - name: Verify umk and UppBuilder
+        run: |
+          umk
+          uppbuilder --version
+          uppbuilder --help
+
+      - name: Materialize Patched BazaarCore Assembly
+        run: |
+          cd BazaarCore
+          uppbuilder --apply-patches --upstream "$GITHUB_WORKSPACE/ultimatepp/uppsrc" --applied-patches "$GITHUB_WORKSPACE/BazaarCore/patched-uppsrc" -v
+
+      - name: Build & Run ConvNetTest (${{ matrix.bm }})
+        run: |
+          cd ConvNetCpp
+          uppbuilder src/ConvNetTest -m ${{ matrix.bm }} --bazaarcore "$GITHUB_WORKSPACE/BazaarCore" -v
+          ./bin/ConvNetTest
+
+  build-windows:
+    name: Windows (windows-latest - MSVC)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout ConvNetCpp
+        uses: actions/checkout@v4
+        with:
+          path: ConvNetCpp
+
+      - name: Checkout UppBootstrap
+        uses: actions/checkout@v4
+        with:
+          repository: OuluBSD/UppBootstrap
+          path: UppBootstrap
+
+      - name: Checkout UppBuilder
+        uses: actions/checkout@v4
+        with:
+          repository: OuluBSD/UppBuilder
+          path: UppBuilder
+
+      - name: Checkout BazaarCore
+        uses: actions/checkout@v4
+        with:
+          repository: OuluBSD/BazaarCore
+          path: BazaarCore
+
+      - name: Checkout Upstream U++ (ultimatepp)
+        uses: actions/checkout@v4
+        with:
+          repository: ultimatepp/ultimatepp
+          path: ultimatepp
+          sparse-checkout: |
+            mkumk_blitz.cpp
+            Makefile
+            uppsrc/**
+          sparse-checkout-cone-mode: false
+
+      - name: Setup MSVC Developer Command Prompt
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Install Dependencies via vcpkg (Windows)
+        shell: cmd
+        env:
+          VCPKG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          vcpkg install zlib:x64-windows xxhash:x64-windows lz4:x64-windows pcre2:x64-windows libpng:x64-windows libjpeg-turbo:x64-windows
+          vcpkg integrate install
+          copy /y "C:\vcpkg\installed\x64-windows\lib\z.lib" "C:\vcpkg\installed\x64-windows\lib\zs.lib"
+          if exist "C:\vcpkg\installed\x64-windows\debug\lib\zd.lib" (
+            copy /y "C:\vcpkg\installed\x64-windows\debug\lib\zd.lib" "C:\vcpkg\installed\x64-windows\debug\lib\zs.lib"
+            copy /y "C:\vcpkg\installed\x64-windows\debug\lib\zd.lib" "C:\vcpkg\installed\x64-windows\debug\lib\z.lib"
+          )
+          copy /y "C:\vcpkg\installed\x64-windows\lib\pcre2-8.lib" "C:\vcpkg\installed\x64-windows\lib\pcre2.lib"
+          if exist "C:\vcpkg\installed\x64-windows\debug\lib\pcre2-8d.lib" (
+            copy /y "C:\vcpkg\installed\x64-windows\debug\lib\pcre2-8d.lib" "C:\vcpkg\installed\x64-windows\debug\lib\pcre2.lib"
+          )
+          copy /y "C:\vcpkg\installed\x64-windows\lib\libpng16.lib" "C:\vcpkg\installed\x64-windows\lib\png.lib"
+          if exist "C:\vcpkg\installed\x64-windows\debug\lib\libpng16d.lib" (
+            copy /y "C:\vcpkg\installed\x64-windows\debug\lib\libpng16d.lib" "C:\vcpkg\installed\x64-windows\debug\lib\png.lib"
+          )
+          echo INCLUDE=C:\vcpkg\installed\x64-windows\include;%INCLUDE%>>%GITHUB_ENV%
+          echo LIB=C:\vcpkg\installed\x64-windows\lib;C:\vcpkg\installed\x64-windows\debug\lib;%LIB%>>%GITHUB_ENV%
+          echo C:\vcpkg\installed\x64-windows\bin>>%GITHUB_PATH%
+
+      - name: Bootstrap umk with UppBootstrap
+        shell: cmd
+        run: |
+          cd UppBootstrap
+          call bootstrap.cmd --upp-root "%GITHUB_WORKSPACE%\ultimatepp" --verbose
+          echo %GITHUB_WORKSPACE%\ultimatepp\bin>>%GITHUB_PATH%
+
+      - name: Bootstrap UppBuilder
+        shell: cmd
+        run: |
+          cd UppBuilder
+          call bootstrap.bat
+          echo %GITHUB_WORKSPACE%\UppBuilder>>%GITHUB_PATH%
+
+      - name: Verify umk and UppBuilder
+        shell: cmd
+        run: |
+          umk.exe
+          uppbuilder.exe --version
+          uppbuilder.exe --help
+
+      - name: Materialize Patched BazaarCore Assembly
+        shell: cmd
+        run: |
+          cd BazaarCore
+          uppbuilder.exe --apply-patches --upstream "%GITHUB_WORKSPACE%\ultimatepp\uppsrc" --applied-patches "%GITHUB_WORKSPACE%\BazaarCore/patched-uppsrc" -v
+
+      - name: Build & Run ConvNetTest (MSVC)
+        shell: cmd
+        run: |
+          cd ConvNetCpp
+          uppbuilder.exe src/ConvNetTest -m MSVS22x64 --bazaarcore "%GITHUB_WORKSPACE%\BazaarCore" -v
+          bin\ConvNetTest.exe
 
   cuda-evaluator-ci:
     name: CUDA Backend & Evaluator Suite
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          path: ConvNetCpp
 
       - name: Install CUDA Toolkit
         run: |
@@ -47,6 +232,7 @@ jobs:
 
       - name: Build CUDA Library & Evaluator
         run: |
+          cd ConvNetCpp
           mkdir -p bin build/obj
           nvcc -arch=sm_60 -O3 -std=c++17 \
             -I/usr/include -Isrc/ConvNet/Cuda -Isrc \

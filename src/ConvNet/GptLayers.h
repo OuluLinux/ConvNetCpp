@@ -27,6 +27,7 @@ private:
     // Embedding layers
     Volume token_embeddings;  // Input token embeddings
     Volume output_weights;    // Output projection weights (often tied to input embeddings)
+    Volume generation_output; // Output buffer for autoregressive generation
 
     // Cached values
     Vector<ParametersAndGradients> parameters;
